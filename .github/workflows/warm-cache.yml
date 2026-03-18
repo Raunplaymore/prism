@@ -13,10 +13,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Notify start
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d '{"chat_id":"${{ secrets.TELEGRAM_CHAT_ID }}","text":"🔄 <b>Cache Warm Started</b>\n9 countries × 2 langs","parse_mode":"HTML"}'
+
       - name: Warm cache for major countries
         run: |
           BASE="https://prism-4gy.pages.dev/api/news"
           COUNTRIES="US KR JP GB CN RU IR IL UA"
+          SUCCESS=0
+          FAIL=0
 
           for code in $COUNTRIES; do
             for lang in ko en; do
@@ -25,7 +33,17 @@ jobs:
                 "${BASE}?country=${code}&lang=${lang}&refresh=true" \
                 --max-time 60)
               echo "  status: $status"
+              if [ "$status" = "200" ]; then SUCCESS=$((SUCCESS+1)); else FAIL=$((FAIL+1)); fi
               sleep 2
             done
           done
-          echo "Done."
+
+          echo "SUCCESS=$SUCCESS" >> $GITHUB_ENV
+          echo "FAIL=$FAIL" >> $GITHUB_ENV
+
+      - name: Notify done
+        if: always()
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d '{"chat_id":"${{ secrets.TELEGRAM_CHAT_ID }}","text":"✅ <b>Cache Warm Done</b>\nSuccess: '"${SUCCESS:-0}"' / Fail: '"${FAIL:-0}"'","parse_mode":"HTML"}'
