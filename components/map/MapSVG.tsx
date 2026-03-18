@@ -7,10 +7,12 @@ import type { Topology, GeometryCollection } from 'topojson-specification'
 import { createProjection } from '@/lib/map/projection'
 import { createColorScale } from '@/lib/map/colorScale'
 import countryCodeMap from '@/lib/map/countryCodeMap'
+import { SUPPORTED_COUNTRIES } from '@/lib/rss'
 
 export interface MapSVGHandle {
   zoomIn: () => void
   zoomOut: () => void
+  resetZoom: () => void
 }
 
 interface MapSVGProps {
@@ -71,7 +73,11 @@ const MapSVG = forwardRef<MapSVGHandle, MapSVGProps>(function MapSVG(
     const enter = paths.enter()
       .append('path')
       .attr('class', 'country')
-      .style('cursor', 'pointer')
+      .style('cursor', (d: any) => {
+        const id = String(d.id).padStart(3, '0')
+        const alpha2 = countryCodeMap[id]
+        return alpha2 && SUPPORTED_COUNTRIES.has(alpha2) ? 'pointer' : 'default'
+      })
 
     enter.merge(paths)
       .attr('d', path as any)
@@ -81,7 +87,11 @@ const MapSVG = forwardRef<MapSVGHandle, MapSVGProps>(function MapSVG(
         if (alpha2 && heatmapData[alpha2]) {
           return colorScale(heatmapData[alpha2])
         }
-        return '#1e293b'
+        // Supported = brighter, unsupported = dim
+        if (alpha2 && SUPPORTED_COUNTRIES.has(alpha2)) {
+          return '#1e3a5f'
+        }
+        return '#111827'
       })
       .attr('stroke', (d: any) => {
         const id = String(d.id).padStart(3, '0')
@@ -191,6 +201,13 @@ const MapSVG = forwardRef<MapSVGHandle, MapSVGProps>(function MapSVG(
       const zoom = zoomRef.current
       if (svg && zoom) {
         d3.select(svg).transition().duration(300).call(zoom.scaleBy, 1 / 1.5)
+      }
+    },
+    resetZoom: () => {
+      const svg = svgRef.current
+      const zoom = zoomRef.current
+      if (svg && zoom) {
+        d3.select(svg).transition().duration(400).call(zoom.transform, d3.zoomIdentity)
       }
     },
   }))

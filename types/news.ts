@@ -1,4 +1,4 @@
-export type NewsCategory = 'Society' | 'Economy'
+export type NewsCategory = string
 
 export type Sentiment = 'positive' | 'neutral' | 'negative'
 

@@ -5,6 +5,7 @@ import { getFeed, needsRefresh, mergeFeed, incrementUsage, getTokenStats } from 
 import { fetchNews } from '@/lib/news'
 import { getCountryName } from '@/lib/countries'
 import { ValidationError, AiServiceError } from '@/lib/errors'
+import { isSupported } from '@/lib/rss'
 import { checkCostAlert, notifyNewsCached, notifyError } from '@/lib/telegram'
 
 async function redisExec(cmd: string[]): Promise<unknown> {
@@ -43,6 +44,11 @@ export async function GET(request: NextRequest) {
     }
 
     const code = country.toUpperCase()
+
+    if (!isSupported(code)) {
+      return NextResponse.json({ error: 'unsupported', country: code }, { status: 404 })
+    }
+
     const lang = request.nextUrl.searchParams.get('lang') === 'ko' ? 'ko' : 'en'
     const forceRefresh = request.nextUrl.searchParams.get('refresh') === 'true'
     const ip = getClientIp(request)

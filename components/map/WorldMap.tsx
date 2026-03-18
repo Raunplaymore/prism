@@ -35,6 +35,10 @@ export default function WorldMap({
     mapRef.current?.zoomOut()
   }, [])
 
+  const handleResetZoom = useCallback(() => {
+    mapRef.current?.resetZoom()
+  }, [])
+
   return (
     <div className="relative h-full w-full">
       <MapSVG
@@ -45,7 +49,7 @@ export default function WorldMap({
         selectedCountry={selectedCountry}
       />
       <CountryTooltip name={tooltip.name} x={tooltip.x} y={tooltip.y} />
-      <MapControls zoomIn={handleZoomIn} zoomOut={handleZoomOut} />
+      <MapControls zoomIn={handleZoomIn} zoomOut={handleZoomOut} resetZoom={handleResetZoom} />
     </div>
   )
 }

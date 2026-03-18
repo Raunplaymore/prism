@@ -5,7 +5,7 @@ import { recordTokenUsage } from '@/lib/cache'
 
 interface SummarizedItem {
   originalIndex: number
-  category: 'Society' | 'Economy'
+  category: string
   title: string
   summary: string
   detail: string
@@ -22,11 +22,11 @@ const LANG_LABELS: Record<string, string> = {
   ko: 'Korean',
 }
 
-const CATEGORY_PROMPT = `Category definitions (STRICT):
-- Society: politics, law, education, health, environment, social issues, crime, demographics
-- Economy: business, finance, markets, trade, employment, GDP, industry, startups, real estate
+const CATEGORY_PROMPT = `Assign one category per article from this list:
+Politics, Economy, Society, Tech, Defense, Diplomacy, Environment, Health, Culture
 
-IMPORTANT: Exclude sports, entertainment, K-pop, celebrities, movies, TV shows, music entirely — they do not fit any category.`
+Exclude: celebrity gossip, K-pop fan content, movie/TV reviews, sports scores/match results.
+General sports INDUSTRY news (e.g. league deals, stadium economics) is OK.`
 
 async function callOpenAI(messages: { role: string; content: string }[]): Promise<OpenAIResponse> {
   const apiKey = process.env.OPENAI_API_KEY
@@ -79,18 +79,18 @@ export async function fetchNews(countryCode: string, lang = 'en'): Promise<NewsI
       role: 'system',
       content: `You filter and summarize news articles that are DIRECTLY about ${countryName}. Return JSON: {"items":[...]}
 
-CRITICAL FILTERING RULE:
-- ONLY include articles where ${countryName} is the PRIMARY subject
-- EXCLUDE articles that merely mention ${countryName} in passing or are primarily about another country
-- If an article is about relations between ${countryName} and another country, include it only if ${countryName}'s perspective is central
-- If fewer than 5 articles pass this filter, that is fine — quality over quantity
+FILTERING RULE:
+- Include articles that are significantly about ${countryName} — domestic affairs, economy, politics, or international relations involving ${countryName}
+- EXCLUDE articles that only mention ${countryName} in passing while being primarily about a different country
+- Articles about bilateral relations are fine if ${countryName} is one of the main parties
+- Articles may be in any language — translate the title, summary, and detail to ${langLabel}
 
-Each item: {"originalIndex":number,"category":"Society"|"Economy","title":"${langLabel} title","summary":"1-2 sentence ${langLabel} summary","detail":"4-5 sentence ${langLabel} detailed analysis with context and background","sentiment":"positive"|"neutral"|"negative"}
+Each item: {"originalIndex":number,"category":"one of the categories below","title":"${langLabel} title","summary":"1-2 sentence ${langLabel} summary","detail":"4-5 sentence ${langLabel} detailed analysis with context and background","sentiment":"positive"|"neutral"|"negative"}
 Write title, summary, and detail in ${langLabel}. "summary" is a brief overview. "detail" provides deeper analysis, background context, and implications.
 
 ${CATEGORY_PROMPT}
 
-Select up to 5 per category (max 10 total). Keep summaries concise.`,
+Include as many relevant articles as possible (up to 30). Keep summaries concise.`,
     },
     {
       role: 'user',

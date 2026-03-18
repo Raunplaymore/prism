@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { getAllCountries } from '@/lib/countries'
+import { SUPPORTED_COUNTRIES } from '@/lib/rss'
 
-const allCountries = getAllCountries()
+const allCountries = getAllCountries().filter((c) => SUPPORTED_COUNTRIES.has(c.code))
 const PINNED = ['US', 'GB', 'KR', 'JP', 'CN', 'DE', 'FR', 'IN', 'BR', 'SA']
 
 interface User {
@@ -197,15 +198,29 @@ export default function AdminPage() {
 
         <div className="mb-8">
           <h2 className="mb-3 text-sm font-semibold text-gray-400">Refresh Any Country</h2>
-          <select
-            onChange={(e) => { if (e.target.value) { refreshCache(e.target.value); e.target.value = '' } }}
-            className="w-full rounded-lg border border-gray-800 bg-gray-900 px-3 py-2.5 text-sm text-gray-300 outline-none transition focus:border-blue-500 sm:w-64"
-          >
-            <option value="">Select a country...</option>
-            {allCountries.map(({ code, name }) => (
-              <option key={code} value={code}>{name}</option>
-            ))}
-          </select>
+          <div className="flex items-center gap-3">
+            <select
+              id="country-select"
+              className="w-full rounded-lg border border-gray-800 bg-gray-900 px-3 py-2.5 text-sm text-gray-300 outline-none transition focus:border-blue-500 sm:w-64"
+            >
+              <option value="">Select a country...</option>
+              {allCountries.map(({ code, name }) => (
+                <option key={code} value={code}>{name} ({code})</option>
+              ))}
+            </select>
+            <button
+              onClick={() => {
+                const el = document.getElementById('country-select') as HTMLSelectElement
+                if (el?.value) {
+                  refreshCache(el.value)
+                  addLog(`Started refresh for ${el.value}`, 'info')
+                }
+              }}
+              className="shrink-0 rounded-lg bg-gray-800 px-4 py-2.5 text-sm text-gray-300 transition hover:bg-gray-700 hover:text-white"
+            >
+              Refresh
+            </button>
+          </div>
         </div>
 
         <div className="mb-8">

@@ -40,19 +40,19 @@ function CountryButtons({
   isLoading: boolean
 }) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
       {countries.map(({ code, name, flag }) => (
         <button
           key={code}
           onClick={() => onSelect(code)}
           disabled={isLoading}
-          className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+          className={`flex shrink-0 items-center gap-1 rounded-md border px-2 py-1.5 text-xs font-medium transition ${
             selectedCountry === code
               ? 'border-blue-500 bg-blue-600/20 text-blue-400'
               : 'border-gray-800 bg-gray-900 text-gray-400 hover:border-gray-700 hover:text-white'
           } ${isLoading ? 'cursor-wait opacity-60' : ''}`}
         >
-          <span className="text-base">{flag}</span>
+          <span className="text-sm">{flag}</span>
           <span className="hidden sm:inline">{name}</span>
           <span className="sm:hidden">{code}</span>
         </button>
@@ -72,17 +72,17 @@ export default function NewsStand({
     <div className="space-y-3">
       <div>
         <h3 className="mb-2 text-xs font-medium text-gray-500">Quick Access</h3>
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
           {onToggleMap && (
             <button
               onClick={onToggleMap}
-              className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+              className={`flex shrink-0 items-center gap-1 rounded-md border px-2 py-1.5 text-xs font-medium transition ${
                 mapOpen
                   ? 'border-blue-500 bg-blue-600/20 text-blue-400'
                   : 'border-gray-800 bg-gray-900 text-gray-400 hover:border-gray-700 hover:text-white'
               }`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
               </svg>
@@ -94,13 +94,13 @@ export default function NewsStand({
               key={code}
               onClick={() => onSelect(code)}
               disabled={isLoading}
-              className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+              className={`flex shrink-0 items-center gap-1 rounded-md border px-2 py-1.5 text-xs font-medium transition ${
                 selectedCountry === code
                   ? 'border-blue-500 bg-blue-600/20 text-blue-400'
                   : 'border-gray-800 bg-gray-900 text-gray-400 hover:border-gray-700 hover:text-white'
               } ${isLoading ? 'cursor-wait opacity-60' : ''}`}
             >
-              <span className="text-base">{flag}</span>
+              <span className="text-sm">{flag}</span>
               <span className="hidden sm:inline">{name}</span>
               <span className="sm:hidden">{code}</span>
             </button>

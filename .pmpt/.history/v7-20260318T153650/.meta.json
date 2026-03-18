@@ -1,0 +1,13 @@
+{
+  "version": 7,
+  "timestamp": "20260318T153650",
+  "files": [
+    "plan.md",
+    "pmpt.ai.md",
+    "pmpt.md"
+  ],
+  "changedFiles": [
+    "pmpt.md"
+  ],
+  "note": "Prism v1 개발 진행 중 — 뉴스 API 캐시 레이어, 관리자 페이지, 지도 컴포넌트 등 다수의 파일이 수정된 상태. NewsPanel 컴포넌트를 제거하고 NewsStand로 통합하는 리팩토링 진행. .npmrc 추가 및 scripts 디렉토리 신규 생성으로 빌드/배포 자동화 기반 마련. 캐시 관리 API와 통계 API 엔드포인트 업데이트 완료."
+}

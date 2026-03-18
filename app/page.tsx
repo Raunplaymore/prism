@@ -4,15 +4,15 @@ import { useState, useCallback, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import NewsStand, { ALL_FREE_COUNTRIES } from '@/components/NewsStand'
 import NewsCard from '@/components/NewsCard'
-import type { NewsItem, NewsCategory } from '@/types/news'
+import type { NewsItem } from '@/types/news'
 import { getAllCountries, getCountryName } from '@/lib/countries'
 
-const allCountries = getAllCountries()
+import { SUPPORTED_COUNTRIES } from '@/lib/rss'
+const allCountries = getAllCountries().filter((c) => SUPPORTED_COUNTRIES.has(c.code))
 const FREE_CODES = new Set(ALL_FREE_COUNTRIES.map((c) => c.code))
 
 const WorldMap = dynamic(() => import('@/components/map/WorldMap'), { ssr: false })
 
-const categories: NewsCategory[] = ['Society', 'Economy']
 
 interface User {
   email: string
@@ -74,7 +74,6 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
-  const [activeTab, setActiveTab] = useState<NewsCategory>('Society')
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [heatmapData, setHeatmapData] = useState<Record<string, number>>({})
@@ -102,6 +101,10 @@ export default function Home() {
   }, [lang, latestItems.length])
 
   useEffect(() => {
+    // Set language from URL param
+    const p = new URLSearchParams(window.location.search).get('lang')
+    if (p === 'en' || p === 'ko') setLang(p)
+
     fetch('/api/auth/me')
       .then((r) => r.json())
       .then((data) => setUser(data.user))
@@ -129,6 +132,14 @@ export default function Home() {
       // Step 1: Get cached feed (fast)
       const res = await fetch(`/api/news?country=${countryCode}&lang=${lang}`)
       const data = await res.json()
+
+      if (res.status === 404 && data.error === 'unsupported') {
+        setError(lang === 'ko'
+          ? `${getCountryName(countryCode)}은(는) 현재 미제공 국가입니다.`
+          : `${getCountryName(countryCode)} is not available yet.`)
+        setIsLoading(false)
+        return
+      }
 
       if (!res.ok) throw new Error(data.error || 'Failed to fetch news')
 
@@ -162,7 +173,7 @@ export default function Home() {
     }
   }, [lang, user])
 
-  const filteredItems = newsItems.filter((item) => item.category === activeTab)
+  const sortedItems = newsItems
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -289,23 +300,6 @@ export default function Home() {
               )}
             </div>
 
-            {/* Category Tabs */}
-            <div className="mb-4 flex gap-1">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveTab(cat)}
-                  className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition sm:flex-none ${
-                    activeTab === cat
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-900 text-gray-400 hover:text-white'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-
             {/* News List */}
             {error ? (
               <div className="flex h-32 flex-col items-center justify-center gap-2 rounded-lg border border-red-900/50 bg-red-950/30 text-sm text-red-400">
@@ -319,15 +313,15 @@ export default function Home() {
               </div>
             ) : isLoading ? (
               <LoadingSkeleton />
-            ) : filteredItems.length > 0 ? (
+            ) : sortedItems.length > 0 ? (
               <div className="space-y-3">
-                {filteredItems.map((item) => (
+                {sortedItems.map((item) => (
                   <NewsCard key={item.id} item={item} />
                 ))}
               </div>
             ) : (
               <div className="flex h-32 items-center justify-center rounded-lg border border-gray-800 bg-gray-900 text-sm text-gray-500">
-                No {activeTab.toLowerCase()} news available.
+                No news available.
               </div>
             )}
           </section>
