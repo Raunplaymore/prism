@@ -1,0 +1,29 @@
+name: Warm News Cache
+
+on:
+  schedule:
+    # KST 06:00 = UTC 21:00 (previous day)
+    - cron: '0 21 * * *'
+  workflow_dispatch: # manual trigger
+
+jobs:
+  warm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Warm cache for major countries
+        run: |
+          BASE="https://prism-4gy.pages.dev/api/news"
+          COUNTRIES="US KR JP GB CN RU IR IL UA"
+
+          for code in $COUNTRIES; do
+            for lang in ko en; do
+              echo "→ $code/$lang"
+              status=$(curl -s -o /dev/null -w "%{http_code}" \
+                "${BASE}?country=${code}&lang=${lang}&refresh=true" \
+                --max-time 60)
+              echo "  status: $status"
+              sleep 2
+            done
+          done
+          echo "Done."
