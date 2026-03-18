@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "timestamp": "20260318T052501",
+  "files": [
+    "plan.md",
+    "pmpt.ai.md",
+    "pmpt.md"
+  ],
+  "changedFiles": [
+    "pmpt.md"
+  ],
+  "note": "Prism 프로젝트 전체 시스템 구성 계획 수립 완료. 세계지도(D3.js + TopoJSON 5개 서브컴포넌트, 임페러티브 렌더링), DB/캐시(MVP는 Upstash Redis만 사용, Supabase 없이 쿠키 기반 제한), 백엔드(Claude API Agentic Loop + edge runtime API Routes 6개 lib 모듈) 3개 영역의 아키텍처를 설계했다. 비용 최적화를 핵심으로 캐시 TTL 4시간 연장, 인기 국가 10개 사전 캐싱, 3카테고리 일괄 요청으로 AI 비용 75% 절감 전략을 수립. 배포는 Cloudflare Pages(이미 보유, 대역폭 무제한, 30초 타임아웃)로 결정하여 월 고정비 $0, AI 호출료만 ~$30-90/월 구조를 달성. 하네스 팀(map-specialist, ai-backend, code-reviewer) 3개 에이전트와 4개 스킬도 구성 완료."
+}

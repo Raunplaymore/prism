@@ -1,0 +1,12 @@
+{
+  "projectPath": "/Users/hwangjunguk/prism",
+  "docsPath": ".pmpt/docs",
+  "ignorePatterns": [
+    "node_modules/**",
+    ".pmpt/.history/**",
+    "dist/**"
+  ],
+  "createdAt": "2026-03-18T04:51:05.177Z",
+  "trackGit": false,
+  "origin": "new"
+}

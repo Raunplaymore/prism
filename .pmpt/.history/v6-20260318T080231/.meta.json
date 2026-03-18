@@ -1,0 +1,13 @@
+{
+  "version": 6,
+  "timestamp": "20260318T080231",
+  "files": [
+    "plan.md",
+    "pmpt.ai.md",
+    "pmpt.md"
+  ],
+  "changedFiles": [
+    "pmpt.md"
+  ],
+  "note": "Prism 프로젝트 v5 이후 안정화 스냅샷. 세계 지도(D3.js + TopoJSON) 프론트엔드, Google News RSS 기반 뉴스 수집, OpenAI gpt-4o-mini 번역/요약, Upstash Redis 캐시(TTL 4시간), IP 기반 일일 사용량 제한, 토큰 사용량 추적 및 어드민 대시보드까지 전체 MVP 파이프라인이 구현된 상태. Society/Economy 2카테고리 뉴스 브리핑과 countries.ts 국가 매핑, errors.ts 에러 핸들링 등 유틸리티 모듈도 정비 완료."
+}

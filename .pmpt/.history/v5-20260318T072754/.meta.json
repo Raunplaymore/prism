@@ -1,0 +1,13 @@
+{
+  "version": 5,
+  "timestamp": "20260318T072754",
+  "files": [
+    "plan.md",
+    "pmpt.ai.md",
+    "pmpt.md"
+  ],
+  "changedFiles": [
+    "pmpt.md"
+  ],
+  "note": "뉴스 소스를 국가별 RSS 피드 + OpenAI web_search 하이브리드에서 Google News RSS 단일 소스로 전면 전환했다. Google News RSS는 무료이고 API 키 불필요하며 전 세계 모든 국가를 커버한다. 기존 COUNTRY_FEEDS 11개국 하드코딩과 web_search 폴백 코드를 모두 제거하고, 국가명 기반 Google News 검색 URL 하나로 통일했다. AI는 OpenAI gpt-4o-mini로 카테고리 분류와 요약만 수행하여 호출당 ~$0.0003으로 비용을 최소화했다. 또한 스포츠 카테고리를 제거하여 Society/Economy 2개 탭으로 변경하고, 토큰 사용량 추적 시스템(Redis 누적 통계 + 호출별 로그)과 어드민 대시보드를 추가했다."
+}

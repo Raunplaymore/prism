@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+
+# env
+.env
+.env.local
+.env*.local
+
+# debug
+npm-debug.log*
+
+# vercel
+.vercel
+
+# cloudflare
+.wrangler/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# claude
+.claude/
+.mcp.json
+answers.json
+
+# misc
+prism_design.md
+tsconfig.tsbuildinfo
