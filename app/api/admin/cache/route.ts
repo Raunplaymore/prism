@@ -1,16 +1,22 @@
+export const runtime = 'edge'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { deleteCachedNewsAllLangs } from '@/lib/cache'
+import { verifySessionToken, getSessionFromCookie } from '@/lib/auth'
 
-const ADMIN_SECRET = process.env.ADMIN_SECRET || 'dev-admin'
-
-function isAuthorized(request: NextRequest): boolean {
-  if (process.env.NODE_ENV === 'development') return true
-  const auth = request.headers.get('x-admin-secret')
-  return auth === ADMIN_SECRET
+async function isAdmin(request: NextRequest): Promise<boolean> {
+  const token = getSessionFromCookie(request.headers.get('cookie'))
+  if (token) {
+    const user = await verifySessionToken(token)
+    if (user?.isAdmin) return true
+  }
+  const secret = process.env.ADMIN_SECRET
+  if (secret && request.headers.get('x-admin-secret') === secret) return true
+  return false
 }
 
 export async function DELETE(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!(await isAdmin(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

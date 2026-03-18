@@ -5,6 +5,15 @@ import type { NewsItem } from '@/types/news'
 
 interface NewsCardProps {
   item: NewsItem
+  showCountry?: boolean
+}
+
+function countryFlag(code: string): string {
+  return code
+    .toUpperCase()
+    .split('')
+    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
+    .join('')
 }
 
 const sentimentColors = {
@@ -13,7 +22,7 @@ const sentimentColors = {
   negative: '#ef4444',
 } as const
 
-export default function NewsCard({ item }: NewsCardProps) {
+export default function NewsCard({ item, showCountry }: NewsCardProps) {
   const [expanded, setExpanded] = useState(false)
 
   return (
@@ -23,6 +32,9 @@ export default function NewsCard({ item }: NewsCardProps) {
     >
       <div className="mb-2 flex items-start justify-between gap-2">
         <h3 className="text-sm font-semibold leading-snug text-white">
+          {showCountry && item.country && (
+            <span className="mr-1.5">{countryFlag(item.country)}</span>
+          )}
           {item.title}
         </h3>
         <span

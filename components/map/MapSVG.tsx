@@ -132,7 +132,7 @@ const MapSVG = forwardRef<MapSVGHandle, MapSVGProps>(function MapSVG(
       .attr('stroke-width', 0.5)
   }, [heatmapData, selectedCountry, onCountrySelect, onHover])
 
-  // Fetch TopoJSON on mount
+  // Fetch TopoJSON on mount (once)
   useEffect(() => {
     fetch('/data/countries-110m.json')
       .then((res) => res.json())
@@ -141,7 +141,8 @@ const MapSVG = forwardRef<MapSVGHandle, MapSVGProps>(function MapSVG(
         render()
       })
       .catch((err) => console.error('Failed to load TopoJSON:', err))
-  }, [render])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Setup zoom
   useEffect(() => {
