@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import NewsStand, { ALL_FREE_COUNTRIES } from '@/components/NewsStand'
 import NewsCard from '@/components/NewsCard'
@@ -62,10 +62,57 @@ function LoginPrompt() {
   )
 }
 
+function CountrySearch({ countries, onSelect, loggedIn }: { countries: { code: string; name: string; nameKo: string }[]; onSelect: (code: string) => void; loggedIn: boolean }) {
+  const [query, setQuery] = useState('')
+  const [focused, setFocused] = useState(false)
+
+  if (!loggedIn) {
+    return <p className="mt-2 text-xs text-gray-600">Sign in to browse all countries</p>
+  }
+
+  const q = query.toLowerCase()
+  const filtered = query.length > 0
+    ? countries.filter((c) => c.name.toLowerCase().includes(q) || c.nameKo.includes(query) || c.code.toLowerCase().includes(q)).slice(0, 8)
+    : []
+
+  return (
+    <div className="relative mt-2">
+      <div className="relative">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setTimeout(() => setFocused(false), 150)}
+          placeholder="국가 검색..."
+          className="w-full rounded-lg border border-gray-800 bg-gray-900 py-1.5 pl-8 pr-3 text-xs text-gray-300 outline-none transition focus:border-blue-500 sm:w-56"
+        />
+      </div>
+      {focused && filtered.length > 0 && (
+        <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl sm:w-56">
+          {filtered.map(({ code, name, nameKo }) => (
+            <button
+              key={code}
+              onMouseDown={() => { onSelect(code); setQuery(''); setFocused(false) }}
+              className="flex w-full items-center justify-between px-3 py-1.5 text-left text-xs text-gray-300 transition hover:bg-gray-800 hover:text-white"
+            >
+              <span>{nameKo}</span>
+              <span className="text-gray-600">{name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Home() {
   const [user, setUser] = useState<User | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
-  const [lang, setLang] = useState<'en' | 'ko'>('ko')
+  const lang = 'ko' as const
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
   const [newsItems, setNewsItems] = useState<NewsItem[]>([])
   const [latestItems, setLatestItems] = useState<NewsItem[]>([])
@@ -76,7 +123,10 @@ export default function Home() {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
+  const [showScrollTop, setShowScrollTop] = useState(false)
   const [heatmapData, setHeatmapData] = useState<Record<string, number>>({})
+  const currentCountryRef = useRef<string | null>(null)
+  const sharedArticleRef = useRef<string | null>(null)
 
   const refreshLatest = useCallback(() => {
     fetch(`/api/news/latest?lang=${lang}&limit=20`)
@@ -101,9 +151,18 @@ export default function Home() {
   }, [lang, latestItems.length])
 
   useEffect(() => {
-    // Set language from URL param
-    const p = new URLSearchParams(window.location.search).get('lang')
-    if (p === 'en' || p === 'ko') setLang(p)
+    const params = new URLSearchParams(window.location.search)
+
+    // Share link: ?country=XX&article=YY
+    const countryParam = params.get('country')
+    const articleParam = params.get('article')
+    if (countryParam) {
+      sharedArticleRef.current = articleParam
+      // Delay to let auth check complete first
+      setTimeout(() => handleCountrySelect(countryParam), 300)
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname)
+    }
 
     fetch('/api/auth/me')
       .then((r) => r.json())
@@ -112,6 +171,10 @@ export default function Home() {
       .finally(() => setAuthLoading(false))
 
     refreshLatest()
+
+    const onScroll = () => setShowScrollTop(window.scrollY > 400)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCountrySelect = useCallback(async (countryCode: string) => {
@@ -122,16 +185,17 @@ export default function Home() {
     }
     setShowLoginPrompt(false)
 
+    currentCountryRef.current = countryCode
     setSelectedCountry(countryCode)
     setIsLoading(true)
     setIsRefreshing(false)
     setError(null)
-    // Don't clear newsItems — keep previous while loading
 
     try {
-      // Step 1: Get cached feed (fast)
       const res = await fetch(`/api/news?country=${countryCode}&lang=${lang}`)
       const data = await res.json()
+
+      if (currentCountryRef.current !== countryCode) return
 
       if (res.status === 404 && data.error === 'unsupported') {
         setError(lang === 'ko'
@@ -145,28 +209,44 @@ export default function Home() {
 
       setNewsItems(data.items)
       setIsLoading(false)
+
+      // Scroll to shared article if present
+      if (sharedArticleRef.current) {
+        const targetId = sharedArticleRef.current
+        sharedArticleRef.current = null
+        setTimeout(() => {
+          const el = document.getElementById(`news-${targetId}`)
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            el.classList.add('ring-2', 'ring-blue-500')
+            setTimeout(() => el.classList.remove('ring-2', 'ring-blue-500'), 3000)
+          }
+        }, 100)
+      }
+
       setHeatmapData(prev => ({
         ...prev,
         [countryCode]: (prev[countryCode] || 0) + 1,
       }))
 
-      // Step 2: If stale, trigger background refresh
       if (data.refreshing) {
         setIsRefreshing(true)
         try {
           const refreshRes = await fetch(`/api/news?country=${countryCode}&lang=${lang}&refresh=true`)
           const refreshData = await refreshRes.json()
+          if (currentCountryRef.current !== countryCode) return
           if (refreshRes.ok) {
             setNewsItems(refreshData.items)
-            refreshLatest() // Update global feed with new articles
+            refreshLatest()
           }
         } catch {
-          // Refresh failure is non-critical — stale data is still shown
+          // Refresh failure is non-critical
         } finally {
-          setIsRefreshing(false)
+          if (currentCountryRef.current === countryCode) setIsRefreshing(false)
         }
       }
     } catch (err) {
+      if (currentCountryRef.current !== countryCode) return
       console.error('News fetch error:', err)
       setError('Failed to load news. Please try again.')
       setIsLoading(false)
@@ -179,7 +259,7 @@ export default function Home() {
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-gray-800/50 bg-gray-950/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-2.5">
           <div className="flex items-center gap-2.5">
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-600">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -191,25 +271,7 @@ export default function Home() {
             <span className="text-sm font-bold tracking-tight">Prism</span>
             <span className="hidden text-xs text-gray-500 sm:inline">World News at a Glance</span>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex overflow-hidden rounded-md border border-gray-700 bg-gray-900/80">
-              <button
-                onClick={() => setLang('en')}
-                className={`px-2.5 py-1 text-[11px] font-medium transition ${
-                  lang === 'en' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                EN
-              </button>
-              <button
-                onClick={() => setLang('ko')}
-                className={`px-2.5 py-1 text-[11px] font-medium transition ${
-                  lang === 'ko' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                KO
-              </button>
-            </div>
+          <div className="flex items-center gap-2">
             {/* Auth */}
             {authLoading ? null : user ? (
               <div className="flex items-center gap-2">
@@ -250,21 +312,7 @@ export default function Home() {
             }}
             mapOpen={viewMode === 'map'}
           />
-          {user && (
-            <select
-              value={selectedCountry ?? ''}
-              onChange={(e) => { if (e.target.value) handleCountrySelect(e.target.value) }}
-              className="mt-2 w-full rounded-lg border border-gray-800 bg-gray-900 px-2 py-1.5 text-xs text-gray-300 outline-none transition focus:border-blue-500 sm:w-48"
-            >
-              <option value="">All countries...</option>
-              {allCountries.map(({ code, name }) => (
-                <option key={code} value={code}>{name}</option>
-              ))}
-            </select>
-          )}
-          {!user && (
-            <p className="mt-2 text-xs text-gray-600">Sign in to browse all countries</p>
-          )}
+          <CountrySearch countries={allCountries} onSelect={(code) => handleCountrySelect(code)} loggedIn={!!user} />
 
           {/* Map (collapsible) */}
           {viewMode === 'map' && (
@@ -358,14 +406,26 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-800/50 bg-gray-950">
-        <div className="mx-auto max-w-5xl px-4 py-3">
-          <span className="text-[11px] text-gray-500">
-            Summaries are AI-generated. For accuracy, please read the original article from the source.
-          </span>
+      <footer className="sticky bottom-0 z-30 border-t border-gray-800/50 bg-gray-950/95 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-2">
+          <div className="flex items-center gap-3 text-[11px] text-gray-500">
+            <span className="hidden sm:inline">AI-generated summaries.</span>
+            <a href="/about" className="hover:text-gray-300">About</a>
+            <a href="/privacy" className="hover:text-gray-300">Privacy</a>
+          </div>
+          {showScrollTop && (
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-700 text-white transition hover:bg-gray-600"
+              aria-label="Scroll to top"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="18 15 12 9 6 15" />
+              </svg>
+            </button>
+          )}
         </div>
       </footer>
-
     </div>
   )
 }

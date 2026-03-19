@@ -38,7 +38,7 @@ async function redisPipeline(commands: string[][]): Promise<unknown[]> {
 }
 
 const FEED_TTL = 24 * 60 * 60 // 24 hours
-const REFRESH_INTERVAL = 4 * 60 * 60 // 4 hours — minimum between refreshes
+const REFRESH_INTERVAL = 6 * 60 * 60 // 6 hours — minimum between refreshes
 const USAGE_TTL = 24 * 60 * 60 // 24 hours
 const ARTICLE_MAX_AGE = 24 * 60 * 60 * 1000 // 24h in ms
 

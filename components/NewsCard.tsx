@@ -24,9 +24,25 @@ const sentimentColors = {
 
 export default function NewsCard({ item, showCountry }: NewsCardProps) {
   const [expanded, setExpanded] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const shareUrl = `${window.location.origin}?country=${item.country}&article=${item.id}`
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: item.title, url: shareUrl })
+      } catch { /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(shareUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   return (
     <article
+      id={`news-${item.id}`}
       className="cursor-pointer rounded-lg border border-gray-800 bg-gray-900 p-4 transition hover:border-gray-700"
       onClick={() => setExpanded(!expanded)}
     >
@@ -57,6 +73,19 @@ export default function NewsCard({ item, showCountry }: NewsCardProps) {
         <span>{item.source}</span>
         <div className="flex items-center gap-3">
           <span className="text-gray-600">{expanded ? 'Collapse' : 'Detail'}</span>
+          <button
+            onClick={handleShare}
+            className="text-gray-500 transition hover:text-white"
+            aria-label="Share"
+          >
+            {copied ? (
+              <span className="text-green-400">Copied!</span>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+              </svg>
+            )}
+          </button>
           <a
             href={item.url}
             target="_blank"

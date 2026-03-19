@@ -1,9 +1,20 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Prism',
-  description: 'AI-powered world news briefing on an interactive map',
+  title: 'Prism — AI 세계 뉴스 브리핑',
+  description: '51개국의 뉴스를 AI가 한국어로 요약하여 제공합니다. 인터랙티브 세계 지도에서 관심 국가의 최신 뉴스를 확인하세요.',
+  keywords: ['뉴스', '세계 뉴스', 'AI 뉴스', '뉴스 요약', '국제 뉴스', 'world news', 'Prism'],
+  openGraph: {
+    title: 'Prism — AI 세계 뉴스 브리핑',
+    description: '51개국의 뉴스를 AI가 한국어로 요약하여 제공합니다.',
+    type: 'website',
+    locale: 'ko_KR',
+    siteName: 'Prism',
+  },
+  robots: { index: true, follow: true },
+  verification: { google: 'QY09AFQmbMM0PxNDQg7eRaVx-ouDrjLWChRp1KTPaXU' },
 }
 
 export default function RootLayout({
@@ -11,9 +22,21 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT
+
   return (
-    <html lang="en">
-      <body className="bg-gray-950 text-white antialiased">{children}</body>
+    <html lang="ko">
+      <body className="bg-gray-950 text-white antialiased">
+        {children}
+        {adsenseClient && (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
+            crossOrigin="anonymous"
+            strategy="lazyOnload"
+          />
+        )}
+      </body>
     </html>
   )
 }

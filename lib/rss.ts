@@ -41,6 +41,7 @@ const COUNTRY_RSS: Record<string, CountryRssConfig> = {
   SE: { hl: 'sv', gl: 'SE', ceid: 'SE:sv', queries: ['Sverige nyheter', 'Sverige politik ekonomi'] },
   NO: { hl: 'no', gl: 'NO', ceid: 'NO:no', queries: ['Norge nyheter', 'Norge politikk økonomi'] },
   GB: { hl: 'en', gl: 'GB', ceid: 'GB:en', queries: ['United Kingdom news', 'UK politics economy'] },
+  GR: { hl: 'el', gl: 'GR', ceid: 'GR:el', queries: ['Ελλάδα ειδήσεις', 'Ελλάδα πολιτική οικονομία'] },
   // Middle East
   IL: { hl: 'he', gl: 'IL', ceid: 'IL:he', queries: ['ישראל חדשות', 'ישראל פוליטיקה כלכלה'] },
   IR: { hl: 'fa', gl: 'IR', ceid: 'IR:fa', queries: ['ایران اخبار', 'ایران سیاست اقتصاد'] },
@@ -69,6 +70,9 @@ const COUNTRY_RSS: Record<string, CountryRssConfig> = {
   CO: { hl: 'es', gl: 'CO', ceid: 'CO:es-419', queries: ['Colombia noticias', 'Colombia política economía'] },
   VE: { hl: 'es', gl: 'VE', ceid: 'VE:es-419', queries: ['Venezuela noticias', 'Venezuela crisis'] },
   CU: { hl: 'es', gl: 'CU', ceid: 'CU:es-419', queries: ['Cuba noticias', 'Cuba news'] },
+  // Oceania
+  AU: { hl: 'en', gl: 'AU', ceid: 'AU:en', queries: ['Australia news', 'Australia politics economy'] },
+  NZ: { hl: 'en', gl: 'NZ', ceid: 'NZ:en', queries: ['New Zealand news', 'New Zealand politics economy'] },
   // Africa
   NG: { hl: 'en', gl: 'NG', ceid: 'NG:en', queries: ['Nigeria news', 'Nigeria politics economy'] },
   ZA: { hl: 'en', gl: 'ZA', ceid: 'ZA:en', queries: ['South Africa news', 'South Africa politics economy'] },

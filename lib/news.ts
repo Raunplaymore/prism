@@ -17,6 +17,14 @@ interface OpenAIResponse {
   usage?: { prompt_tokens: number; completion_tokens: number }
 }
 
+function simpleHash(str: string): string {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash).toString(36)
+}
+
 const LANG_LABELS: Record<string, string> = {
   en: 'English',
   ko: 'Korean',
@@ -111,10 +119,10 @@ Include as many relevant articles as possible (up to 30). Keep summaries concise
 
   return (parsed.items as SummarizedItem[])
     .filter((item) => typeof item.originalIndex === 'number' && item.originalIndex >= 0 && item.originalIndex < articles.length)
-    .map((item, idx) => {
+    .map((item) => {
       const original: RssArticle = articles[item.originalIndex]
       return {
-        id: `${countryCode}-${item.category}-${idx}-${Date.now()}`,
+        id: `${countryCode}-${simpleHash(original.link)}`,
         country: countryCode,
         category: item.category,
         title: item.title,

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getFeed } from '@/lib/cache'
 
 // All free-access countries
-const COUNTRIES = ['US', 'KR', 'JP', 'GB', 'CN', 'RU', 'IR', 'IL', 'UA']
+const COUNTRIES = ['US', 'KR', 'JP', 'GB', 'CN', 'FR', 'BR', 'IN', 'RU', 'IR', 'IL', 'UA']
 
 export async function GET(request: NextRequest) {
   const lang = request.nextUrl.searchParams.get('lang') === 'ko' ? 'ko' : 'en'
