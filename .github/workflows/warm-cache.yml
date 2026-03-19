@@ -2,7 +2,8 @@ name: Warm News Cache
 
 on:
   schedule:
-    # 3 times daily — KST 06:00 / 12:00 / 18:00
+    # 4 times daily — KST 00:00 / 06:00 / 12:00 / 18:00
+    - cron: '0 15 * * *'  # KST 00:00
     - cron: '0 21 * * *'  # KST 06:00
     - cron: '0 3 * * *'   # KST 12:00
     - cron: '0 9 * * *'   # KST 18:00
@@ -17,7 +18,7 @@ jobs:
         run: |
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -H "Content-Type: application/json" \
-            -d '{"chat_id":"${{ secrets.TELEGRAM_CHAT_ID }}","text":"🔄 <b>Cache Warm Started</b>\n9 countries × 2 langs","parse_mode":"HTML"}'
+            -d '{"chat_id":"${{ secrets.TELEGRAM_CHAT_ID }}","text":"🔄 <b>Cache Warm Started</b>\n12 countries","parse_mode":"HTML"}'
 
       - name: Warm cache for major countries
         run: |
@@ -27,15 +28,13 @@ jobs:
           FAIL=0
 
           for code in $COUNTRIES; do
-            for lang in ko en; do
-              echo "→ $code/$lang"
-              status=$(curl -s -o /dev/null -w "%{http_code}" \
-                "${BASE}?country=${code}&lang=${lang}&refresh=true" \
-                --max-time 60)
-              echo "  status: $status"
-              if [ "$status" = "200" ]; then SUCCESS=$((SUCCESS+1)); else FAIL=$((FAIL+1)); fi
-              sleep 2
-            done
+            echo "→ $code/ko"
+            status=$(curl -s -o /dev/null -w "%{http_code}" \
+              "${BASE}?country=${code}&lang=ko&refresh=true" \
+              --max-time 60)
+            echo "  status: $status"
+            if [ "$status" = "200" ]; then SUCCESS=$((SUCCESS+1)); else FAIL=$((FAIL+1)); fi
+            sleep 2
           done
 
           echo "SUCCESS=$SUCCESS" >> $GITHUB_ENV
