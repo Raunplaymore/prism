@@ -33,7 +33,9 @@ jobs:
             local max=2
             while [ $attempt -le $max ]; do
               status=$(curl -s -o /dev/null -w "%{http_code}" \
-                "${BASE}?country=${code}&lang=ko&refresh=true" \
+                -X POST \
+                -H "x-admin-secret: ${{ secrets.ADMIN_SECRET }}" \
+                "${BASE}/refresh?country=${code}&lang=ko" \
                 --max-time 90)
               if [ "$status" = "200" ]; then
                 echo "  ✓ $code (attempt $((attempt+1)))"
@@ -58,6 +60,11 @@ jobs:
 
           echo "SUCCESS=$SUCCESS" >> $GITHUB_ENV
           echo "FAIL=$FAIL" >> $GITHUB_ENV
+
+          if [ "$FAIL" -gt 0 ]; then
+            echo "::error::$FAIL countries failed"
+            exit 1
+          fi
 
       - name: Notify done
         if: always()

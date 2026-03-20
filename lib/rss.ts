@@ -242,5 +242,5 @@ export async function fetchRssArticles(countryCode: string): Promise<RssArticle[
       const db = b.pubDate ? new Date(b.pubDate).getTime() : 0
       return db - da
     })
-    .slice(0, 15)
+    .slice(0, 30)
 }
