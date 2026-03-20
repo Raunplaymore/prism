@@ -111,11 +111,13 @@ export default function AdminPage() {
       }
       addLog(`${delData.message}`, 'success')
 
-      for (const lang of ['en', 'ko']) {
-        addLog(`Fetching ${code} (${lang})...`)
-        const newsRes = await fetch(`/api/news?country=${code}&lang=${lang}`)
-        const newsData = await newsRes.json()
-        addLog(`${code}/${lang}: ${newsData.items?.length ?? 0} items cached`, 'success')
+      addLog(`Refreshing ${code}...`)
+      const refreshRes = await fetch(`/api/news/refresh?country=${code}&lang=ko`, { method: 'POST' })
+      const refreshData = await refreshRes.json()
+      if (refreshRes.ok) {
+        addLog(`${code}: ${refreshData.newArticles} new / ${refreshData.totalArticles} total`, 'success')
+      } else {
+        addLog(`${code}: ${refreshData.error || 'refresh failed'}`, 'error')
       }
 
       if (!skipStats) fetchStats()
@@ -184,17 +186,9 @@ export default function AdminPage() {
             <h1 className="text-xl font-bold">Prism Admin</h1>
             <p className="text-sm text-gray-500">{user.email}</p>
           </div>
-          <div className="flex gap-2">
-            <a href="/" className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 transition hover:text-white">
-              Back to Map
-            </a>
-            <button
-              onClick={refreshPinned}
-              className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium transition hover:bg-blue-500"
-            >
-              Refresh Pinned
-            </button>
-          </div>
+          <a href="/" className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 transition hover:text-white">
+            Back to Map
+          </a>
         </div>
 
         {stats && (
@@ -267,6 +261,16 @@ export default function AdminPage() {
               )
             })}
           </div>
+          <button
+            onClick={() => {
+              if (window.confirm(`Pinned ${PINNED.length}개국 전체를 리프래시합니다. 계속할까요?`)) {
+                refreshPinned()
+              }
+            }}
+            className="mt-3 w-full rounded-lg bg-blue-600 py-2.5 text-sm font-medium transition hover:bg-blue-500"
+          >
+            Refresh All Pinned
+          </button>
         </div>
 
         {tokenLog.length > 0 && (
