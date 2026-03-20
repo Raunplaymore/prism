@@ -207,7 +207,7 @@ export async function recordTokenUsage(
       cost: +cost.toFixed(6),
     })
     await redis(['LPUSH', TOKEN_LOG_KEY, entry])
-    await redis(['LTRIM', TOKEN_LOG_KEY, '0', '99'])
+    await redis(['LTRIM', TOKEN_LOG_KEY, '0', '499'])
   } catch {
     // non-critical
   }
@@ -232,12 +232,14 @@ export async function getTokenStats(): Promise<TokenStats> {
   }
 }
 
-export async function getTokenLog(): Promise<unknown[]> {
+export async function getTokenLog(offset = 0, limit = 20): Promise<{ items: unknown[]; total: number; hasMore: boolean }> {
   try {
-    const log = await redis(['LRANGE', TOKEN_LOG_KEY, '0', '49']) as string[]
-    return log.map((entry) => typeof entry === 'string' ? JSON.parse(entry) : entry)
+    const total = await redis(['LLEN', TOKEN_LOG_KEY]) as number
+    const log = await redis(['LRANGE', TOKEN_LOG_KEY, String(offset), String(offset + limit - 1)]) as string[]
+    const items = log.map((entry) => typeof entry === 'string' ? JSON.parse(entry) : entry)
+    return { items, total, hasMore: offset + limit < total }
   } catch {
-    return []
+    return { items: [], total: 0, hasMore: false }
   }
 }
 

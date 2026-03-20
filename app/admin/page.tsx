@@ -43,6 +43,9 @@ export default function AdminPage() {
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [stats, setStats] = useState<TokenStats | null>(null)
   const [tokenLog, setTokenLog] = useState<TokenLogEntry[]>([])
+  const [logHasMore, setLogHasMore] = useState(false)
+  const [logTotal, setLogTotal] = useState(0)
+  const [logLoading, setLogLoading] = useState(false)
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -57,14 +60,33 @@ export default function AdminPage() {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch('/api/admin/stats')
+      const res = await fetch('/api/admin/stats?limit=20')
       if (res.ok) {
         const data = await res.json()
         setStats(data.stats)
         setTokenLog(data.log)
+        setLogHasMore(data.logHasMore)
+        setLogTotal(data.logTotal)
       }
     } catch {
       // ignore
+    }
+  }
+
+  const loadMoreLog = async () => {
+    setLogLoading(true)
+    try {
+      const res = await fetch(`/api/admin/stats?offset=${tokenLog.length}&limit=20`)
+      if (res.ok) {
+        const data = await res.json()
+        setTokenLog((prev) => [...prev, ...data.log])
+        setLogHasMore(data.logHasMore)
+        setLogTotal(data.logTotal)
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLogLoading(false)
     }
   }
 
@@ -249,7 +271,7 @@ export default function AdminPage() {
 
         {tokenLog.length > 0 && (
           <div className="mb-8">
-            <h2 className="mb-3 text-sm font-semibold text-gray-400">Token Usage Log</h2>
+            <h2 className="mb-3 text-sm font-semibold text-gray-400">Token Usage Log <span className="text-gray-600">({tokenLog.length}/{logTotal})</span></h2>
             <div className="max-h-60 overflow-y-auto rounded-lg border border-gray-800 bg-gray-900">
               <table className="w-full text-xs">
                 <thead>
@@ -278,6 +300,15 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
+            {logHasMore && (
+              <button
+                onClick={loadMoreLog}
+                disabled={logLoading}
+                className="mt-2 w-full rounded-lg border border-gray-800 bg-gray-900 py-2 text-xs text-gray-400 transition hover:border-gray-700 hover:text-white disabled:cursor-wait disabled:opacity-50"
+              >
+                {logLoading ? 'Loading...' : 'More'}
+              </button>
+            )}
           </div>
         )}
 

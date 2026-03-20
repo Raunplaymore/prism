@@ -48,12 +48,11 @@ function CountryButtons({
         <button
           key={code}
           onClick={() => onSelect(code)}
-          disabled={isLoading}
-          className={`flex shrink-0 items-center gap-1 rounded-md border px-2 py-1.5 text-xs font-medium transition ${
+          className={`flex shrink-0 items-center gap-1 rounded-md border px-2.5 py-1.5 text-sm font-medium transition ${
             selectedCountry === code
               ? 'border-blue-500 bg-blue-600/20 text-blue-400'
               : 'border-gray-800 bg-gray-900 text-gray-400 hover:border-gray-700 hover:text-white'
-          } ${isLoading ? 'cursor-wait opacity-60' : ''}`}
+          } ${isLoading && selectedCountry === code ? 'cursor-wait' : ''}`}
         >
           <span className="text-sm">{flag}</span>
           <span className="hidden sm:inline">{name}</span>
@@ -79,7 +78,7 @@ export default function NewsStand({
           {onToggleMap && (
             <button
               onClick={onToggleMap}
-              className={`flex shrink-0 items-center gap-1 rounded-md border px-2 py-1.5 text-xs font-medium transition ${
+              className={`flex shrink-0 items-center gap-1 rounded-md border px-2.5 py-1.5 text-sm font-medium transition ${
                 mapOpen
                   ? 'border-blue-500 bg-blue-600/20 text-blue-400'
                   : 'border-gray-800 bg-gray-900 text-gray-400 hover:border-gray-700 hover:text-white'
@@ -97,7 +96,7 @@ export default function NewsStand({
               key={code}
               onClick={() => onSelect(code)}
               disabled={isLoading}
-              className={`flex shrink-0 items-center gap-1 rounded-md border px-2 py-1.5 text-xs font-medium transition ${
+              className={`flex shrink-0 items-center gap-1 rounded-md border px-2.5 py-1.5 text-sm font-medium transition ${
                 selectedCountry === code
                   ? 'border-blue-500 bg-blue-600/20 text-blue-400'
                   : 'border-gray-800 bg-gray-900 text-gray-400 hover:border-gray-700 hover:text-white'

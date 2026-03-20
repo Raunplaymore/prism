@@ -4,16 +4,18 @@ import { useEffect, useRef } from 'react'
 
 interface AdSlotProps {
   slot: string
-  format?: 'auto' | 'rectangle' | 'horizontal'
+  type?: 'banner' | 'inline'
   className?: string
 }
 
 /**
  * Google AdSense ad slot component.
- * Set NEXT_PUBLIC_ADSENSE_CLIENT in env to enable.
- * Example: NEXT_PUBLIC_ADSENSE_CLIENT=ca-pub-XXXXXXXXXXXXXXXX
+ * - banner: thin horizontal (320x50 mobile / 728x90 pc)
+ * - inline: thin horizontal between articles (320x50 mobile / 468x60 pc)
+ *
+ * Requires: NEXT_PUBLIC_ADSENSE_CLIENT + NEXT_PUBLIC_ADSENSE_APPROVED
  */
-export default function AdSlot({ slot, format = 'auto', className = '' }: AdSlotProps) {
+export default function AdSlot({ slot, type = 'inline', className = '' }: AdSlotProps) {
   const adRef = useRef<HTMLModElement>(null)
   const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT
 
@@ -28,18 +30,26 @@ export default function AdSlot({ slot, format = 'auto', className = '' }: AdSlot
     }
   }, [client])
 
-  if (!client) return null
+  if (!client || !process.env.NEXT_PUBLIC_ADSENSE_APPROVED) return null
+
+  const isBanner = type === 'banner'
 
   return (
-    <div className={`my-4 ${className}`}>
+    <div className={`my-3 flex justify-center ${className}`}>
       <ins
         ref={adRef}
         className="adsbygoogle"
-        style={{ display: 'block' }}
+        style={{
+          display: 'block',
+          width: '100%',
+          maxWidth: isBanner ? 728 : 468,
+          height: isBanner ? 90 : 60,
+          overflow: 'hidden',
+        }}
         data-ad-client={client}
         data-ad-slot={slot}
-        data-ad-format={format}
-        data-full-width-responsive="true"
+        data-ad-format="horizontal"
+        data-full-width-responsive="false"
       />
     </div>
   )

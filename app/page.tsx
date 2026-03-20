@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import NewsStand, { ALL_FREE_COUNTRIES } from '@/components/NewsStand'
 import NewsCard from '@/components/NewsCard'
+import AdSlot from '@/components/AdSlot'
 import type { NewsItem } from '@/types/news'
 import { getAllCountries, getCountryName } from '@/lib/countries'
 
@@ -12,6 +13,27 @@ const allCountries = getAllCountries().filter((c) => SUPPORTED_COUNTRIES.has(c.c
 const FREE_CODES = new Set(ALL_FREE_COUNTRIES.map((c) => c.code))
 
 const WorldMap = dynamic(() => import('@/components/map/WorldMap'), { ssr: false })
+
+/** Approximate center coordinates [lon, lat] for countries */
+const COUNTRY_COORDS: Record<string, [number, number]> = {
+  KR: [127, 36], JP: [139, 36], CN: [104, 35], TW: [121, 24], MN: [105, 47],
+  KP: [127, 40], US: [-98, 38], CA: [-106, 56], BR: [-51, -10], MX: [-102, 23],
+  AR: [-64, -34], CO: [-74, 4], VE: [-66, 7], CU: [-79, 22], CL: [-71, -35],
+  PE: [-76, -10], GB: [-2, 54], FR: [2, 47], DE: [10, 51], IT: [12, 43],
+  ES: [-4, 40], PT: [-8, 39], NL: [5, 52], PL: [20, 52], SE: [18, 62],
+  NO: [10, 62], GR: [22, 39], BE: [4, 51], AT: [14, 47], CH: [8, 47],
+  DK: [10, 56], FI: [26, 64], IE: [-8, 53], CZ: [15, 50], RO: [25, 46],
+  HU: [19, 47], RS: [21, 44], HR: [16, 45], BG: [25, 43], SK: [19, 49],
+  LT: [24, 56], LV: [25, 57], EE: [26, 59], MD: [29, 47],
+  RU: [100, 60], UA: [32, 49], BY: [28, 53], KZ: [67, 48], GE: [44, 42],
+  IL: [35, 31], IR: [53, 32], SA: [45, 24], EG: [30, 27], IQ: [44, 33],
+  SY: [38, 35], LB: [36, 34], AE: [54, 24], TR: [35, 39], JO: [36, 31], QA: [51, 25],
+  IN: [79, 21], PK: [69, 30], BD: [90, 24], TH: [101, 15], VN: [108, 16],
+  ID: [118, -2], PH: [122, 13], MM: [96, 19], SG: [104, 1], MY: [110, 4], KH: [105, 13],
+  AU: [134, -25], NZ: [174, -41],
+  NG: [8, 10], ZA: [25, -29], KE: [38, 0], ET: [40, 9], SD: [30, 16],
+  CD: [24, -3], GH: [-2, 8], TN: [9, 34], LY: [17, 27], MA: [-6, 32],
+}
 
 
 interface User {
@@ -88,7 +110,7 @@ function CountrySearch({ countries, onSelect, loggedIn }: { countries: { code: s
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 150)}
           placeholder="국가 검색..."
-          className="w-full rounded-lg border border-gray-800 bg-gray-900 py-1.5 pl-8 pr-3 text-xs text-gray-300 outline-none transition focus:border-blue-500 sm:w-56"
+          className="w-full rounded-lg border border-gray-800 bg-gray-900 py-2 pl-8 pr-3 text-sm text-gray-300 outline-none transition focus:border-blue-500 sm:w-56"
         />
       </div>
       {focused && filtered.length > 0 && (
@@ -97,7 +119,7 @@ function CountrySearch({ countries, onSelect, loggedIn }: { countries: { code: s
             <button
               key={code}
               onMouseDown={() => { onSelect(code); setQuery(''); setFocused(false) }}
-              className="flex w-full items-center justify-between px-3 py-1.5 text-left text-xs text-gray-300 transition hover:bg-gray-800 hover:text-white"
+              className="flex w-full items-center justify-between px-3 py-1.5 text-left text-sm text-gray-300 transition hover:bg-gray-800 hover:text-white"
             >
               <span>{nameKo}</span>
               <span className="text-gray-600">{name}</span>
@@ -125,8 +147,14 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [heatmapData, setHeatmapData] = useState<Record<string, number>>({})
+  const [pullState, setPullState] = useState<'idle' | 'pulling' | 'refreshing'>('idle')
+  const [pullDistance, setPullDistance] = useState(0)
   const currentCountryRef = useRef<string | null>(null)
+  const [rotateTarget, setRotateTarget] = useState<[number, number] | null>(null)
+  const viewModeRef = useRef(viewMode)
   const sharedArticleRef = useRef<string | null>(null)
+  const pullStartY = useRef(0)
+  const pullDistRef = useRef(0)
 
   const refreshLatest = useCallback(() => {
     fetch(`/api/news/latest?lang=${lang}&limit=20`)
@@ -174,7 +202,58 @@ export default function Home() {
 
     const onScroll = () => setShowScrollTop(window.scrollY > 400)
     window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+
+    // Pull-to-refresh — only on global feed, only real drag (not taps)
+    let pulling = false
+    const onTouchStart = (e: TouchEvent) => {
+      pulling = false
+      pullDistRef.current = 0
+      if (window.scrollY <= 0 && !currentCountryRef.current) {
+        pullStartY.current = e.touches[0].clientY
+      } else {
+        pullStartY.current = 0
+      }
+    }
+    const onTouchMove = (e: TouchEvent) => {
+      if (pullStartY.current === 0 || window.scrollY > 0) return
+      const dist = e.touches[0].clientY - pullStartY.current
+      if (dist > 10) { // threshold to distinguish from tap
+        pulling = true
+        const d = Math.min(dist, 120)
+        pullDistRef.current = d
+        setPullDistance(d)
+        setPullState('pulling')
+      }
+    }
+    const onTouchEnd = () => {
+      if (!pulling) {
+        pullStartY.current = 0
+        return
+      }
+      pullStartY.current = 0
+      pulling = false
+      if (pullDistRef.current > 60) {
+        setPullState('refreshing')
+        setPullDistance(60)
+        const done = () => { setPullState('idle'); setPullDistance(0); pullDistRef.current = 0 }
+        refreshLatest()
+        setTimeout(done, 500)
+      } else {
+        setPullState('idle')
+        setPullDistance(0)
+        pullDistRef.current = 0
+      }
+    }
+    window.addEventListener('touchstart', onTouchStart, { passive: true })
+    window.addEventListener('touchmove', onTouchMove, { passive: true })
+    window.addEventListener('touchend', onTouchEnd, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('touchstart', onTouchStart)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend', onTouchEnd)
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCountrySelect = useCallback(async (countryCode: string) => {
@@ -261,15 +340,11 @@ export default function Home() {
       <header className="sticky top-0 z-40 border-b border-gray-800/50 bg-gray-950/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-2.5">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-600">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="12 2 2 7 12 12 22 7 12 2" />
-                <polyline points="2 17 12 22 22 17" />
-                <polyline points="2 12 12 17 22 12" />
-              </svg>
+            <img src="/logo.png" alt="Prism" className="h-7 w-7 rounded-md" />
+            <div className="flex flex-col leading-none">
+              <span className="text-base font-bold tracking-tight">Prism</span>
+              <span className="text-[10px] text-gray-500">refracted by AI</span>
             </div>
-            <span className="text-sm font-bold tracking-tight">Prism</span>
-            <span className="hidden text-xs text-gray-500 sm:inline">World News at a Glance</span>
           </div>
           <div className="flex items-center gap-2">
             {/* Auth */}
@@ -295,24 +370,55 @@ export default function Home() {
       </header>
 
       <div className="mx-auto max-w-5xl px-3 py-4 sm:px-4 sm:py-6">
+        {pullState !== 'idle' && (
+          <div
+            className="flex items-center justify-center overflow-hidden transition-all"
+            style={{ height: pullDistance }}
+          >
+            {pullState === 'refreshing' ? (
+              <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-gray-600 border-t-blue-400" />
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                className="text-gray-500 transition-transform"
+                style={{ transform: `rotate(${pullDistance > 60 ? 180 : 0}deg)` }}
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            )}
+          </div>
+        )}
         {/* Country Selector */}
         <section className="mb-4">
           <NewsStand
             selectedCountry={selectedCountry}
-            onSelect={handleCountrySelect}
+            onSelect={(code: string) => {
+              const coords = COUNTRY_COORDS[code]
+              if (coords && viewMode === 'map') {
+                setRotateTarget([...coords] as [number, number])
+              }
+              handleCountrySelect(code)
+            }}
             isLoading={isLoading}
             onToggleMap={() => {
               if (viewMode === 'map') {
-                setViewMode('list')
+                setViewMode('list'); viewModeRef.current = 'list'
               } else {
-                setViewMode('map')
+                setViewMode('map'); viewModeRef.current = 'map'
                 setSelectedCountry(null)
                 setNewsItems([])
               }
             }}
             mapOpen={viewMode === 'map'}
           />
-          <CountrySearch countries={allCountries} onSelect={(code) => handleCountrySelect(code)} loggedIn={!!user} />
+          <CountrySearch countries={allCountries} onSelect={(code) => {
+            const coords = COUNTRY_COORDS[code]
+            if (coords && viewMode === 'map') {
+              setRotateTarget([...coords] as [number, number])
+            }
+            handleCountrySelect(code)
+          }} loggedIn={!!user} />
 
           {/* Map (collapsible) */}
           {viewMode === 'map' && (
@@ -322,6 +428,7 @@ export default function Home() {
                   onCountrySelect={handleCountrySelect}
                   heatmapData={heatmapData}
                   selectedCountry={selectedCountry}
+                  rotateTarget={rotateTarget}
                 />
               </div>
             </div>
@@ -334,6 +441,8 @@ export default function Home() {
             <LoginPrompt />
           </section>
         )}
+
+        <AdSlot slot="top-banner" type="banner" />
 
         {/* News Section */}
         {selectedCountry && (
@@ -363,8 +472,13 @@ export default function Home() {
               <LoadingSkeleton />
             ) : sortedItems.length > 0 ? (
               <div className="space-y-3">
-                {sortedItems.map((item) => (
-                  <NewsCard key={item.id} item={item} />
+                {sortedItems.map((item, i) => (
+                  <div key={item.id}>
+                    <NewsCard item={item} />
+                    {(i + 1) % 5 === 0 && i < sortedItems.length - 1 && (
+                      <AdSlot slot={`news-${i}`} type="inline" />
+                    )}
+                  </div>
                 ))}
               </div>
             ) : (
@@ -382,8 +496,13 @@ export default function Home() {
               <>
                 <h2 className="mb-3 text-sm font-semibold text-gray-400">Latest</h2>
                 <div className="space-y-3">
-                  {latestItems.map((item) => (
-                    <NewsCard key={item.id} item={item} showCountry />
+                  {latestItems.map((item, i) => (
+                    <div key={item.id}>
+                      <NewsCard item={item} showCountry />
+                      {(i + 1) % 5 === 0 && i < latestItems.length - 1 && (
+                        <AdSlot slot={`latest-${i}`} type="inline" />
+                      )}
+                    </div>
                   ))}
                 </div>
                 {latestHasMore && (
@@ -406,26 +525,26 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="sticky bottom-0 z-30 border-t border-gray-800/50 bg-gray-950/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-2">
-          <div className="flex items-center gap-3 text-[11px] text-gray-500">
-            <span className="hidden sm:inline">AI-generated summaries.</span>
-            <a href="/about" className="hover:text-gray-300">About</a>
-            <a href="/privacy" className="hover:text-gray-300">Privacy</a>
-          </div>
-          {showScrollTop && (
-            <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-700 text-white transition hover:bg-gray-600"
-              aria-label="Scroll to top"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="18 15 12 9 6 15" />
-              </svg>
-            </button>
-          )}
+      <footer className="border-t border-gray-800/50 bg-gray-950">
+        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-2 text-[11px] text-gray-500">
+          <span className="hidden sm:inline">AI-generated summaries.</span>
+          <a href="/about" className="hover:text-gray-300">About</a>
+          <a href="/privacy" className="hover:text-gray-300">Privacy</a>
         </div>
       </footer>
+
+      {/* Scroll to top */}
+      {showScrollTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-5 right-4 z-50 flex h-9 w-9 items-center justify-center rounded-full bg-gray-700/90 text-white shadow-lg transition hover:bg-gray-600"
+          aria-label="Scroll to top"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="18 15 12 9 6 15" />
+          </svg>
+        </button>
+      )}
     </div>
   )
 }

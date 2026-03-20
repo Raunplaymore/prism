@@ -42,8 +42,27 @@ const COUNTRY_RSS: Record<string, CountryRssConfig> = {
   NO: { hl: 'no', gl: 'NO', ceid: 'NO:no', queries: ['Norge nyheter', 'Norge politikk økonomi'] },
   GB: { hl: 'en', gl: 'GB', ceid: 'GB:en', queries: ['United Kingdom news', 'UK politics economy'] },
   GR: { hl: 'el', gl: 'GR', ceid: 'GR:el', queries: ['Ελλάδα ειδήσεις', 'Ελλάδα πολιτική οικονομία'] },
+  BE: { hl: 'nl', gl: 'BE', ceid: 'BE:nl', queries: ['België nieuws', 'Belgique actualités'] },
+  AT: { hl: 'de', gl: 'AT', ceid: 'AT:de', queries: ['Österreich Nachrichten', 'Austria news'] },
+  CH: { hl: 'de', gl: 'CH', ceid: 'CH:de', queries: ['Schweiz Nachrichten', 'Switzerland news'] },
+  DK: { hl: 'da', gl: 'DK', ceid: 'DK:da', queries: ['Danmark nyheder', 'Denmark news'] },
+  FI: { hl: 'fi', gl: 'FI', ceid: 'FI:fi', queries: ['Suomi uutiset', 'Finland news'] },
+  IE: { hl: 'en', gl: 'IE', ceid: 'IE:en', queries: ['Ireland news', 'Ireland politics economy'] },
+  CZ: { hl: 'cs', gl: 'CZ', ceid: 'CZ:cs', queries: ['Česko zprávy', 'Czech Republic news'] },
+  RO: { hl: 'ro', gl: 'RO', ceid: 'RO:ro', queries: ['România știri', 'Romania news'] },
+  HU: { hl: 'hu', gl: 'HU', ceid: 'HU:hu', queries: ['Magyarország hírek', 'Hungary news'] },
+  RS: { hl: 'sr', gl: 'RS', ceid: 'RS:sr', queries: ['Србија вести', 'Serbia news'] },
+  HR: { hl: 'hr', gl: 'HR', ceid: 'HR:hr', queries: ['Hrvatska vijesti', 'Croatia news'] },
+  BG: { hl: 'bg', gl: 'BG', ceid: 'BG:bg', queries: ['България новини', 'Bulgaria news'] },
+  SK: { hl: 'sk', gl: 'SK', ceid: 'SK:sk', queries: ['Slovensko správy', 'Slovakia news'] },
+  LT: { hl: 'lt', gl: 'LT', ceid: 'LT:lt', queries: ['Lietuva naujienos', 'Lithuania news'] },
+  LV: { hl: 'lv', gl: 'LV', ceid: 'LV:lv', queries: ['Latvija ziņas', 'Latvia news'] },
+  EE: { hl: 'et', gl: 'EE', ceid: 'EE:et', queries: ['Eesti uudised', 'Estonia news'] },
+  MD: { hl: 'ro', gl: 'MD', ceid: 'MD:ro', queries: ['Moldova știri', 'Moldova news'] },
   // Middle East
   IL: { hl: 'he', gl: 'IL', ceid: 'IL:he', queries: ['ישראל חדשות', 'ישראל פוליטיקה כלכלה'] },
+  JO: { hl: 'ar', gl: 'JO', ceid: 'JO:ar', queries: ['الأردن أخبار', 'Jordan news'] },
+  QA: { hl: 'ar', gl: 'QA', ceid: 'QA:ar', queries: ['قطر أخبار', 'Qatar news'] },
   IR: { hl: 'fa', gl: 'IR', ceid: 'IR:fa', queries: ['ایران اخبار', 'ایران سیاست اقتصاد'] },
   SA: { hl: 'ar', gl: 'SA', ceid: 'SA:ar', queries: ['السعودية أخبار', 'السعودية سياسة اقتصاد'] },
   EG: { hl: 'ar', gl: 'EG', ceid: 'EG:ar', queries: ['مصر أخبار', 'مصر سياسة اقتصاد'] },
@@ -60,6 +79,8 @@ const COUNTRY_RSS: Record<string, CountryRssConfig> = {
   VN: { hl: 'vi', gl: 'VN', ceid: 'VN:vi', queries: ['Việt Nam tin tức', 'Việt Nam chính trị kinh tế'] },
   ID: { hl: 'id', gl: 'ID', ceid: 'ID:id', queries: ['Indonesia berita', 'Indonesia politik ekonomi'] },
   PH: { hl: 'en', gl: 'PH', ceid: 'PH:en', queries: ['Philippines news', 'Philippines politics economy'] },
+  SG: { hl: 'en', gl: 'SG', ceid: 'SG:en', queries: ['Singapore news', 'Singapore politics economy'] },
+  MY: { hl: 'ms', gl: 'MY', ceid: 'MY:ms', queries: ['Malaysia berita', 'Malaysia politik ekonomi'] },
   MM: { hl: 'my', gl: 'MM', ceid: 'MM:my', queries: ['မြန်မာ သတင်း', 'Myanmar news'] },
   // Americas
   US: { hl: 'en', gl: 'US', ceid: 'US:en', queries: ['United States news', 'US politics economy'] },
@@ -73,7 +94,16 @@ const COUNTRY_RSS: Record<string, CountryRssConfig> = {
   // Oceania
   AU: { hl: 'en', gl: 'AU', ceid: 'AU:en', queries: ['Australia news', 'Australia politics economy'] },
   NZ: { hl: 'en', gl: 'NZ', ceid: 'NZ:en', queries: ['New Zealand news', 'New Zealand politics economy'] },
+  // Americas
+  CL: { hl: 'es', gl: 'CL', ceid: 'CL:es-419', queries: ['Chile noticias', 'Chile política economía'] },
+  PE: { hl: 'es', gl: 'PE', ceid: 'PE:es-419', queries: ['Perú noticias', 'Perú política economía'] },
   // Africa
+  MA: { hl: 'ar', gl: 'MA', ceid: 'MA:ar', queries: ['المغرب أخبار', 'Morocco news'] },
+  SD: { hl: 'ar', gl: 'SD', ceid: 'SD:ar', queries: ['السودان أخبار', 'Sudan news war'] },
+  CD: { hl: 'fr', gl: 'CD', ceid: 'CD:fr', queries: ['Congo RDC actualités', 'DR Congo news'] },
+  GH: { hl: 'en', gl: 'GH', ceid: 'GH:en', queries: ['Ghana news', 'Ghana politics economy'] },
+  TN: { hl: 'ar', gl: 'TN', ceid: 'TN:ar', queries: ['تونس أخبار', 'Tunisia news'] },
+  LY: { hl: 'ar', gl: 'LY', ceid: 'LY:ar', queries: ['ليبيا أخبار', 'Libya news'] },
   NG: { hl: 'en', gl: 'NG', ceid: 'NG:en', queries: ['Nigeria news', 'Nigeria politics economy'] },
   ZA: { hl: 'en', gl: 'ZA', ceid: 'ZA:en', queries: ['South Africa news', 'South Africa politics economy'] },
   KE: { hl: 'en', gl: 'KE', ceid: 'KE:en', queries: ['Kenya news', 'Kenya politics economy'] },
@@ -171,7 +201,7 @@ function stripHtml(text: string): string {
 /** Fetch from a single RSS URL */
 async function fetchOneRss(url: string): Promise<RssArticle[]> {
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 10000)
+  const timeout = setTimeout(() => controller.abort(), 5000)
 
   try {
     const res = await fetch(url, {
@@ -189,7 +219,7 @@ async function fetchOneRss(url: string): Promise<RssArticle[]> {
   }
 }
 
-/** Fetch articles from multiple Google News RSS queries, dedup, return up to 30 */
+/** Fetch articles from multiple Google News RSS queries, dedup, return up to 15 */
 export async function fetchRssArticles(countryCode: string): Promise<RssArticle[]> {
   const urls = buildGoogleNewsUrls(countryCode)
 
@@ -212,5 +242,5 @@ export async function fetchRssArticles(countryCode: string): Promise<RssArticle[
       const db = b.pubDate ? new Date(b.pubDate).getTime() : 0
       return db - da
     })
-    .slice(0, 30)
+    .slice(0, 15)
 }

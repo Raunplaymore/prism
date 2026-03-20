@@ -2,9 +2,17 @@ import type { Metadata } from 'next'
 import Script from 'next/script'
 import './globals.css'
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+}
+
 export const metadata: Metadata = {
   title: 'Prism — AI 세계 뉴스 브리핑',
-  description: '51개국의 뉴스를 AI가 한국어로 요약하여 제공합니다. 인터랙티브 세계 지도에서 관심 국가의 최신 뉴스를 확인하세요.',
+  description: '83개국의 뉴스를 AI가 한국어로 요약하여 제공합니다. 인터랙티브 세계 지도에서 관심 국가의 최신 뉴스를 확인하세요.',
+  manifest: '/manifest.json',
+  icons: { icon: '/favicon.ico', apple: '/icon-192.png' },
   keywords: ['뉴스', '세계 뉴스', 'AI 뉴스', '뉴스 요약', '국제 뉴스', 'world news', 'Prism'],
   openGraph: {
     title: 'Prism — AI 세계 뉴스 브리핑',
@@ -12,6 +20,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'ko_KR',
     siteName: 'Prism',
+    images: [{ url: 'https://prism-4gy.pages.dev/og-image.png', width: 1200, height: 630 }],
   },
   robots: { index: true, follow: true },
   verification: { google: 'QY09AFQmbMM0PxNDQg7eRaVx-ouDrjLWChRp1KTPaXU' },

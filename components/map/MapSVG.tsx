@@ -13,6 +13,7 @@ export interface MapSVGHandle {
   zoomIn: () => void
   zoomOut: () => void
   resetZoom: () => void
+  rotateTo: (lon: number, lat: number) => void
 }
 
 interface MapSVGProps {
@@ -30,6 +31,7 @@ const MapSVG = forwardRef<MapSVGHandle, MapSVGProps>(function MapSVG(
   const svgRef = useRef<SVGSVGElement>(null)
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null)
   const topoRef = useRef<Topology | null>(null)
+  const rotationRef = useRef<[number, number, number]>([-127, -36, 0])
 
   const render = useCallback(() => {
     const container = containerRef.current
@@ -44,6 +46,7 @@ const MapSVG = forwardRef<MapSVGHandle, MapSVGProps>(function MapSVG(
     d3svg.attr('width', width).attr('height', height)
 
     const projection = createProjection(width, height)
+    projection.rotate(rotationRef.current)
     const path = d3.geoPath(projection)
 
     const countries = topojson.feature(
@@ -79,8 +82,9 @@ const MapSVG = forwardRef<MapSVGHandle, MapSVGProps>(function MapSVG(
         return alpha2 && SUPPORTED_COUNTRIES.has(alpha2) ? 'pointer' : 'default'
       })
 
-    enter.merge(paths)
-      .attr('d', path as any)
+    const merged = enter.merge(paths)
+    merged.attr('d', path as any)
+    merged.transition().duration(300)
       .attr('fill', (d: any) => {
         const id = String(d.id).padStart(3, '0')
         const alpha2 = countryCodeMap[id]
@@ -93,6 +97,8 @@ const MapSVG = forwardRef<MapSVGHandle, MapSVGProps>(function MapSVG(
         }
         return '#111827'
       })
+
+    merged
       .attr('stroke', (d: any) => {
         const id = String(d.id).padStart(3, '0')
         const alpha2 = countryCodeMap[id]
@@ -137,8 +143,8 @@ const MapSVG = forwardRef<MapSVGHandle, MapSVGProps>(function MapSVG(
     spherePath
       .datum({ type: 'Sphere' } as d3.GeoPermissibleObjects)
       .attr('d', path as any)
-      .attr('fill', 'none')
-      .attr('stroke', '#475569')
+      .attr('fill', '#0a1628')
+      .attr('stroke', '#334155')
       .attr('stroke-width', 0.5)
   }, [heatmapData, selectedCountry, onCountrySelect, onHover])
 
@@ -154,22 +160,44 @@ const MapSVG = forwardRef<MapSVGHandle, MapSVGProps>(function MapSVG(
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Setup zoom
+  // Setup drag rotation for orthographic globe
   useEffect(() => {
     const svg = svgRef.current
     if (!svg) return
 
     const d3svg = d3.select(svg)
+    let dragStartRotation: [number, number, number] = [0, 0, 0]
 
+    const drag = d3.drag<SVGSVGElement, unknown>()
+      .on('drag', (event) => {
+        const sensitivity = 0.4
+        const [lam, phi, gamma] = rotationRef.current
+        rotationRef.current = [
+          lam + event.dx * sensitivity,
+          Math.max(-60, Math.min(60, phi - event.dy * sensitivity)),
+          gamma,
+        ]
+        render()
+      })
+
+    d3svg.call(drag as unknown as (selection: d3.Selection<SVGSVGElement, unknown, null, undefined>) => void)
+
+    // Zoom for scale — keep globe centered
     const zoom = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([1, 8])
+      .scaleExtent([0.8, 4])
+      .filter((event) => event.type === 'wheel' || event.type === 'dblclick')
       .on('zoom', (event) => {
-        d3svg.select('g.map-group').attr('transform', event.transform)
+        const container = containerRef.current
+        if (!container) return
+        const cx = container.clientWidth / 2
+        const cy = container.clientHeight / 2
+        d3svg.select('g.map-group')
+          .attr('transform', `translate(${cx},${cy}) scale(${event.transform.k}) translate(${-cx},${-cy})`)
       })
 
     d3svg.call(zoom)
     zoomRef.current = zoom
-  }, [])
+  }, [render])
 
   // Re-render on data changes
   useEffect(() => {
@@ -206,9 +234,30 @@ const MapSVG = forwardRef<MapSVGHandle, MapSVGProps>(function MapSVG(
     resetZoom: () => {
       const svg = svgRef.current
       const zoom = zoomRef.current
+      rotationRef.current = [-127, -36, 0]
+      render()
       if (svg && zoom) {
         d3.select(svg).transition().duration(400).call(zoom.transform, d3.zoomIdentity)
       }
+    },
+    rotateTo: (lon: number, lat: number) => {
+      const target: [number, number, number] = [-lon, -lat, 0]
+      const start = [...rotationRef.current] as [number, number, number]
+      const steps = 30
+      let step = 0
+      const animate = () => {
+        step++
+        const t = step / steps
+        const ease = t * (2 - t) // ease-out quad
+        rotationRef.current = [
+          start[0] + (target[0] - start[0]) * ease,
+          start[1] + (target[1] - start[1]) * ease,
+          0,
+        ]
+        render()
+        if (step < steps) requestAnimationFrame(animate)
+      }
+      requestAnimationFrame(animate)
     },
   }))
 

@@ -22,6 +22,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const [stats, log] = await Promise.all([getTokenStats(), getTokenLog()])
-  return NextResponse.json({ stats, log })
+  const offset = Number(request.nextUrl.searchParams.get('offset')) || 0
+  const limit = Number(request.nextUrl.searchParams.get('limit')) || 20
+  const [stats, log] = await Promise.all([getTokenStats(), getTokenLog(offset, limit)])
+  return NextResponse.json({ stats, log: log.items, logTotal: log.total, logHasMore: log.hasMore })
 }

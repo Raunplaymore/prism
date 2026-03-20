@@ -1,20 +1,26 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import MapSVG, { type MapSVGHandle } from './MapSVG'
 import CountryTooltip from './CountryTooltip'
 import MapControls from './MapControls'
+
+export interface WorldMapHandle {
+  rotateTo: (lon: number, lat: number) => void
+}
 
 interface WorldMapProps {
   onCountrySelect: (alpha2Code: string) => void
   heatmapData: Record<string, number>
   selectedCountry: string | null
+  rotateTarget?: [number, number] | null
 }
 
 export default function WorldMap({
   onCountrySelect,
   heatmapData,
   selectedCountry,
+  rotateTarget,
 }: WorldMapProps) {
   const mapRef = useRef<MapSVGHandle>(null)
   const [tooltip, setTooltip] = useState<{
@@ -36,8 +42,19 @@ export default function WorldMap({
   }, [])
 
   const handleResetZoom = useCallback(() => {
-    mapRef.current?.resetZoom()
-  }, [])
+    if (rotateTarget) {
+      mapRef.current?.rotateTo(rotateTarget[0], rotateTarget[1])
+    } else {
+      mapRef.current?.resetZoom()
+    }
+  }, [rotateTarget])
+
+  // Rotate globe when rotateTarget changes
+  useEffect(() => {
+    if (rotateTarget) {
+      mapRef.current?.rotateTo(rotateTarget[0], rotateTarget[1])
+    }
+  }, [rotateTarget])
 
   return (
     <div className="relative h-full w-full">

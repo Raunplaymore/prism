@@ -12,6 +12,7 @@ export interface NewsItem {
   sentiment: Sentiment
   source: string
   url: string
+  pubDate: string
   cachedAt: string
   isRealtime: boolean
 }

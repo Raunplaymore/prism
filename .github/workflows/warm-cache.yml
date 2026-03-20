@@ -12,7 +12,7 @@ on:
 jobs:
   warm:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - name: Notify start
         run: |
@@ -27,14 +27,33 @@ jobs:
           SUCCESS=0
           FAIL=0
 
+          fetch_with_retry() {
+            local code=$1
+            local attempt=0
+            local max=2
+            while [ $attempt -le $max ]; do
+              status=$(curl -s -o /dev/null -w "%{http_code}" \
+                "${BASE}?country=${code}&lang=ko&refresh=true" \
+                --max-time 90)
+              if [ "$status" = "200" ]; then
+                echo "  ✓ $code (attempt $((attempt+1)))"
+                return 0
+              fi
+              echo "  ✗ $code status=$status (attempt $((attempt+1)))"
+              attempt=$((attempt+1))
+              [ $attempt -le $max ] && sleep 5
+            done
+            return 1
+          }
+
           for code in $COUNTRIES; do
-            echo "→ $code/ko"
-            status=$(curl -s -o /dev/null -w "%{http_code}" \
-              "${BASE}?country=${code}&lang=ko&refresh=true" \
-              --max-time 60)
-            echo "  status: $status"
-            if [ "$status" = "200" ]; then SUCCESS=$((SUCCESS+1)); else FAIL=$((FAIL+1)); fi
-            sleep 2
+            echo "→ $code"
+            if fetch_with_retry "$code"; then
+              SUCCESS=$((SUCCESS+1))
+            else
+              FAIL=$((FAIL+1))
+            fi
+            sleep 3
           done
 
           echo "SUCCESS=$SUCCESS" >> $GITHUB_ENV
