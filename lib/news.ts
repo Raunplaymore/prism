@@ -66,11 +66,17 @@ async function callOpenAI(messages: { role: string; content: string }[]): Promis
  * Google News RSS에서 기사 수집 (무료) + OpenAI로 요약만 수행
  */
 export async function fetchNews(countryCode: string, lang = 'en'): Promise<NewsItem[]> {
+  const articles = await fetchRssArticles(countryCode)
+  return fetchNewsFromArticles(countryCode, lang, articles)
+}
+
+/**
+ * Summarize pre-collected articles with OpenAI (no RSS fetch)
+ */
+export async function fetchNewsFromArticles(countryCode: string, lang = 'en', articles: RssArticle[]): Promise<NewsItem[]> {
   const countryName = getCountryName(countryCode)
   const langLabel = LANG_LABELS[lang] ?? 'English'
   const now = new Date().toISOString()
-
-  const articles = await fetchRssArticles(countryCode)
 
   if (articles.length === 0) {
     return []

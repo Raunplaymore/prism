@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Prism — AI 세계 뉴스 브리핑',
     description: desc,
+    url: 'https://prismglobe.com',
     type: 'website',
     locale: 'ko_KR',
     siteName: 'Prism',
@@ -38,6 +39,9 @@ export default function RootLayout({
 
   return (
     <html lang="ko">
+      <head>
+        <meta property="fb:app_id" content="3828444140798151" />
+      </head>
       <body className="bg-gray-950 text-white antialiased">
         {children}
         {adsenseClient && (

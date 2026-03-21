@@ -162,6 +162,8 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [heatmapData, setHeatmapData] = useState<Record<string, number>>({})
+  const [showInstallGuide, setShowInstallGuide] = useState(false)
+  const deferredPromptRef = useRef<{ prompt: () => void } | null>(null)
   const [pullState, setPullState] = useState<'idle' | 'pulling' | 'refreshing'>('idle')
   const [pullDistance, setPullDistance] = useState(0)
   const currentCountryRef = useRef<string | null>(null)
@@ -199,7 +201,6 @@ export default function Home() {
 
   const changeCategory = (cat: string) => {
     setLatestCategory(cat)
-    setLatestItems([])
     refreshLatest(cat)
   }
 
@@ -232,6 +233,13 @@ export default function Home() {
       })
 
     refreshLatest()
+
+    // Intercept install prompt — only show when user clicks install button
+    const onBeforeInstall = (e: Event) => {
+      e.preventDefault()
+      deferredPromptRef.current = e as unknown as { prompt: () => void }
+    }
+    window.addEventListener('beforeinstallprompt', onBeforeInstall)
 
     const onScroll = () => setShowScrollTop(window.scrollY > 400)
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -282,6 +290,7 @@ export default function Home() {
     window.addEventListener('touchend', onTouchEnd, { passive: true })
 
     return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstall)
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('touchstart', onTouchStart)
       window.removeEventListener('touchmove', onTouchMove)
@@ -362,8 +371,14 @@ export default function Home() {
           }
         }, 3000)
 
-        // Fire-and-forget: trigger refresh (may 502 but data might still save)
-        fetch(`/api/news/refresh?country=${countryCode}&lang=${lang}`, { method: 'POST' }).catch(() => {})
+        // Step 1: Collect RSS, then Step 2: Summarize
+        fetch(`/api/news/collect?country=${countryCode}`, { method: 'POST' })
+          .then(() => {
+            setTimeout(() => {
+              fetch(`/api/news/collect?country=${countryCode}&lang=${lang}&step=2`, { method: 'POST' }).catch(() => {})
+            }, 2000)
+          })
+          .catch(() => {})
 
         // Poll every 5s for up to 60s
         let polls = 0
@@ -423,6 +438,25 @@ export default function Home() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Install */}
+            <button
+              onClick={() => {
+                if (deferredPromptRef.current) {
+                  deferredPromptRef.current.prompt()
+                  deferredPromptRef.current = null
+                } else {
+                  setShowInstallGuide(true)
+                }
+              }}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-700 text-gray-400 transition hover:border-gray-600 hover:text-white"
+              aria-label="Install app"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            </button>
             {/* Auth */}
             {authLoading ? null : user ? (
               <div className="flex items-center gap-2">
@@ -516,6 +550,30 @@ export default function Home() {
           <LoginModal onClose={() => setShowLoginPrompt(false)} />
         )}
 
+        {/* Install Guide Modal */}
+        {showInstallGuide && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowInstallGuide(false)}>
+            <div className="mx-4 w-full max-w-sm rounded-2xl border border-gray-700 bg-gray-900 p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="mb-4 flex justify-center">
+                <img src="/logo.png" alt="Prism" className="h-12 w-12 rounded-lg" />
+              </div>
+              <h3 className="mb-4 text-lg font-bold text-white">홈 화면에 추가</h3>
+              <div className="mb-4 space-y-3 text-left text-sm text-gray-300">
+                <div className="rounded-lg bg-gray-800 p-3">
+                  <p className="mb-1 font-medium text-blue-400">iPhone / iPad</p>
+                  <p className="text-xs text-gray-400">Safari 하단 공유 버튼(↑) → &quot;홈 화면에 추가&quot;</p>
+                </div>
+                <div className="rounded-lg bg-gray-800 p-3">
+                  <p className="mb-1 font-medium text-green-400">Android</p>
+                  <p className="text-xs text-gray-400">Chrome 메뉴(⋮) → &quot;홈 화면에 추가&quot;</p>
+                </div>
+              </div>
+              <p className="mb-4 text-xs text-gray-500">앱처럼 빠르게 접속할 수 있습니다</p>
+              <button onClick={() => setShowInstallGuide(false)} className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white transition hover:bg-blue-500">확인</button>
+            </div>
+          </div>
+        )}
+
         <AdSlot slot="top-banner" type="banner" />
 
         {/* News Section */}
@@ -523,12 +581,6 @@ export default function Home() {
           <section className="mb-8">
             <div className="mb-4 flex items-center gap-3">
               <h2 className="text-lg font-bold">{getCountryName(selectedCountry)}</h2>
-              {isRefreshing && (
-                <span className="inline-flex items-center gap-1.5 text-xs text-blue-400">
-                  <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400" />
-                  {refreshMessage || 'Updating...'}
-                </span>
-              )}
             </div>
 
             {/* News List */}
@@ -554,6 +606,22 @@ export default function Home() {
                     )}
                   </div>
                 ))}
+              </div>
+            ) : isRefreshing ? (
+              <div className="relative">
+                <div className="space-y-3">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="animate-pulse rounded-lg border border-gray-800 bg-gray-900 p-4">
+                      <div className="mb-2 h-4 w-3/4 rounded bg-gray-800" />
+                      <div className="mb-1 h-3 w-full rounded bg-gray-800" />
+                      <div className="h-3 w-2/3 rounded bg-gray-800" />
+                    </div>
+                  ))}
+                </div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-950/60 backdrop-blur-[2px]">
+                  <span className="mb-3 inline-block h-7 w-7 animate-spin rounded-full border-2 border-gray-600 border-t-blue-400" />
+                  <p className="text-sm font-medium text-blue-400">{refreshMessage || '뉴스를 준비하고 있습니다...'}</p>
+                </div>
               </div>
             ) : (
               <div className="flex h-32 items-center justify-center rounded-lg border border-gray-800 bg-gray-900 text-sm text-gray-500">

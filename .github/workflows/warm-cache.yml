@@ -22,26 +22,39 @@ jobs:
 
       - name: Warm cache for major countries
         run: |
-          BASE="https://prismglobe.com/api/news"
+          BASE="https://prism-4gy.pages.dev/api/news"
           COUNTRIES="US KR JP GB CN FR BR IN RU IR IL UA"
           SUCCESS=0
           FAIL=0
 
           fetch_with_retry() {
             local code=$1
+
+            # Step 1: Collect RSS
+            echo "  collect..."
+            local cs=$(curl -s -o /dev/null -w "%{http_code}" \
+              -X POST "${BASE}/collect?country=${code}" \
+              --max-time 30)
+            if [ "$cs" != "200" ]; then
+              echo "  ✗ collect failed ($cs)"
+              return 1
+            fi
+
+            sleep 2
+
+            # Step 2: Summarize with OpenAI (same endpoint, step=2)
             local attempt=0
             local max=2
             while [ $attempt -le $max ]; do
-              status=$(curl -s -o /dev/null -w "%{http_code}" \
-                -X POST \
-                -H "x-admin-secret: ${{ secrets.ADMIN_SECRET }}" \
-                "${BASE}/refresh?country=${code}&lang=ko" \
+              echo "  summarize (attempt $((attempt+1)))..."
+              local ss=$(curl -s -o /dev/null -w "%{http_code}" \
+                -X POST "${BASE}/collect?country=${code}&lang=ko&step=2" \
                 --max-time 90)
-              if [ "$status" = "200" ]; then
-                echo "  ✓ $code (attempt $((attempt+1)))"
+              if [ "$ss" = "200" ]; then
+                echo "  ✓ $code done"
                 return 0
               fi
-              echo "  ✗ $code status=$status (attempt $((attempt+1)))"
+              echo "  ✗ summarize status=$ss"
               attempt=$((attempt+1))
               [ $attempt -le $max ] && sleep 5
             done

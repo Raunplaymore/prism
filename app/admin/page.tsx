@@ -199,11 +199,11 @@ export default function AdminPage() {
             </div>
             <div className="rounded-lg border border-gray-800 bg-gray-900 p-4">
               <p className="text-[11px] text-gray-500">Input Tokens</p>
-              <p className="text-lg font-bold">{stats.totalPrompt.toLocaleString()}</p>
+              <p className="text-lg font-bold">{(stats.totalPrompt / 1000).toFixed(1)}k</p>
             </div>
             <div className="rounded-lg border border-gray-800 bg-gray-900 p-4">
               <p className="text-[11px] text-gray-500">Output Tokens</p>
-              <p className="text-lg font-bold">{stats.totalCompletion.toLocaleString()}</p>
+              <p className="text-lg font-bold">{(stats.totalCompletion / 1000).toFixed(1)}k</p>
             </div>
             <div className="rounded-lg border border-gray-800 bg-gray-900 p-4">
               <p className="text-[11px] text-gray-500">Total Cost</p>
