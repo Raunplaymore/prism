@@ -51,11 +51,24 @@ async function redisExec(cmd: string[]): Promise<unknown> {
   } catch { return null }
 }
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': 'https://prismglobe.com',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+}
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS_HEADERS })
+}
+
 export async function POST(request: NextRequest) {
   const step = request.nextUrl.searchParams.get('step')
 
   if (step === '2') {
-    return handleSummarize(request)
+    const res = await handleSummarize(request)
+    // Add CORS headers for cross-origin calls from prismglobe.com → pages.dev
+    CORS_HEADERS && Object.entries(CORS_HEADERS).forEach(([k, v]) => res.headers.set(k, v))
+    return res
   }
   return handleCollect(request)
 }

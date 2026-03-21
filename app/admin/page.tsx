@@ -121,9 +121,9 @@ export default function AdminPage() {
       }
       addLog(`${code}: ${collectData.articlesCollected} articles collected`, 'info')
 
-      // Step 2: Summarize
+      // Step 2: Summarize (via pages.dev to bypass custom domain 502)
       addLog(`Summarizing ${code}...`)
-      const sumRes = await fetch(`/api/news/collect?country=${code}&lang=ko&step=2`, { method: 'POST' })
+      const sumRes = await fetch(`https://prism-4gy.pages.dev/api/news/collect?country=${code}&lang=ko&step=2`, { method: 'POST' })
       const sumData = await sumRes.json()
       if (sumRes.ok) {
         addLog(`${code}: ${sumData.newArticles} new / ${sumData.totalArticles} total`, 'success')
@@ -140,10 +140,8 @@ export default function AdminPage() {
   }
 
   const refreshPinned = async () => {
-    addLog('Refreshing all pinned countries (sequential)...')
-    for (const code of PINNED) {
-      await refreshCache(code, true)
-    }
+    addLog('Refreshing all pinned countries...')
+    await Promise.all(PINNED.map((code) => refreshCache(code, true)))
     fetchStats()
     addLog('All pinned countries refreshed', 'success')
   }

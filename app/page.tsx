@@ -356,7 +356,7 @@ export default function Home() {
       // Empty cache — trigger refresh and poll
       if (data.empty) {
         setIsRefreshing(true)
-        setRefreshMessage('뉴스 검색은 약 1분 정도 소요됩니다')
+        setRefreshMessage('뉴스 검색은 약 30초 정도 소요됩니다')
 
         // Rotating messages
         const msgs = ['뉴스 수집중...', '뉴스 요약중...', '뉴스 번역중...']
@@ -375,7 +375,7 @@ export default function Home() {
         fetch(`/api/news/collect?country=${countryCode}`, { method: 'POST' })
           .then(() => {
             setTimeout(() => {
-              fetch(`/api/news/collect?country=${countryCode}&lang=${lang}&step=2`, { method: 'POST' }).catch(() => {})
+              fetch(`https://prism-4gy.pages.dev/api/news/collect?country=${countryCode}&lang=${lang}&step=2`, { method: 'POST' }).catch(() => {})
             }, 2000)
           })
           .catch(() => {})
