@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
+import { SUPPORTED_COUNT } from '@/lib/rss'
 
 export const metadata: Metadata = {
   title: 'About — Prism',
-  description: 'Prism은 AI 기반 세계 뉴스 브리핑 서비스입니다. 51개국의 뉴스를 한국어로 요약하여 제공합니다.',
+  description: `Prism은 AI 기반 세계 뉴스 브리핑 서비스입니다. ${SUPPORTED_COUNT}개국의 뉴스를 한국어로 요약하여 제공합니다.`,
 }
 
 export default function AboutPage() {
@@ -14,7 +15,7 @@ export default function AboutPage() {
         <section className="mb-8">
           <h2 className="mb-3 text-lg font-semibold text-blue-400">서비스 소개</h2>
           <p className="mb-4 text-sm leading-relaxed text-gray-300">
-            Prism은 전 세계 51개국의 주요 뉴스를 AI가 수집, 분류, 요약하여 한국어로 제공하는 뉴스 브리핑 서비스입니다.
+            Prism은 전 세계 {SUPPORTED_COUNT}개국의 주요 뉴스를 AI가 수집, 분류, 요약하여 한국어로 제공하는 뉴스 브리핑 서비스입니다.
             Google News RSS를 통해 각국의 현지 언어 뉴스를 실시간으로 수집하고, OpenAI의 gpt-4o-mini 모델을 활용하여
             정치, 경제, 사회, 기술, 외교, 국방, 환경, 건강, 문화 등 다양한 카테고리로 분류하고 요약합니다.
           </p>
@@ -27,7 +28,7 @@ export default function AboutPage() {
         <section className="mb-8">
           <h2 className="mb-3 text-lg font-semibold text-blue-400">주요 기능</h2>
           <ul className="space-y-2 text-sm text-gray-300">
-            <li>- 51개국 뉴스를 한국어로 AI 요약</li>
+            <li>- {SUPPORTED_COUNT}개국 뉴스를 한국어로 AI 요약</li>
             <li>- D3.js 기반 인터랙티브 세계 지도</li>
             <li>- 현지 언어로 뉴스 수집 (한국어, 일본어, 중국어, 아랍어, 러시아어 등)</li>
             <li>- 24시간 누적 피드 — 최신 기사가 상단에 추가</li>
@@ -51,7 +52,7 @@ export default function AboutPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="mb-3 text-lg font-semibold text-blue-400">지원 국가 (51개국)</h2>
+          <h2 className="mb-3 text-lg font-semibold text-blue-400">지원 국가 ({SUPPORTED_COUNT}개국)</h2>
           <p className="text-sm leading-relaxed text-gray-300">
             한국, 일본, 중국, 대만, 몽골, 북한, 미국, 캐나다, 브라질, 멕시코, 아르헨티나, 콜롬비아, 베네수엘라, 쿠바,
             영국, 프랑스, 독일, 이탈리아, 스페인, 포르투갈, 네덜란드, 폴란드, 스웨덴, 노르웨이, 그리스,

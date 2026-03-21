@@ -22,7 +22,7 @@ jobs:
 
       - name: Warm cache for major countries
         run: |
-          BASE="https://prism-4gy.pages.dev/api/news"
+          BASE="https://prismglobe.com/api/news"
           COUNTRIES="US KR JP GB CN FR BR IN RU IR IL UA"
           SUCCESS=0
           FAIL=0

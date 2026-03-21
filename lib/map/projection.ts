@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 
 export function createProjection(width: number, height: number) {
-  const scale = Math.min(width, height) / 1.8
+  const scale = Math.min(width, height) / 1.2
   return d3
     .geoOrthographic()
     .scale(scale)

@@ -33,6 +33,18 @@ const sentimentColors = {
   negative: '#ef4444',
 } as const
 
+const categoryColors: Record<string, string> = {
+  Politics: '#3b82f6',
+  Economy: '#22c55e',
+  Society: '#6b7280',
+  Tech: '#a855f7',
+  Defense: '#ef4444',
+  Diplomacy: '#eab308',
+  Environment: '#10b981',
+  Health: '#06b6d4',
+  Culture: '#ec4899',
+}
+
 export default function NewsCard({ item, showCountry }: NewsCardProps) {
   const [expanded, setExpanded] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -66,15 +78,28 @@ export default function NewsCard({ item, showCountry }: NewsCardProps) {
           )}
           {item.title}
         </h3>
-        <span
-          className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium uppercase"
-          style={{
-            backgroundColor: `${sentimentColors[item.sentiment]}20`,
-            color: sentimentColors[item.sentiment],
-          }}
-        >
-          {item.sentiment}
-        </span>
+        <div className="flex shrink-0 items-center gap-1">
+          {item.category && (
+            <span
+              className="rounded-full px-2 py-0.5 text-[10px] font-medium"
+              style={{
+                backgroundColor: `${categoryColors[item.category] ?? '#6b7280'}15`,
+                color: categoryColors[item.category] ?? '#6b7280',
+              }}
+            >
+              {item.category}
+            </span>
+          )}
+          <span
+            className="rounded-full px-2 py-0.5 text-[10px] font-medium uppercase"
+            style={{
+              backgroundColor: `${sentimentColors[item.sentiment]}20`,
+              color: sentimentColors[item.sentiment],
+            }}
+          >
+            {item.sentiment}
+          </span>
+        </div>
       </div>
       <p className="mb-3 text-sm leading-relaxed text-gray-400">{item.summary}</p>
       {expanded && item.detail && (

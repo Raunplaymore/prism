@@ -112,6 +112,7 @@ const COUNTRY_RSS: Record<string, CountryRssConfig> = {
 
 /** Set of supported country codes */
 export const SUPPORTED_COUNTRIES = new Set(Object.keys(COUNTRY_RSS))
+export const SUPPORTED_COUNT = SUPPORTED_COUNTRIES.size
 
 export function isSupported(countryCode: string): boolean {
   return SUPPORTED_COUNTRIES.has(countryCode.toUpperCase())
