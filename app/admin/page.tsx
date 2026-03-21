@@ -111,13 +111,24 @@ export default function AdminPage() {
       }
       addLog(`${delData.message}`, 'success')
 
-      addLog(`Refreshing ${code}...`)
-      const refreshRes = await fetch(`/api/news/refresh?country=${code}&lang=ko`, { method: 'POST' })
-      const refreshData = await refreshRes.json()
-      if (refreshRes.ok) {
-        addLog(`${code}: ${refreshData.newArticles} new / ${refreshData.totalArticles} total`, 'success')
+      // Step 1: Collect RSS
+      addLog(`Collecting ${code}...`)
+      const collectRes = await fetch(`/api/news/collect?country=${code}`, { method: 'POST' })
+      const collectData = await collectRes.json()
+      if (!collectRes.ok) {
+        addLog(`${code}: collect failed — ${collectData.error || collectRes.status}`, 'error')
+        return
+      }
+      addLog(`${code}: ${collectData.articlesCollected} articles collected`, 'info')
+
+      // Step 2: Summarize
+      addLog(`Summarizing ${code}...`)
+      const sumRes = await fetch(`/api/news/collect?country=${code}&lang=ko&step=2`, { method: 'POST' })
+      const sumData = await sumRes.json()
+      if (sumRes.ok) {
+        addLog(`${code}: ${sumData.newArticles} new / ${sumData.totalArticles} total`, 'success')
       } else {
-        addLog(`${code}: ${refreshData.error || 'refresh failed'}`, 'error')
+        addLog(`${code}: summarize failed — ${sumData.error || sumRes.status}`, 'error')
       }
 
       if (!skipStats) fetchStats()
