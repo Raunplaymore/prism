@@ -140,8 +140,10 @@ export default function AdminPage() {
   }
 
   const refreshPinned = async () => {
-    addLog('Refreshing all pinned countries...')
-    await Promise.all(PINNED.map((code) => refreshCache(code, true)))
+    addLog('Refreshing all pinned countries (sequential)...')
+    for (const code of PINNED) {
+      await refreshCache(code, true)
+    }
     fetchStats()
     addLog('All pinned countries refreshed', 'success')
   }
