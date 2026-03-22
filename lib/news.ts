@@ -33,7 +33,7 @@ const LANG_LABELS: Record<string, string> = {
 const CATEGORY_PROMPT = `Assign one category per article from this list:
 Politics, Economy, Society, Tech, Defense, Diplomacy, Environment, Health, Culture
 
-Exclude: celebrity gossip, K-pop fan content, movie/TV reviews, sports scores/match results.
+Exclude: celebrity/idol news (concerts, tours, comebacks, fan events, dating), K-pop, movie/TV/drama reviews, sports scores/match results.
 General sports INDUSTRY news (e.g. league deals, stadium economics) is OK.`
 
 async function callOpenAI(messages: { role: string; content: string }[]): Promise<OpenAIResponse> {
