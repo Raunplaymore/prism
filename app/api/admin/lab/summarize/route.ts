@@ -114,8 +114,8 @@ FILTERING RULE:
 - EXCLUDE: celebrity news, sports, entertainment, K-pop, movie/TV reviews
 - General business/industry news is OK if it has economic significance
 
-Each item: {"originalIndex":number,"category":"one of the categories above","title":"${langLabel} title","summary":"1-2 sentence ${langLabel} summary","detail":"4-5 sentence ${langLabel} detailed analysis with context and background","sentiment":"positive"|"neutral"|"negative"}
-Write title, summary, and detail in ${langLabel}. "summary" is a brief overview. "detail" provides deeper analysis, background context, and implications.
+Each item: {"originalIndex":number,"category":"one of the categories above","title":"${langLabel} title","summary":"2-3 sentence ${langLabel} summary","detail":"6-8 sentence ${langLabel} detailed analysis with context, background, market impact, and implications","sentiment":"positive"|"neutral"|"negative"}
+Write title, summary, and detail in ${langLabel}. "summary" is an informative overview with key figures/data. "detail" provides in-depth analysis, historical context, market reactions, expert opinions, and future outlook.
 
 Include all relevant articles (up to 30).`,
       },

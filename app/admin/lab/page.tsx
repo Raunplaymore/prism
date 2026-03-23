@@ -32,6 +32,15 @@ interface SummarizedArticle {
   url: string
 }
 
+interface HistoryEntry {
+  index: number
+  title: string
+  query: string
+  lang: string
+  itemCount: number
+  savedAt: string
+}
+
 const CATEGORY_PRESETS: Record<string, string> = {
   Macro: 'global economy macro GDP inflation interest rate',
   Stocks: 'stock market S&P 500 NASDAQ Dow Jones equity',
@@ -51,11 +60,17 @@ export default function LabPage() {
   const [collecting, setCollecting] = useState(false)
   const [summarizing, setSummarizing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [saveTitle, setSaveTitle] = useState('')
+  const [history, setHistory] = useState<HistoryEntry[]>([])
+  const [selectedHistory, setSelectedHistory] = useState<{ title: string; items: SummarizedArticle[] } | null>(null)
 
   useEffect(() => {
     fetch('/api/auth/me')
       .then((r) => r.json())
-      .then((data) => setUser(data.user))
+      .then((data) => {
+        setUser(data.user)
+        if (data.user?.isAdmin) fetchHistory()
+      })
       .catch(() => {})
       .finally(() => setAuthChecked(true))
   }, [])
@@ -65,6 +80,26 @@ export default function LabPage() {
       { time: new Date().toLocaleTimeString(), message, type },
       ...prev.slice(0, 99),
     ])
+  }
+
+  const fetchHistory = async () => {
+    try {
+      const res = await fetch('/api/admin/lab/save')
+      if (res.ok) {
+        const data = await res.json()
+        setHistory(data.history || [])
+      }
+    } catch { /* ignore */ }
+  }
+
+  const viewHistory = async (index: number) => {
+    try {
+      const res = await fetch(`/api/admin/lab/save?index=${index}`)
+      if (res.ok) {
+        const data = await res.json()
+        setSelectedHistory({ title: data.title, items: data.items || [] })
+      }
+    } catch { /* ignore */ }
   }
 
   const handleCollect = async () => {
@@ -106,16 +141,19 @@ export default function LabPage() {
   }
 
   const handleSave = async () => {
+    const title = saveTitle.trim() || `${query} (${new Date().toLocaleDateString('ko')})`
     setSaving(true)
-    addLog(`Saving to feed:GLOBAL_ECONOMY:${lang}...`)
+    addLog(`Saving as "${title}"...`)
     try {
-      const res = await fetch(`/api/admin/lab/save?lang=${lang}`, { method: 'POST' })
+      const res = await fetch(`/api/admin/lab/save?title=${encodeURIComponent(title)}&query=${encodeURIComponent(query)}&lang=${lang}`, { method: 'POST' })
       const data = await res.json()
       if (!res.ok) {
         addLog(`Save failed: ${data.error}`, 'error')
         return
       }
-      addLog(`Saved ${data.count} articles to Redis`, 'success')
+      addLog(`Saved ${data.count} articles as "${title}"`, 'success')
+      setSaveTitle('')
+      fetchHistory()
     } catch (err) {
       addLog(`Save error: ${err}`, 'error')
     } finally {
@@ -131,30 +169,12 @@ export default function LabPage() {
     )
   }
 
-  if (!user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-950 p-4 text-white">
-        <div className="text-center">
-          <h1 className="mb-4 text-xl font-bold">Prism Lab</h1>
-          <p className="mb-6 text-sm text-gray-400">Sign in with an admin account to continue</p>
-          <a
-            href="/api/auth/login"
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-gray-800 transition hover:bg-gray-100"
-          >
-            Sign in with Google
-          </a>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user.isAdmin) {
+  if (!user?.isAdmin) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-950 p-4 text-white">
         <div className="text-center">
           <h1 className="mb-4 text-xl font-bold">Access Denied</h1>
-          <p className="mb-2 text-sm text-gray-400">{user.email} is not an admin account.</p>
-          <a href="/" className="text-sm text-blue-400 hover:text-blue-300">Back to Map</a>
+          <a href="/api/auth/login" className="text-sm text-blue-400 hover:text-blue-300">Sign in</a>
         </div>
       </div>
     )
@@ -162,6 +182,40 @@ export default function LabPage() {
 
   const sentimentColor = (s: string) =>
     s === 'positive' ? 'text-green-400' : s === 'negative' ? 'text-red-400' : 'text-gray-400'
+
+  // History detail view
+  if (selectedHistory) {
+    return (
+      <div className="min-h-screen bg-gray-950 p-4 text-white sm:p-8">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-6 flex items-center justify-between">
+            <h1 className="text-xl font-bold">{selectedHistory.title}</h1>
+            <button
+              onClick={() => setSelectedHistory(null)}
+              className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 transition hover:text-white"
+            >
+              Back to Lab
+            </button>
+          </div>
+          <p className="mb-4 text-sm text-gray-500">{selectedHistory.items.length} articles</p>
+          <div className="space-y-3">
+            {selectedHistory.items.map((a, i) => (
+              <div key={i} className="rounded-lg border border-gray-800 bg-gray-900 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="rounded bg-gray-800 px-2 py-0.5 text-[10px] text-gray-400">{a.category}</span>
+                  <span className={`text-[10px] ${sentimentColor(a.sentiment)}`}>{a.sentiment}</span>
+                  <span className="text-[10px] text-gray-600">{a.source}</span>
+                </div>
+                <h3 className="mb-1 text-sm font-medium text-white">{a.title}</h3>
+                <p className="mb-2 text-xs text-gray-300">{a.summary}</p>
+                <p className="text-xs leading-relaxed text-gray-500">{a.detail}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 p-4 text-white sm:p-8">
@@ -225,28 +279,37 @@ export default function LabPage() {
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={handleCollect}
               disabled={collecting}
               className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium transition hover:bg-blue-500 disabled:cursor-wait disabled:opacity-50"
             >
-              {collecting ? 'Collecting...' : 'Collect'}
+              {collecting ? 'Collecting...' : '1. Collect'}
             </button>
             <button
               onClick={handleSummarize}
-              disabled={summarizing}
+              disabled={summarizing || rawArticles.length === 0}
               className="rounded-lg bg-purple-600 px-5 py-2 text-sm font-medium transition hover:bg-purple-500 disabled:cursor-wait disabled:opacity-50"
             >
-              {summarizing ? 'Summarizing...' : 'Summarize'}
+              {summarizing ? 'Summarizing...' : '2. Summarize'}
             </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="rounded-lg bg-green-600 px-5 py-2 text-sm font-medium transition hover:bg-green-500 disabled:cursor-wait disabled:opacity-50"
-            >
-              {saving ? 'Saving...' : 'Save'}
-            </button>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={saveTitle}
+                onChange={(e) => setSaveTitle(e.target.value)}
+                placeholder="실험 제목..."
+                className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-green-500"
+              />
+              <button
+                onClick={handleSave}
+                disabled={saving || summarized.length === 0}
+                className="rounded-lg bg-green-600 px-5 py-2 text-sm font-medium transition hover:bg-green-500 disabled:cursor-wait disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : '3. Save'}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -257,7 +320,7 @@ export default function LabPage() {
             <h2 className="mb-3 text-sm font-semibold text-gray-400">
               Raw Articles {rawArticles.length > 0 && <span className="text-gray-600">({rawArticles.length})</span>}
             </h2>
-            <div className="max-h-96 space-y-2 overflow-y-auto">
+            <div className="max-h-[500px] space-y-2 overflow-y-auto">
               {rawArticles.length === 0 ? (
                 <p className="text-xs text-gray-600">No articles collected yet</p>
               ) : (
@@ -276,24 +339,46 @@ export default function LabPage() {
             <h2 className="mb-3 text-sm font-semibold text-gray-400">
               Summarized {summarized.length > 0 && <span className="text-gray-600">({summarized.length})</span>}
             </h2>
-            <div className="max-h-96 space-y-2 overflow-y-auto">
+            <div className="max-h-[500px] space-y-2 overflow-y-auto">
               {summarized.length === 0 ? (
                 <p className="text-xs text-gray-600">No summaries yet</p>
               ) : (
                 summarized.map((a, i) => (
-                  <div key={i} className="rounded border border-gray-800 bg-gray-950 p-2">
+                  <div key={i} className="rounded border border-gray-800 bg-gray-950 p-3">
                     <div className="mb-1 flex items-center gap-2">
                       <span className="rounded bg-gray-800 px-1.5 py-0.5 text-[10px] text-gray-400">{a.category}</span>
                       <span className={`text-[10px] ${sentimentColor(a.sentiment)}`}>{a.sentiment}</span>
                     </div>
-                    <p className="text-xs font-medium text-gray-300">{a.title}</p>
-                    <p className="mt-1 text-[10px] text-gray-500">{a.summary}</p>
+                    <p className="text-xs font-medium text-gray-200">{a.title}</p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-gray-400">{a.summary}</p>
                   </div>
                 ))
               )}
             </div>
           </div>
         </div>
+
+        {/* History */}
+        {history.length > 0 && (
+          <div className="mb-6">
+            <h2 className="mb-3 text-sm font-semibold text-gray-400">History</h2>
+            <div className="space-y-2">
+              {history.map((h) => (
+                <button
+                  key={h.index}
+                  onClick={() => viewHistory(h.index)}
+                  className="flex w-full items-center justify-between rounded-lg border border-gray-800 bg-gray-900 px-4 py-3 text-left transition hover:border-gray-700"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-gray-200">{h.title}</p>
+                    <p className="text-[10px] text-gray-500">{h.query} · {h.lang} · {h.itemCount} articles</p>
+                  </div>
+                  <span className="text-[10px] text-gray-600">{new Date(h.savedAt).toLocaleString('ko')}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Activity log */}
         <div>
