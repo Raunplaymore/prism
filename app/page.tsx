@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import NewsStand, { ALL_FREE_COUNTRIES } from '@/components/NewsStand'
 import NewsCard from '@/components/NewsCard'
-import AdSlot from '@/components/AdSlot'
+// import AdSlot from '@/components/AdSlot'  // AdSense — re-enable after approval
 import type { NewsItem } from '@/types/news'
 import { getAllCountries, getCountryName } from '@/lib/countries'
 
@@ -574,7 +574,7 @@ export default function Home() {
           </div>
         )}
 
-        <AdSlot slot="top-banner" type="banner" />
+        {/* <AdSlot slot="top-banner" type="banner" /> */}
 
         {/* News Section */}
         {selectedCountry && (
@@ -601,9 +601,7 @@ export default function Home() {
                 {sortedItems.map((item, i) => (
                   <div key={item.id}>
                     <NewsCard item={item} />
-                    {(i + 1) % 5 === 0 && i < sortedItems.length - 1 && (
-                      <AdSlot slot={`news-${i}`} type="inline" />
-                    )}
+                    {/* AdSlot: re-enable after AdSense approval */}
                   </div>
                 ))}
               </div>
@@ -659,9 +657,7 @@ export default function Home() {
                   {latestItems.map((item, i) => (
                     <div key={item.id}>
                       <NewsCard item={item} showCountry />
-                      {(i + 1) % 5 === 0 && i < latestItems.length - 1 && (
-                        <AdSlot slot={`latest-${i}`} type="inline" />
-                      )}
+                      {/* AdSlot: re-enable after AdSense approval */}
                     </div>
                   ))}
                 </div>

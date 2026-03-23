@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Script from 'next/script'
+// import Script from 'next/script'  // AdSense — re-enable after approval
 import './globals.css'
 import { SUPPORTED_COUNT } from '@/lib/rss'
 
@@ -35,8 +35,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT
-
   return (
     <html lang="ko">
       <head>
@@ -44,14 +42,7 @@ export default function RootLayout({
       </head>
       <body className="bg-gray-950 text-white antialiased">
         {children}
-        {adsenseClient && process.env.NEXT_PUBLIC_ADSENSE_APPROVED && (
-          <Script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
-            crossOrigin="anonymous"
-            strategy="lazyOnload"
-          />
-        )}
+        {/* AdSense script — re-enable after Google approval */}
       </body>
     </html>
   )
