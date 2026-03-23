@@ -44,7 +44,7 @@ export default function RootLayout({
       </head>
       <body className="bg-gray-950 text-white antialiased">
         {children}
-        {adsenseClient && (
+        {adsenseClient && process.env.NEXT_PUBLIC_ADSENSE_APPROVED && (
           <Script
             async
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
