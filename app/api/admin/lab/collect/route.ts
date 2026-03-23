@@ -111,22 +111,27 @@ export async function POST(request: NextRequest) {
       clearTimeout(timeout)
     }
 
-    // Dedup by link
-    const seen = new Set<string>()
+    // Dedup by link + title similarity
+    const seenLinks = new Set<string>()
+    const seenTitles = new Set<string>()
     articles = articles.filter((a) => {
-      if (seen.has(a.link)) return false
-      seen.add(a.link)
+      if (seenLinks.has(a.link)) return false
+      // Normalize title for dedup (lowercase, strip punctuation)
+      const norm = a.title.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim()
+      if (seenTitles.has(norm)) return false
+      seenLinks.add(a.link)
+      seenTitles.add(norm)
       return true
     })
 
-    // Sort newest first, limit to 30
+    // Sort newest first, limit to 50
     articles = articles
       .sort((a, b) => {
         const da = a.pubDate ? new Date(a.pubDate).getTime() : 0
         const db = b.pubDate ? new Date(b.pubDate).getTime() : 0
         return db - da
       })
-      .slice(0, 30)
+      .slice(0, 50)
 
     // Store in Redis with 10min TTL
     await redisSet('lab:raw', JSON.stringify(articles), 600)
