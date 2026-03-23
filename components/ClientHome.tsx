@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import NewsStand, { ALL_FREE_COUNTRIES } from '@/components/NewsStand'
 import NewsCard from '@/components/NewsCard'
-// import AdSlot from '@/components/AdSlot'  // AdSense — re-enable after approval
+import AdSlot from '@/components/AdSlot'
 import type { NewsItem } from '@/types/news'
 import { getAllCountries, getCountryName } from '@/lib/countries'
 
@@ -657,7 +657,9 @@ export default function ClientHome({ initialLatestItems = [] }: { initialLatestI
                   {latestItems.map((item, i) => (
                     <div key={item.id}>
                       <NewsCard item={item} showCountry />
-                      {/* AdSlot: re-enable after AdSense approval */}
+                      {(i + 1) % 5 === 0 && i < latestItems.length - 1 && (
+                        <AdSlot slot={`latest-${i}`} type="inline" />
+                      )}
                     </div>
                   ))}
                 </div>
