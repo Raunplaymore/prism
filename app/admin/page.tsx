@@ -197,9 +197,14 @@ export default function AdminPage() {
             <h1 className="text-xl font-bold">Prism Admin</h1>
             <p className="text-sm text-gray-500">{user.email}</p>
           </div>
-          <a href="/" className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 transition hover:text-white">
-            Back to Map
-          </a>
+          <div className="flex gap-2">
+            <a href="/admin/lab" className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 transition hover:text-white">
+              Lab
+            </a>
+            <a href="/" className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 transition hover:text-white">
+              Back to Map
+            </a>
+          </div>
         </div>
 
         {stats && (
