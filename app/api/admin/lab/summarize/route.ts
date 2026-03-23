@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
 
 FILTERING RULE:
 - Include articles about global economy, finance, markets, trade, monetary policy
-- Assign one category per article from: Macro, Stocks, Commodities, Forex, Crypto, Policy, Trade
+- Assign one category per article from: Macro, Stocks, Bonds, Commodities, Forex, Crypto, Policy, Trade
 - EXCLUDE: celebrity news, sports, entertainment, K-pop, movie/TV reviews
 - General business/industry news is OK if it has economic significance
 

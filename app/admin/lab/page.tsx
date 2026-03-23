@@ -41,16 +41,26 @@ interface HistoryEntry {
   savedAt: string
 }
 
+const MULTI_PRESETS: Record<string, string> = {
+  'Global Markets': 'US stock bond market today|Europe stock bond market today|Asia stock bond market today|emerging markets bond commodity today',
+  'US Markets': 'US stock market today|US treasury bond yield|US commodity oil gold today',
+  'Asia Markets': 'Japan Nikkei stock market|China stock market Shanghai|Korea KOSPI market|India stock market BSE',
+  'Europe Markets': 'Europe stock market FTSE DAX|ECB interest rate bond|Europe commodity energy',
+  'Commodities': 'oil price crude WTI Brent OPEC|gold silver commodity price|copper lithium commodity|natural gas LNG energy',
+  'Forex & Rates': 'forex USD EUR dollar|fed interest rate decision|ECB rate policy|yen yuan exchange rate',
+  'Crypto': 'bitcoin ethereum crypto market|crypto regulation SEC ETF|DeFi stablecoin blockchain',
+}
+
 const TERM_GROUPS: Record<string, string[]> = {
   Macro: ['GDP', 'inflation', 'recession', 'interest rate', 'central bank', 'monetary policy', 'fiscal stimulus', 'economic growth', 'unemployment'],
   Stocks: ['S&P 500', 'NASDAQ', 'Dow Jones', 'earnings', 'Wall Street', 'IPO', 'rally', 'crash', 'equity'],
+  Bonds: ['treasury', 'yield', 'bond market', 'sovereign debt', 'credit spread', 'corporate bond', 'junk bond'],
   Commodities: ['oil', 'gold', 'silver', 'crude', 'WTI', 'Brent', 'OPEC', 'copper', 'commodity'],
   Forex: ['USD', 'EUR', 'dollar', 'yen', 'yuan', 'exchange rate', 'currency', 'forex', 'won'],
   Crypto: ['bitcoin', 'ethereum', 'crypto', 'blockchain', 'SEC', 'ETF', 'DeFi', 'stablecoin', 'regulation'],
   Policy: ['fed', 'ECB', 'rate decision', 'tariff', 'sanctions', 'trade war', 'fiscal policy', 'quantitative easing'],
   Trade: ['export', 'import', 'supply chain', 'trade deficit', 'trade agreement', 'customs', 'shipping'],
   Energy: ['renewable', 'solar', 'nuclear', 'LNG', 'natural gas', 'energy transition', 'EV', 'battery'],
-  'Real Estate': ['housing market', 'mortgage', 'property', 'commercial real estate', 'housing bubble', 'rent'],
   Tech: ['AI', 'startup', 'big tech', 'antitrust', 'layoffs', 'venture capital', 'semiconductor', 'chip'],
 }
 
@@ -257,13 +267,30 @@ export default function LabPage() {
 
         {/* Controls */}
         <div className="mb-6 rounded-lg border border-gray-800 bg-gray-900 p-4">
+          {/* Multi-query presets */}
+          <div className="mb-3 flex flex-wrap gap-2">
+            {Object.entries(MULTI_PRESETS).map(([label, q]) => (
+              <button
+                key={label}
+                onClick={() => setQuery(q)}
+                className={`rounded-md border px-3 py-1 text-xs transition ${
+                  query === q
+                    ? 'border-blue-500 bg-blue-500/20 text-blue-400'
+                    : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600 hover:text-white'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           <div className="mb-3 flex flex-wrap items-end gap-3">
             <div className="flex-1">
-              <label className="mb-1 block text-xs text-gray-500">RSS Query</label>
-              <input
-                type="text"
+              <label className="mb-1 block text-xs text-gray-500">RSS Queries <span className="text-gray-600">(| 로 구분하면 멀티 검색)</span></label>
+              <textarea
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                rows={query.includes('|') ? 3 : 1}
                 className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
               />
             </div>

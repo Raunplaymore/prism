@@ -89,27 +89,37 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const query = request.nextUrl.searchParams.get('query') || 'global economy stock market'
-
-    const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en&gl=US&ceid=US:en`
-
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 8000)
+    const queryParam = request.nextUrl.searchParams.get('query') || 'global economy stock market'
+    // Support multi-query: split by newline or pipe
+    const queries = queryParam.split(/[\n|]/).map(q => q.trim()).filter(Boolean)
 
     let articles: RssArticle[] = []
-    try {
-      const res = await fetch(rssUrl, {
-        signal: controller.signal,
-        redirect: 'follow',
-        headers: { 'User-Agent': 'PrismNewsBot/1.0' },
+
+    // Fetch all queries in parallel
+    const results = await Promise.all(
+      queries.map(async (query) => {
+        const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en&gl=US&ceid=US:en`
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 8000)
+        try {
+          const res = await fetch(rssUrl, {
+            signal: controller.signal,
+            redirect: 'follow',
+            headers: { 'User-Agent': 'PrismNewsBot/1.0' },
+          })
+          if (res.ok) {
+            const xml = await res.text()
+            return parseRss(xml)
+          }
+          return []
+        } catch {
+          return []
+        } finally {
+          clearTimeout(timeout)
+        }
       })
-      if (res.ok) {
-        const xml = await res.text()
-        articles = parseRss(xml)
-      }
-    } finally {
-      clearTimeout(timeout)
-    }
+    )
+    articles = results.flat()
 
     // Dedup by link + title similarity
     const seenLinks = new Set<string>()
