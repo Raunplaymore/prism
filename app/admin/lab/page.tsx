@@ -401,6 +401,7 @@ export default function LabPage() {
                     </div>
                     <p className="text-xs font-medium text-gray-200">{a.title}</p>
                     <p className="mt-1 text-[11px] leading-relaxed text-gray-400">{a.summary}</p>
+                    {a.detail && <p className="mt-2 text-[11px] leading-relaxed text-gray-500">{a.detail}</p>}
                   </div>
                 ))
               )}
