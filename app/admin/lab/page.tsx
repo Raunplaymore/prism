@@ -41,12 +41,17 @@ interface HistoryEntry {
   savedAt: string
 }
 
-const CATEGORY_PRESETS: Record<string, string> = {
-  Macro: 'global economy macro GDP inflation interest rate',
-  Stocks: 'stock market S&P 500 NASDAQ Dow Jones equity',
-  Commodities: 'oil gold commodity crude WTI Brent copper',
-  Forex: 'forex dollar euro yen won exchange rate currency',
-  Crypto: 'bitcoin crypto ethereum blockchain cryptocurrency',
+const TERM_GROUPS: Record<string, string[]> = {
+  Macro: ['GDP', 'inflation', 'recession', 'interest rate', 'central bank', 'monetary policy', 'fiscal stimulus', 'economic growth', 'unemployment'],
+  Stocks: ['S&P 500', 'NASDAQ', 'Dow Jones', 'earnings', 'Wall Street', 'IPO', 'rally', 'crash', 'equity'],
+  Commodities: ['oil', 'gold', 'silver', 'crude', 'WTI', 'Brent', 'OPEC', 'copper', 'commodity'],
+  Forex: ['USD', 'EUR', 'dollar', 'yen', 'yuan', 'exchange rate', 'currency', 'forex', 'won'],
+  Crypto: ['bitcoin', 'ethereum', 'crypto', 'blockchain', 'SEC', 'ETF', 'DeFi', 'stablecoin', 'regulation'],
+  Policy: ['fed', 'ECB', 'rate decision', 'tariff', 'sanctions', 'trade war', 'fiscal policy', 'quantitative easing'],
+  Trade: ['export', 'import', 'supply chain', 'trade deficit', 'trade agreement', 'customs', 'shipping'],
+  Energy: ['renewable', 'solar', 'nuclear', 'LNG', 'natural gas', 'energy transition', 'EV', 'battery'],
+  'Real Estate': ['housing market', 'mortgage', 'property', 'commercial real estate', 'housing bubble', 'rent'],
+  Tech: ['AI', 'startup', 'big tech', 'antitrust', 'layoffs', 'venture capital', 'semiconductor', 'chip'],
 }
 
 export default function LabPage() {
@@ -61,6 +66,7 @@ export default function LabPage() {
   const [summarizing, setSummarizing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveTitle, setSaveTitle] = useState('')
+  const [showTerms, setShowTerms] = useState(false)
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [selectedHistory, setSelectedHistory] = useState<{ title: string; items: SummarizedArticle[] } | null>(null)
 
@@ -101,6 +107,18 @@ export default function LabPage() {
       }
     } catch { /* ignore */ }
   }
+
+  const toggleTerm = (term: string) => {
+    const terms = query.split(' ').filter(Boolean)
+    // Check if term (possibly multi-word) is in query
+    if (query.toLowerCase().includes(term.toLowerCase())) {
+      setQuery(query.replace(new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '').replace(/\s+/g, ' ').trim())
+    } else {
+      setQuery((query + ' ' + term).trim())
+    }
+  }
+
+  const isTermSelected = (term: string) => query.toLowerCase().includes(term.toLowerCase())
 
   const handleCollect = async () => {
     setCollecting(true)
@@ -205,6 +223,7 @@ export default function LabPage() {
                   <span className="rounded bg-gray-800 px-2 py-0.5 text-[10px] text-gray-400">{a.category}</span>
                   <span className={`text-[10px] ${sentimentColor(a.sentiment)}`}>{a.sentiment}</span>
                   <span className="text-[10px] text-gray-600">{a.source}</span>
+                  {a.url && <a href={a.url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:text-blue-400">Source</a>}
                 </div>
                 <h3 className="mb-1 text-sm font-medium text-white">{a.title}</h3>
                 <p className="mb-2 text-xs text-gray-300">{a.summary}</p>
@@ -261,22 +280,52 @@ export default function LabPage() {
             </div>
           </div>
 
-          {/* Category presets */}
-          <div className="mb-4 flex flex-wrap gap-2">
-            {Object.entries(CATEGORY_PRESETS).map(([label, q]) => (
-              <button
-                key={label}
-                onClick={() => setQuery(q)}
-                className={`rounded-md border px-3 py-1 text-xs transition ${
-                  query === q
-                    ? 'border-blue-500 bg-blue-500/20 text-blue-400'
-                    : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600 hover:text-white'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+          {/* Term selector */}
+          <div className="mb-4 flex items-center gap-2">
+            <button
+              onClick={() => setShowTerms(!showTerms)}
+              className={`rounded-md border px-3 py-1 text-xs transition ${
+                showTerms ? 'border-blue-500 bg-blue-500/20 text-blue-400' : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600 hover:text-white'
+              }`}
+            >
+              {showTerms ? 'Close Dictionary' : 'Dictionary'}
+            </button>
+            <button
+              onClick={() => setQuery('')}
+              className="rounded-md border border-gray-700 bg-gray-800 px-3 py-1 text-xs text-gray-500 transition hover:text-white"
+            >
+              Clear
+            </button>
           </div>
+
+          {/* Terms dictionary popup */}
+          {showTerms && (
+            <div className="mb-4 rounded-lg border border-gray-700 bg-gray-800 p-4">
+              <p className="mb-3 text-[10px] text-gray-500">Click terms to add/remove from query</p>
+              <div className="space-y-3">
+                {Object.entries(TERM_GROUPS).map(([group, terms]) => (
+                  <div key={group}>
+                    <p className="mb-1.5 text-[10px] font-semibold text-gray-500">{group}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {terms.map((term) => (
+                        <button
+                          key={term}
+                          onClick={() => toggleTerm(term)}
+                          className={`rounded-full border px-2.5 py-0.5 text-[11px] transition ${
+                            isTermSelected(term)
+                              ? 'border-blue-500 bg-blue-500/20 text-blue-400'
+                              : 'border-gray-600 text-gray-400 hover:border-gray-500 hover:text-white'
+                          }`}
+                        >
+                          {term}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-3">
@@ -326,7 +375,7 @@ export default function LabPage() {
               ) : (
                 rawArticles.map((a, i) => (
                   <div key={i} className="rounded border border-gray-800 bg-gray-950 p-2">
-                    <p className="text-xs font-medium text-gray-300">{a.title}</p>
+                    <a href={a.link} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-gray-300 hover:text-blue-400">{a.title}</a>
                     <p className="mt-1 text-[10px] text-gray-500">{a.source}</p>
                   </div>
                 ))
@@ -348,6 +397,7 @@ export default function LabPage() {
                     <div className="mb-1 flex items-center gap-2">
                       <span className="rounded bg-gray-800 px-1.5 py-0.5 text-[10px] text-gray-400">{a.category}</span>
                       <span className={`text-[10px] ${sentimentColor(a.sentiment)}`}>{a.sentiment}</span>
+                      {a.url && <a href={a.url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:text-blue-400">Source</a>}
                     </div>
                     <p className="text-xs font-medium text-gray-200">{a.title}</p>
                     <p className="mt-1 text-[11px] leading-relaxed text-gray-400">{a.summary}</p>
