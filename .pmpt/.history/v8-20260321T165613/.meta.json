@@ -1,0 +1,13 @@
+{
+  "version": 8,
+  "timestamp": "20260321T165613",
+  "files": [
+    "plan.md",
+    "pmpt.ai.md",
+    "pmpt.md"
+  ],
+  "changedFiles": [
+    "pmpt.md"
+  ],
+  "note": "Prism v4 안정화 및 유지보수 단계. prismglobe.com 도메인 기반 카테고리별 뉴스 브리핑 서비스가 운영 중이며, Claude API 연동 agentic loop, Redis 캐시 레이어, D3.js 세계 지도 인터랙션, RSS 피드 등 핵심 기능이 안정적으로 동작하고 있다. 최근에는 502 타임아웃 방지를 위한 API 속도 최적화, 캐시 워밍 스케줄 조정(KST 00/06/12/18 4회), RSS 제한 30건 확대, Refresh Pinned 버튼 UX 개선 등 운영 품질 향상 작업을 진행했다."
+}

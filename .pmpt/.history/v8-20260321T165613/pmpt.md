@@ -90,12 +90,6 @@ Next.js 14 Frontend (D3.js 지도) → Next.js API Routes → RSS 피드 파싱 
 - prismglobe.com 도메인 기반 카테고리별 뉴스 브리핑 서비스가 운영 중이며, Claude API 연동 agentic loop, Redis 캐시 레이어, D3.js 세계 지도 인터랙션, RSS 피드 등 핵심 기능이 안정적으로 동작하고 있다
 - 최근에는 502 타임아웃 방지를 위한 API 속도 최적화, 캐시 워밍 스케줄 조정(KST 00/06/12/18 4회), RSS 제한 30건 확대, Refresh Pinned 버튼 UX 개선 등 운영 품질 향상 작업을 진행했다
 
-### v9 — 2026-03-23
-- Prism v4 안정화 및 운영 품질 향상 단계 기록
-- prismglobe.com 도메인 기반 카테고리별 뉴스 브리핑 서비스가 안정적으로 운영 중이며, Claude API agentic loop, Redis 캐시 레이어, D3.js 세계 지도, RSS 피드 등 핵심 기능이 모두 정상 동작하고 있다
-- 최근 502 타임아웃 방지를 위한 API 속도 최적화, 캐시 워밍 스케줄을 KST 06/12/18 3회로 조정, Telegram 알림 연동, RSS 제한 30건 확대, Refresh Pinned 버튼 UX 개선 등 운영 안정성과 사용자 경험 향상 작업을 진행했다
-- CI/CD 파이프라인에 GitHub Actions 기반 캐시 워밍 자동화와 Telegram 노티피케이션이 추가되어 운영 모니터링 체계가 강화되었다
-
 ## Decisions
 - Claude API → RSS + OpenAI 전환 → RSS 피드로 무료 뉴스 수집, OpenAI는 번역/요약만 수행하여 토큰 비용 최소화. web_search 불필요
 - MVP에서 Supabase Auth 제외 → Redis IP 기반 사용량 추적으로 단순화
