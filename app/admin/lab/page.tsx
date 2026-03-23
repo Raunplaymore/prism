@@ -42,7 +42,7 @@ interface HistoryEntry {
 }
 
 const MULTI_PRESETS: Record<string, string> = {
-  'Global Markets': 'US stock bond market today|Europe stock bond market today|Asia stock bond market today|emerging markets bond commodity today',
+  'Global Markets': 'US stock bond market today|Europe stock bond market today|Asia stock bond market today|emerging markets stock bond market today',
   'US Markets': 'US stock market today|US treasury bond yield|US commodity oil gold today',
   'Asia Markets': 'Japan Nikkei stock market|China stock market Shanghai|Korea KOSPI market|India stock market BSE',
   'Europe Markets': 'Europe stock market FTSE DAX|ECB interest rate bond|Europe commodity energy',
