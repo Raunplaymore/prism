@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-// import Script from 'next/script'  // AdSense — re-enable after approval
+import Script from 'next/script'
 import './globals.css'
 import { SUPPORTED_COUNT } from '@/lib/rss'
 
@@ -42,7 +42,12 @@ export default function RootLayout({
       </head>
       <body className="bg-gray-950 text-white antialiased">
         {children}
-        {/* AdSense script — re-enable after Google approval */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8772509301822103"
+          crossOrigin="anonymous"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   )
