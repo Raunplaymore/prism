@@ -147,7 +147,7 @@ function buildGoogleNewsUrls(countryCode: string): string[] {
 }
 
 /** Parse RSS XML into articles */
-function parseRss(xml: string): RssArticle[] {
+export function parseRss(xml: string): RssArticle[] {
   const articles: RssArticle[] = []
   const itemRegex = /<item>([\s\S]*?)<\/item>/gi
   let match: RegExpExecArray | null
@@ -200,7 +200,7 @@ function stripHtml(text: string): string {
 }
 
 /** Fetch from a single RSS URL */
-async function fetchOneRss(url: string): Promise<RssArticle[]> {
+export async function fetchOneRss(url: string): Promise<RssArticle[]> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 5000)
 

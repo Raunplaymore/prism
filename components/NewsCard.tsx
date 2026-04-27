@@ -109,7 +109,19 @@ export default function NewsCard({ item, showCountry }: NewsCardProps) {
       )}
       <div className="flex items-center justify-between text-xs text-gray-500">
         <div className="flex items-center gap-2">
-          <span>{item.source}</span>
+          {item.url ? (
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-blue-400 transition hover:text-blue-300"
+            >
+              {item.source}
+            </a>
+          ) : (
+            <span>{item.source}</span>
+          )}
           {pubTime && <span className="text-gray-600">{pubTime}</span>}
         </div>
         <div className="flex items-center gap-3">
@@ -127,15 +139,6 @@ export default function NewsCard({ item, showCountry }: NewsCardProps) {
               </svg>
             )}
           </button>
-          <a
-            href={item.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-400 transition hover:text-blue-300"
-            onClick={(e) => e.stopPropagation()}
-          >
-            Source
-          </a>
         </div>
       </div>
     </article>
