@@ -198,6 +198,9 @@ export default function AdminPage() {
             <p className="text-sm text-gray-500">{user.email}</p>
           </div>
           <div className="flex gap-2">
+            <a href="/markets" className="rounded-lg border border-yellow-900/60 bg-yellow-950/30 px-3 py-1.5 text-sm text-yellow-300 transition hover:text-yellow-200">
+              Markets (v2)
+            </a>
             <a href="/admin/lab" className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 transition hover:text-white">
               Lab
             </a>

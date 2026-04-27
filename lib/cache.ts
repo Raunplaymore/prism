@@ -187,7 +187,7 @@ export async function recordTokenUsage(
   promptTokens: number,
   completionTokens: number,
   country: string,
-  method: 'rss' | 'search',
+  method: 'rss' | 'search' | 'markets',
 ): Promise<void> {
   const cost = promptTokens * INPUT_COST_PER_TOKEN + completionTokens * OUTPUT_COST_PER_TOKEN
   try {
