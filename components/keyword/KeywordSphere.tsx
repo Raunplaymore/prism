@@ -94,10 +94,28 @@ export default function KeywordSphere({
   }, [items, radius, maxSpeed])
 
   return (
-    <div
-      ref={ref}
-      className="flex items-center justify-center"
-      style={{ minHeight: radius * 2 }}
-    />
+    <>
+      <div
+        ref={ref}
+        className="flex items-center justify-center"
+        style={{ minHeight: radius * 2 }}
+        aria-hidden="true"
+      />
+      {/* SSR-visible textual fallback for crawlers and screen readers.
+          The 3D sphere is JS-rendered, so this list is the only way bots see
+          which keywords the page actually surfaces. */}
+      <ul className="sr-only">
+        {items.map((kc) => {
+          const label = kc.entry.labelKo || kc.entry.label
+          return (
+            <li key={kc.entry.slug}>
+              <a href={`/keyword/${encodeURIComponent(kc.entry.slug)}`}>
+                #{label} ({kc.count})
+              </a>
+            </li>
+          )
+        })}
+      </ul>
+    </>
   )
 }

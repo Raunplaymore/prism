@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Nav from '@/components/Nav'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy — Prism',
@@ -7,8 +8,9 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-gray-950 px-4 py-12 text-white">
-      <div className="mx-auto max-w-2xl">
+    <div className="min-h-screen bg-gray-950 text-white">
+      <Nav />
+      <div className="mx-auto max-w-2xl px-4 py-12">
         <h1 className="mb-8 text-2xl font-bold">Privacy Policy</h1>
 
         <section className="mb-8">

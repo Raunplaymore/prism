@@ -564,6 +564,18 @@ export default function ClientHome({
       </header>
 
       <div className="mx-auto max-w-5xl px-3 py-4 sm:px-4 sm:py-6">
+        {/* SSR-visible page intro — gives crawlers and screen readers a coherent
+            description of what Prism does, even before client-side widgets mount. */}
+        <section className="mb-4 sm:mb-6">
+          <h1 className="text-xl font-bold text-white sm:text-2xl">
+            세계 뉴스를 키워드와 지도로 — Prism
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-400">
+            전 세계 50여 개국의 현지 언론을 AI가 직접 수집·분류·요약하여 한국어로 제공하는 뉴스 브리핑 서비스입니다.
+            키워드를 누르면 같은 사건을 여러 국가가 어떻게 다루는지 한눈에 비교할 수 있고, 지도에서 국가를 선택하면
+            해당 국가에서 지금 가장 많이 보도되는 이슈를 확인할 수 있습니다.
+          </p>
+        </section>
         {pullState !== 'idle' && (
           <div
             className="flex items-center justify-center overflow-hidden transition-all"

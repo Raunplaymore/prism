@@ -57,8 +57,13 @@ export default async function KeywordIndexPage() {
       <Nav />
       <div className="mx-auto max-w-3xl p-4 sm:p-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">키워드</h1>
-          <p className="mt-1 text-sm text-gray-400">
+          <h1 className="text-3xl font-bold">키워드로 보는 세계 뉴스</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-300">
+            Prism은 매일 50여 개국의 현지 언론에서 수집한 기사를 AI가 분류·요약하고,
+            인물·국가·조직·기업·토픽·이벤트 6개 분류의 정규화된 키워드로 인덱싱합니다.
+            아래 키워드를 누르면 같은 주제를 여러 국가가 어떻게 다루고 있는지 한눈에 비교할 수 있습니다.
+          </p>
+          <p className="mt-2 text-sm text-gray-500">
             지금 살아있는 키워드 {all.length}개 · 총 {totalArticleHits}건
           </p>
         </div>
