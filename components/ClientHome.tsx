@@ -162,6 +162,7 @@ export default function ClientHome({
   const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null)
   const [selectedKeywordLabel, setSelectedKeywordLabel] = useState<string | null>(null)
   const [newsItems, setNewsItems] = useState<NewsItem[]>([])
+  const [needsScrape, setNeedsScrape] = useState(false)
   const [latestItems, setLatestItems] = useState<NewsItem[]>(initialLatestItems)
   const [latestHasMore, setLatestHasMore] = useState(false)
   const [latestCategory, setLatestCategory] = useState<string>('all')
@@ -311,6 +312,64 @@ export default function ClientHome({
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const handleStartScrape = useCallback((countryCode: string) => {
+    setNeedsScrape(false)
+    setIsRefreshing(true)
+    setError(null)
+    setRefreshMessage('뉴스 검색은 약 30초 정도 소요됩니다')
+
+    const msgs = ['뉴스 수집중...', '뉴스 요약중...', '뉴스 번역중...']
+    let msgIdx = 0
+    setTimeout(() => {
+      if (currentCountryRef.current === countryCode) {
+        setRefreshMessage(msgs[0])
+        refreshMsgTimer.current = setInterval(() => {
+          msgIdx = (msgIdx + 1) % msgs.length
+          setRefreshMessage(msgs[msgIdx])
+        }, 5000)
+      }
+    }, 3000)
+
+    fetch(`/api/news/collect?country=${countryCode}`, { method: 'POST' })
+      .then(() => {
+        setTimeout(() => {
+          fetch(`https://prism-4gy.pages.dev/api/news/collect?country=${countryCode}&lang=${lang}&step=2`, { method: 'POST' }).catch(() => {})
+        }, 2000)
+      })
+      .catch(() => {})
+
+    let polls = 0
+    const maxPolls = 12
+    const pollInterval = setInterval(async () => {
+      polls++
+      if (currentCountryRef.current !== countryCode) {
+        clearInterval(pollInterval)
+        return
+      }
+      if (polls > maxPolls) {
+        clearInterval(pollInterval)
+        setIsRefreshing(false)
+        setRefreshMessage('')
+        if (refreshMsgTimer.current) clearInterval(refreshMsgTimer.current)
+        setError(`${getCountryName(countryCode)} 뉴스를 가져오지 못했습니다.`)
+        fetch(`/api/news/refresh?country=${countryCode}&lang=${lang}&poll_failed=true`, { method: 'POST' }).catch(() => {})
+        return
+      }
+      try {
+        const pollRes = await fetch(`/api/news?country=${countryCode}&lang=${lang}`)
+        const pollData = await pollRes.json()
+        if (pollData.items?.length > 0 && currentCountryRef.current === countryCode) {
+          setNewsItems(pollData.items)
+          setIsRefreshing(false)
+          setRefreshMessage('')
+          if (refreshMsgTimer.current) clearInterval(refreshMsgTimer.current)
+          clearInterval(pollInterval)
+          refreshLatest()
+        }
+      } catch { /* ignore */ }
+    }, 5000)
+  }, [lang]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleKeywordSelect = useCallback(async (slug: string) => {
     setSelectedKeyword(slug)
     setSelectedCountry(null)
@@ -349,6 +408,7 @@ export default function ClientHome({
     setSelectedCountry(countryCode)
     setIsLoading(true)
     setIsRefreshing(false)
+    setNeedsScrape(false)
     setError(null)
 
     try {
@@ -389,65 +449,11 @@ export default function ClientHome({
         [countryCode]: (prev[countryCode] || 0) + 1,
       }))
 
-      // Empty cache — trigger refresh and poll
+      // Empty cache — show explicit scrape button instead of auto-fetching.
+      // Avoids accidental LLM calls when the user grazes a country while
+      // rotating the globe.
       if (data.empty) {
-        setIsRefreshing(true)
-        setRefreshMessage('뉴스 검색은 약 30초 정도 소요됩니다')
-
-        // Rotating messages
-        const msgs = ['뉴스 수집중...', '뉴스 요약중...', '뉴스 번역중...']
-        let msgIdx = 0
-        setTimeout(() => {
-          if (currentCountryRef.current === countryCode) {
-            setRefreshMessage(msgs[0])
-            refreshMsgTimer.current = setInterval(() => {
-              msgIdx = (msgIdx + 1) % msgs.length
-              setRefreshMessage(msgs[msgIdx])
-            }, 5000)
-          }
-        }, 3000)
-
-        // Step 1: Collect RSS, then Step 2: Summarize
-        fetch(`/api/news/collect?country=${countryCode}`, { method: 'POST' })
-          .then(() => {
-            setTimeout(() => {
-              fetch(`https://prism-4gy.pages.dev/api/news/collect?country=${countryCode}&lang=${lang}&step=2`, { method: 'POST' }).catch(() => {})
-            }, 2000)
-          })
-          .catch(() => {})
-
-        // Poll every 5s for up to 60s
-        let polls = 0
-        const maxPolls = 12
-        const pollInterval = setInterval(async () => {
-          polls++
-          if (currentCountryRef.current !== countryCode) {
-            clearInterval(pollInterval)
-            return
-          }
-          if (polls > maxPolls) {
-            clearInterval(pollInterval)
-            setIsRefreshing(false)
-            setRefreshMessage('')
-            if (refreshMsgTimer.current) clearInterval(refreshMsgTimer.current)
-            setError(`${getCountryName(countryCode)} 뉴스를 가져오지 못했습니다.`)
-            // Notify admin of polling failure
-            fetch(`/api/news/refresh?country=${countryCode}&lang=${lang}&poll_failed=true`, { method: 'POST' }).catch(() => {})
-            return
-          }
-          try {
-            const pollRes = await fetch(`/api/news?country=${countryCode}&lang=${lang}`)
-            const pollData = await pollRes.json()
-            if (pollData.items?.length > 0 && currentCountryRef.current === countryCode) {
-              setNewsItems(pollData.items)
-              setIsRefreshing(false)
-              setRefreshMessage('')
-              if (refreshMsgTimer.current) clearInterval(refreshMsgTimer.current)
-              clearInterval(pollInterval)
-              refreshLatest()
-            }
-          } catch { /* ignore */ }
-        }, 5000)
+        setNeedsScrape(true)
       } else if (data.refreshing) {
         setIsRefreshing(true)
       }
@@ -484,6 +490,7 @@ export default function ClientHome({
                   setSelectedKeyword(null)
                   setSelectedKeywordLabel(null)
                   setNewsItems([])
+                  setNeedsScrape(false)
                 }}
                 className={
                   exploreMode === 'keyword'
@@ -502,6 +509,7 @@ export default function ClientHome({
                   setSelectedKeyword(null)
                   setSelectedKeywordLabel(null)
                   setNewsItems([])
+                  setNeedsScrape(false)
                 }}
                 className={
                   exploreMode === 'country'
@@ -714,6 +722,27 @@ export default function ClientHome({
                   className="rounded-md bg-red-900/50 px-3 py-1 text-xs text-red-300 transition hover:bg-red-900/70"
                 >
                   Retry
+                </button>
+              </div>
+            ) : needsScrape && selectedCountry ? (
+              <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-gray-800 bg-gray-900/40 px-6 py-10 text-center">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <div>
+                  <p className="text-sm text-gray-300">
+                    {getCountryName(selectedCountry)}의 캐시된 기사가 없습니다.
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    수집은 약 30초 소요됩니다.
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleStartScrape(selectedCountry)}
+                  className="mt-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
+                >
+                  뉴스 수집 시작
                 </button>
               </div>
             ) : isLoading ? (
