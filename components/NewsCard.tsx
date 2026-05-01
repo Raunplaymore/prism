@@ -6,6 +6,9 @@ import type { NewsItem } from '@/types/news'
 interface NewsCardProps {
   item: NewsItem
   showCountry?: boolean
+  /** Render the detail body expanded on first paint (used on keyword pages
+   *  where surfacing detail in SSR meaningfully boosts page text content). */
+  defaultExpanded?: boolean
 }
 
 function countryFlag(code: string): string {
@@ -45,8 +48,8 @@ const categoryColors: Record<string, string> = {
   Culture: '#ec4899',
 }
 
-export default function NewsCard({ item, showCountry }: NewsCardProps) {
-  const [expanded, setExpanded] = useState(false)
+export default function NewsCard({ item, showCountry, defaultExpanded }: NewsCardProps) {
+  const [expanded, setExpanded] = useState(Boolean(defaultExpanded))
   const [copied, setCopied] = useState(false)
 
   const handleShare = async (e: React.MouseEvent) => {
