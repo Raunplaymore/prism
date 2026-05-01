@@ -1,7 +1,15 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import EventCard, { type EventCardItem } from './EventCard'
+import type { NewsArticle } from '@/lib/polymarket/news'
+
+interface ModalContent {
+  titleKo: string
+  contextKo: string
+  marketLabelsKo: Record<string, string>
+  articles: NewsArticle[]
+}
 
 export default function EventModal({
   item,
@@ -10,6 +18,9 @@ export default function EventModal({
   item: EventCardItem
   onClose: () => void
 }) {
+  const [content, setContent] = useState<ModalContent | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -21,6 +32,59 @@ export default function EventModal({
       document.body.style.overflow = ''
     }
   }, [onClose])
+
+  useEffect(() => {
+    let cancelled = false
+    const markets = (item.event.markets || [])
+      .filter((m) => m.active && !m.closed)
+      .slice(0, 8)
+      .map((m) => ({
+        id: m.id,
+        question: m.question,
+        groupItemTitle: m.groupItemTitle,
+      }))
+    const tags = (item.event.tags || []).map((t) => ({
+      id: t.id,
+      label: t.label,
+      slug: t.slug,
+      forceShow: t.forceShow,
+      forceHide: t.forceHide,
+    }))
+
+    fetch('/api/markets/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventId: item.event.id,
+        eventTitle: item.event.title,
+        category: item.category,
+        context: item.event.eventMetadata?.context_description ?? '',
+        markets,
+        tags,
+      }),
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((data: ModalContent) => {
+        if (!cancelled) setContent(data)
+      })
+      .catch(() => {
+        if (!cancelled) setError('상세 정보를 불러오지 못했습니다.')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [item.event.id, item.event.title, item.category])
+
+  const enrichedItem: EventCardItem = content
+    ? {
+        ...item,
+        titleKo: content.titleKo,
+        contextKo: content.contextKo,
+        marketLabelsKo: content.marketLabelsKo,
+        articles: content.articles,
+      }
+    : item
 
   return (
     <div
@@ -44,7 +108,13 @@ export default function EventModal({
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
-        <EventCard item={item} />
+        {error ? (
+          <div className="rounded-lg border border-red-900 bg-red-950/30 p-4 text-sm text-red-300">
+            {error}
+          </div>
+        ) : (
+          <EventCard item={enrichedItem} loading={!content} />
+        )}
       </div>
     </div>
   )

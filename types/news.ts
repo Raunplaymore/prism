@@ -15,6 +15,9 @@ export interface NewsItem {
   pubDate: string
   cachedAt: string
   isRealtime: boolean
+  /** Canonical English keyword slugs (vocabulary-matched). Optional for backward
+   * compatibility with cached items written before keywords were introduced. */
+  keywords?: string[]
 }
 
 export interface NewsResponse {

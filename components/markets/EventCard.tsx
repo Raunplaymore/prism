@@ -39,7 +39,7 @@ function MarketLine({
 }
 
 export interface EventCardItem extends ClassifiedEvent {
-  articles: NewsArticle[]
+  articles?: NewsArticle[]
   /** Translated event.title (Korean). Falls back to English when absent. */
   titleKo?: string
   /** Translated context_description (Korean). Falls back to English when absent. */
@@ -48,8 +48,15 @@ export interface EventCardItem extends ClassifiedEvent {
   marketLabelsKo?: Record<string, string>
 }
 
-export default function EventCard({ item }: { item: EventCardItem }) {
-  const { event, articles } = item
+export default function EventCard({
+  item,
+  loading = false,
+}: {
+  item: EventCardItem
+  loading?: boolean
+}) {
+  const { event } = item
+  const articles = item.articles ?? []
   const tags = (event.tags || []).filter((t) => !t.forceHide).slice(0, 4)
   const title = item.titleKo || event.title
   const ctx = item.contextKo || event.eventMetadata?.context_description
@@ -87,11 +94,22 @@ export default function EventCard({ item }: { item: EventCardItem }) {
           )}
         </div>
       )}
+      {loading && !ctx && (
+        <div className="mt-3 h-16 animate-pulse rounded border-l-2 border-gray-800 bg-gray-900/40" />
+      )}
       {ctx && (
         <div className="mt-3 rounded border-l-2 border-gray-700 bg-gray-900/40 py-2 pl-2.5 pr-2 text-sm leading-relaxed text-gray-300">
           <span className="font-medium text-gray-400">시장 시각</span>
           <span className="ml-1.5 text-gray-700">·</span>{' '}
           {ctx}
+        </div>
+      )}
+      {loading && articles.length === 0 && (
+        <div className="mt-3 space-y-2 border-t border-gray-800/60 pt-2.5">
+          <p className="text-xs text-gray-600">뉴스 시각</p>
+          <div className="h-20 animate-pulse rounded bg-gray-900/40" />
+          <div className="h-20 animate-pulse rounded bg-gray-900/40" />
+          <div className="h-20 animate-pulse rounded bg-gray-900/40" />
         </div>
       )}
       {articles.length > 0 && (

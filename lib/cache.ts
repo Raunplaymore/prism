@@ -7,7 +7,7 @@ function getConfig() {
   return { url, token }
 }
 
-async function redis(command: string[]): Promise<unknown> {
+export async function redis(command: string[]): Promise<unknown> {
   const { url, token } = getConfig()
   const res = await fetch(`${url}`, {
     method: 'POST',
@@ -22,7 +22,7 @@ async function redis(command: string[]): Promise<unknown> {
   return data.result
 }
 
-async function redisPipeline(commands: string[][]): Promise<unknown[]> {
+export async function redisPipeline(commands: string[][]): Promise<unknown[]> {
   const { url, token } = getConfig()
   const res = await fetch(`${url}/pipeline`, {
     method: 'POST',

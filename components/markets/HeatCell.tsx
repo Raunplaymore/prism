@@ -26,7 +26,6 @@ export default function HeatCell({
   const headPrice = prices[0]
   const title = item.titleKo || item.event.title
   const activeMarkets = (item.event.markets || []).filter((m) => m.active && !m.closed).length
-  const articleCount = item.articles.length
 
   return (
     <button
@@ -45,11 +44,9 @@ export default function HeatCell({
         </div>
         <div className="flex items-center justify-between text-xs text-gray-500">
           <span>{formatVolume(item.event.volume24hr)}</span>
-          <span className="text-gray-600">
-            {activeMarkets > 1 && `${activeMarkets} markets`}
-            {activeMarkets > 1 && articleCount > 0 && ' · '}
-            {articleCount > 0 && `${articleCount} news`}
-          </span>
+          {activeMarkets > 1 && (
+            <span className="text-gray-600">{activeMarkets} markets</span>
+          )}
         </div>
       </div>
     </button>

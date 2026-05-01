@@ -6,6 +6,7 @@ import { mergeFeed, getTokenStats } from '@/lib/cache'
 import { getCountryName } from '@/lib/countries'
 import { checkCostAlert, notifyNewsCached, notifyError } from '@/lib/telegram'
 import { fetchNewsFromArticles } from '@/lib/news'
+import { indexBatch } from '@/lib/keywords/index'
 
 /**
  * Step 1: POST /api/news/collect?country=XX        → collect RSS only
@@ -116,6 +117,10 @@ async function handleSummarize(request: NextRequest) {
     const articles = JSON.parse(raw)
     const items = await fetchNewsFromArticles(code, lang, articles)
     const merged = await mergeFeed(code, lang, items as unknown as import('@/lib/cache').FeedItem[])
+
+    // Phase 2: populate keyword reverse index (kw:{slug} → {articleId, ...}).
+    // Cache write failures are swallowed inside indexBatch.
+    indexBatch(items).catch(() => {})
 
     const countryName = getCountryName(code)
     notifyNewsCached(code, countryName, lang, items.length).catch(() => {})

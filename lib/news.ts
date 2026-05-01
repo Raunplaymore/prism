@@ -2,6 +2,7 @@ import { getCountryName } from '@/lib/countries'
 import { fetchRssArticles, type RssArticle } from '@/lib/rss'
 import type { NewsItem } from '@/types/news'
 import { recordTokenUsage } from '@/lib/cache'
+import { matchKeywords } from '@/lib/keywords/match'
 
 interface SummarizedItem {
   originalIndex: number
@@ -10,6 +11,7 @@ interface SummarizedItem {
   summary: string
   detail: string
   sentiment: 'positive' | 'neutral' | 'negative'
+  keywords?: string[]
 }
 
 interface OpenAIResponse {
@@ -99,8 +101,12 @@ FILTERING RULE:
 - Articles about bilateral relations are fine if ${countryName} is one of the main parties
 - Articles may be in any language — translate the title, summary, and detail to ${langLabel}
 
-Each item: {"originalIndex":number,"category":"one of the categories below","title":"${langLabel} title","summary":"1-2 sentence ${langLabel} summary","detail":"4-5 sentence ${langLabel} detailed analysis with context and background","sentiment":"positive"|"neutral"|"negative"}
+Each item: {"originalIndex":number,"category":"one of the categories below","title":"${langLabel} title","summary":"1-2 sentence ${langLabel} summary","detail":"4-5 sentence ${langLabel} detailed analysis with context and background","sentiment":"positive"|"neutral"|"negative","keywords":["slug1","slug2",...]}
 Write title, summary, and detail in ${langLabel}. "summary" is a brief overview. "detail" provides deeper analysis, background context, and implications.
+
+For "keywords": extract 3-5 canonical English slug keywords (lowercase kebab-case ASCII).
+Prefer named entities — people, countries, organizations, companies — and concrete topics.
+Skip generic words (news, today, world, breaking). Use English slugs even if the article is in Korean.
 
 ${CATEGORY_PROMPT}
 
@@ -127,6 +133,11 @@ Include all relevant articles (up to 30).`,
     .filter((item) => typeof item.originalIndex === 'number' && item.originalIndex >= 0 && item.originalIndex < articles.length)
     .map((item) => {
       const original: RssArticle = articles[item.originalIndex]
+      // Normalize free-form LLM keywords against the curated vocabulary.
+      // Unknown keywords are dropped here; pending-curator queue is Phase 3.
+      const rawKeywords = Array.isArray(item.keywords) ? item.keywords : []
+      const { matched } = matchKeywords(rawKeywords)
+      const keywords = matched.map((m) => m.slug)
       return {
         id: `${countryCode}-${simpleHash(original.link)}`,
         country: countryCode,
@@ -140,6 +151,7 @@ Include all relevant articles (up to 30).`,
         pubDate: original.pubDate || now,
         cachedAt: now,
         isRealtime: true,
+        keywords,
       }
     })
 }

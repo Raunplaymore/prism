@@ -102,6 +102,20 @@ export default function NewsCard({ item, showCountry }: NewsCardProps) {
         </div>
       </div>
       <p className="mb-3 text-sm leading-relaxed text-gray-400">{item.summary}</p>
+      {item.keywords && item.keywords.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-1">
+          {item.keywords.map((kw) => (
+            <a
+              key={kw}
+              href={`/keyword/${encodeURIComponent(kw)}`}
+              onClick={(e) => e.stopPropagation()}
+              className="rounded-full border border-gray-800 bg-gray-950 px-2 py-0.5 text-[11px] text-gray-400 transition hover:border-gray-700 hover:text-gray-200"
+            >
+              #{kw}
+            </a>
+          ))}
+        </div>
+      )}
       {expanded && item.detail && (
         <div className="mb-3 rounded-md border border-gray-800 bg-gray-950 p-3">
           <p className="text-sm leading-relaxed text-gray-300">{item.detail}</p>

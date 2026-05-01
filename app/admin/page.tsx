@@ -36,6 +36,14 @@ interface TokenLogEntry {
   cost: number
 }
 
+type ExperimentTarget = 'keyword' | 'markets' | 'lab'
+
+const EXPERIMENTS: { value: ExperimentTarget; label: string; path: string; hint: string }[] = [
+  { value: 'keyword', label: 'Keywords',   path: '/keyword',    hint: '키워드 인덱스 + sphere 탐색' },
+  { value: 'markets', label: 'Markets v2', path: '/markets',    hint: 'Polymarket × News' },
+  { value: 'lab',     label: 'Lab',        path: '/admin/lab',  hint: 'multi-query RSS collect' },
+]
+
 export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
@@ -46,6 +54,7 @@ export default function AdminPage() {
   const [logHasMore, setLogHasMore] = useState(false)
   const [logTotal, setLogTotal] = useState(0)
   const [logLoading, setLogLoading] = useState(false)
+  const [experiment, setExperiment] = useState<ExperimentTarget>('keyword')
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -207,6 +216,37 @@ export default function AdminPage() {
             <a href="/" className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 transition hover:text-white">
               Back to Map
             </a>
+          </div>
+        </div>
+
+        <div className="mb-8 rounded-lg border border-gray-800 bg-gray-900 p-4">
+          <div className="mb-3 flex items-baseline justify-between">
+            <h2 className="text-sm font-semibold text-gray-400">Experiments</h2>
+            <span className="text-xs text-gray-600">
+              {EXPERIMENTS.find((e) => e.value === experiment)?.hint}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <select
+              value={experiment}
+              onChange={(e) => setExperiment(e.target.value as ExperimentTarget)}
+              className="w-full rounded-lg border border-gray-800 bg-gray-950 px-3 py-2.5 text-sm text-gray-300 outline-none transition focus:border-blue-500 sm:w-72"
+            >
+              {EXPERIMENTS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={() => {
+                const target = EXPERIMENTS.find((e) => e.value === experiment)
+                if (target) window.location.href = target.path
+              }}
+              className="shrink-0 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-500"
+            >
+              Move to →
+            </button>
           </div>
         </div>
 
