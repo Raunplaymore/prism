@@ -5,7 +5,9 @@ import dynamic from 'next/dynamic'
 import NewsStand, { ALL_FREE_COUNTRIES } from '@/components/NewsStand'
 import NewsCard from '@/components/NewsCard'
 import AdSlot from '@/components/AdSlot'
+import KeywordSphere from '@/components/keyword/KeywordSphere'
 import type { NewsItem } from '@/types/news'
+import type { KeywordCount } from '@/lib/keywords/index'
 import { getAllCountries, getCountryName } from '@/lib/countries'
 
 import { SUPPORTED_COUNTRIES } from '@/lib/rss'
@@ -143,11 +145,22 @@ function CountrySearch({ countries, onSelect, loggedIn, onLoginPrompt }: { count
   )
 }
 
-export default function ClientHome({ initialLatestItems = [] }: { initialLatestItems?: NewsItem[] }) {
+type ExploreMode = 'keyword' | 'country'
+
+export default function ClientHome({
+  initialLatestItems = [],
+  keywordCounts = [],
+}: {
+  initialLatestItems?: NewsItem[]
+  keywordCounts?: KeywordCount[]
+}) {
+  const [exploreMode, setExploreMode] = useState<ExploreMode>('keyword')
   const [user, setUser] = useState<User | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const lang = 'ko' as const
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
+  const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null)
+  const [selectedKeywordLabel, setSelectedKeywordLabel] = useState<string | null>(null)
   const [newsItems, setNewsItems] = useState<NewsItem[]>([])
   const [latestItems, setLatestItems] = useState<NewsItem[]>(initialLatestItems)
   const [latestHasMore, setLatestHasMore] = useState(false)
@@ -298,6 +311,29 @@ export default function ClientHome({ initialLatestItems = [] }: { initialLatestI
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const handleKeywordSelect = useCallback(async (slug: string) => {
+    setSelectedKeyword(slug)
+    setSelectedCountry(null)
+    setError(null)
+    setIsLoading(true)
+    try {
+      const res = await fetch(`/api/keyword?slug=${encodeURIComponent(slug)}`)
+      if (!res.ok) {
+        setNewsItems([])
+        setSelectedKeywordLabel(null)
+        return
+      }
+      const data = await res.json()
+      setNewsItems(data.items ?? [])
+      setSelectedKeywordLabel(data.label ?? slug)
+    } catch {
+      setNewsItems([])
+      setSelectedKeywordLabel(null)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
   const handleCountrySelect = useCallback(async (countryCode: string) => {
     // Skip login gate for shared links
     if (isSharedLinkRef.current) {
@@ -430,12 +466,52 @@ export default function ClientHome({ initialLatestItems = [] }: { initialLatestI
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-gray-800/50 bg-gray-950/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-2.5">
-          <div className="flex items-center gap-2.5">
-            <img src="/logo.png" alt="Prism" className="h-7 w-7 rounded-md" />
-            <div className="flex flex-col leading-none">
-              <span className="text-base font-bold tracking-tight">Prism</span>
-              <span className="text-[10px] text-gray-500">refracted by AI</span>
-            </div>
+          <div className="flex items-center gap-3 sm:gap-5">
+            <a href="/" className="flex items-center gap-2.5">
+              <img src="/logo.png" alt="Prism" className="h-7 w-7 rounded-md" />
+              <div className="hidden flex-col leading-none sm:flex">
+                <span className="text-base font-bold tracking-tight">Prism</span>
+                <span className="text-[10px] text-gray-500">refracted by AI</span>
+              </div>
+            </a>
+            <nav className="flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => {
+                  if (exploreMode === 'keyword') return
+                  setExploreMode('keyword')
+                  setSelectedCountry(null)
+                  setSelectedKeyword(null)
+                  setSelectedKeywordLabel(null)
+                  setNewsItems([])
+                }}
+                className={
+                  exploreMode === 'keyword'
+                    ? 'rounded-md bg-gray-800 px-2.5 py-1 text-sm font-medium text-white'
+                    : 'rounded-md px-2.5 py-1 text-sm text-gray-400 transition hover:bg-gray-900 hover:text-white'
+                }
+              >
+                Keywords
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (exploreMode === 'country') return
+                  setExploreMode('country')
+                  setSelectedCountry(null)
+                  setSelectedKeyword(null)
+                  setSelectedKeywordLabel(null)
+                  setNewsItems([])
+                }}
+                className={
+                  exploreMode === 'country'
+                    ? 'rounded-md bg-gray-800 px-2.5 py-1 text-sm font-medium text-white'
+                    : 'rounded-md px-2.5 py-1 text-sm text-gray-400 transition hover:bg-gray-900 hover:text-white'
+                }
+              >
+                Map
+              </button>
+            </nav>
           </div>
           <div className="flex items-center gap-2">
             {/* Install */}
@@ -501,46 +577,69 @@ export default function ClientHome({ initialLatestItems = [] }: { initialLatestI
         )}
         {/* Country Selector */}
         <section className="mb-4">
-          <NewsStand
-            selectedCountry={selectedCountry}
-            onSelect={(code: string) => {
-              const coords = COUNTRY_COORDS[code]
-              if (coords && viewMode === 'map') {
-                setRotateTarget([...coords] as [number, number])
-              }
-              handleCountrySelect(code)
-            }}
-            isLoading={isLoading}
-            onToggleMap={() => {
-              if (viewMode === 'map') {
-                setViewMode('list'); viewModeRef.current = 'list'
-              } else {
-                setViewMode('map'); viewModeRef.current = 'map'
-                setSelectedCountry(null)
-                setNewsItems([])
-              }
-            }}
-            mapOpen={viewMode === 'map'}
-          />
-          <CountrySearch countries={allCountries} onSelect={(code) => {
-            const coords = COUNTRY_COORDS[code]
-            if (coords && viewMode === 'map') {
-              setRotateTarget([...coords] as [number, number])
-            }
-            handleCountrySelect(code)
-          }} loggedIn={!!user} onLoginPrompt={() => setShowLoginPrompt(true)} />
+          {exploreMode === 'country' && (
+            <>
+              <NewsStand
+                selectedCountry={selectedCountry}
+                onSelect={(code: string) => {
+                  const coords = COUNTRY_COORDS[code]
+                  if (coords && viewMode === 'map') {
+                    setRotateTarget([...coords] as [number, number])
+                  }
+                  handleCountrySelect(code)
+                }}
+                isLoading={isLoading}
+                onToggleMap={() => {
+                  if (viewMode === 'map') {
+                    setViewMode('list'); viewModeRef.current = 'list'
+                  } else {
+                    setViewMode('map'); viewModeRef.current = 'map'
+                    setSelectedCountry(null)
+                    setNewsItems([])
+                  }
+                }}
+                mapOpen={viewMode === 'map'}
+              />
+              <CountrySearch countries={allCountries} onSelect={(code) => {
+                const coords = COUNTRY_COORDS[code]
+                if (coords && viewMode === 'map') {
+                  setRotateTarget([...coords] as [number, number])
+                }
+                handleCountrySelect(code)
+              }} loggedIn={!!user} onLoginPrompt={() => setShowLoginPrompt(true)} />
 
-          {/* Map (collapsible) */}
-          {viewMode === 'map' && (
-            <div className="mt-3 overflow-hidden rounded-xl border border-gray-800 bg-gray-900">
-              <div className="h-[190px] sm:h-[350px] lg:h-[400px]">
-                <WorldMap
-                  onCountrySelect={handleCountrySelect}
-                  heatmapData={heatmapData}
-                  selectedCountry={selectedCountry}
-                  rotateTarget={rotateTarget}
+              {/* Map (collapsible) */}
+              {viewMode === 'map' && (
+                <div className="mt-3 overflow-hidden rounded-xl border border-gray-800 bg-gray-900">
+                  <div className="h-[190px] sm:h-[350px] lg:h-[400px]">
+                    <WorldMap
+                      onCountrySelect={handleCountrySelect}
+                      heatmapData={heatmapData}
+                      selectedCountry={selectedCountry}
+                      rotateTarget={rotateTarget}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {exploreMode === 'keyword' && (
+            <div className="relative flex h-[190px] items-center justify-center overflow-hidden rounded-xl border border-gray-800 bg-gradient-to-b from-gray-950 to-gray-900/40 sm:h-[350px] lg:h-[400px]">
+              {keywordCounts.length > 0 ? (
+                <KeywordSphere
+                  items={keywordCounts}
+                  radius={140}
+                  onSelect={handleKeywordSelect}
                 />
-              </div>
+              ) : (
+                <div className="flex h-full items-center justify-center px-6 text-sm text-gray-500">
+                  아직 인덱스된 키워드가 없습니다.
+                </div>
+              )}
+              <p className="pointer-events-none absolute bottom-3 right-4 text-xs text-gray-600">
+                드래그해서 회전 · 클릭해서 들어가기
+              </p>
             </div>
           )}
         </section>
@@ -577,10 +676,30 @@ export default function ClientHome({ initialLatestItems = [] }: { initialLatestI
         {/* <AdSlot slot="top-banner" type="banner" /> */}
 
         {/* News Section */}
-        {selectedCountry && (
+        {(selectedCountry || selectedKeyword) && (
           <section className="mb-8">
             <div className="mb-4 flex items-center gap-3">
-              <h2 className="text-lg font-bold">{getCountryName(selectedCountry)}</h2>
+              {selectedKeyword ? (
+                <>
+                  <h2 className="text-lg font-bold">
+                    {selectedKeywordLabel ?? selectedKeyword}
+                  </h2>
+                  <span className="text-sm text-gray-500">#{selectedKeyword}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedKeyword(null)
+                      setSelectedKeywordLabel(null)
+                      setNewsItems([])
+                    }}
+                    className="ml-auto rounded-md border border-gray-800 px-2 py-0.5 text-xs text-gray-500 transition hover:border-gray-700 hover:text-gray-300"
+                  >
+                    ✕ 해제
+                  </button>
+                </>
+              ) : (
+                <h2 className="text-lg font-bold">{getCountryName(selectedCountry!)}</h2>
+              )}
             </div>
 
             {/* News List */}
@@ -588,7 +707,10 @@ export default function ClientHome({ initialLatestItems = [] }: { initialLatestI
               <div className="flex h-32 flex-col items-center justify-center gap-2 rounded-lg border border-red-900/50 bg-red-950/30 text-sm text-red-400">
                 <span>{error}</span>
                 <button
-                  onClick={() => selectedCountry && handleCountrySelect(selectedCountry)}
+                  onClick={() => {
+                    if (selectedKeyword) handleKeywordSelect(selectedKeyword)
+                    else if (selectedCountry) handleCountrySelect(selectedCountry)
+                  }}
                   className="rounded-md bg-red-900/50 px-3 py-1 text-xs text-red-300 transition hover:bg-red-900/70"
                 >
                   Retry
@@ -630,7 +752,7 @@ export default function ClientHome({ initialLatestItems = [] }: { initialLatestI
         )}
 
         {/* Latest Feed — shown when no country is selected */}
-        {!selectedCountry && !showLoginPrompt && (
+        {!selectedCountry && !selectedKeyword && !showLoginPrompt && (
           <section className="mb-8">
             {latestItems.length > 0 ? (
               <>

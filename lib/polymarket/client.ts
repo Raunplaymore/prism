@@ -97,7 +97,7 @@ async function fetchEventsBySlug(
   }
 
   const url = `${GAMMA_API}/events?tag_slug=${encodeURIComponent(slug)}&active=true&closed=false&limit=${limit}&order=volume24hr&ascending=false`
-  const res = await fetch(url, { cache: 'no-store' })
+  const res = await fetch(url)
   if (!res.ok) throw new Error(`Polymarket gamma-api ${res.status} (slug=${slug})`)
   const raw = (await res.json()) as PolymarketEvent[]
   const events = raw.map(slimEvent)
