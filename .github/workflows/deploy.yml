@@ -37,7 +37,10 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: 1ff44f415f8e1035dfbc71bb19300b05
-          command: pages deploy .vercel/output/static --project-name=prism --branch=${{ github.ref_name }} --commit-hash=${{ github.sha }}
+          # commit-message는 ASCII로 sanitize. git commit message에 GitHub Actions
+          # expression syntax나 일부 유니코드가 들어가면 Cloudflare Pages API가
+          # "Invalid commit message ... must be valid UTF-8" 으로 거부 (8000111).
+          command: pages deploy .vercel/output/static --project-name=prism --branch=${{ github.ref_name }} --commit-hash=${{ github.sha }} --commit-message=${{ github.ref_name }}@${{ github.sha }}
 
       - name: Notify deploy result
         if: always()
