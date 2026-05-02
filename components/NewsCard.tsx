@@ -134,18 +134,55 @@ export default function NewsCard({ item, showCountry, defaultExpanded }: NewsCar
           )}
           {pubTime && <span className="text-gray-600">{pubTime}</span>}
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-gray-600">{expanded ? 'Collapse' : 'Detail'}</span>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              setExpanded(!expanded)
+            }}
+            className="inline-flex items-center gap-1 rounded-md border border-gray-700 px-2.5 py-1 text-xs font-medium text-gray-200 transition hover:border-blue-500 hover:bg-blue-500/10 hover:text-blue-300"
+            aria-expanded={expanded}
+          >
+            {expanded ? '접기' : '자세히 보기'}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`transition-transform ${expanded ? 'rotate-180' : ''}`}
+              aria-hidden="true"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
           <button
             onClick={handleShare}
-            className="text-gray-500 transition hover:text-white"
-            aria-label="Share"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition hover:bg-gray-800 hover:text-white"
+            aria-label="공유"
           >
             {copied ? (
-              <span className="text-green-400">Copied!</span>
+              <span className="text-[10px] text-green-400">복사됨</span>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                <polyline points="16 6 12 2 8 6" />
+                <line x1="12" y1="2" x2="12" y2="15" />
               </svg>
             )}
           </button>
