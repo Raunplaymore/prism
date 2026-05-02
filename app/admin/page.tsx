@@ -36,11 +36,10 @@ interface TokenLogEntry {
   cost: number
 }
 
-type ExperimentTarget = 'keyword' | 'markets' | 'lab'
+type ExperimentTarget = 'keyword' | 'lab'
 
 const EXPERIMENTS: { value: ExperimentTarget; label: string; path: string; hint: string }[] = [
   { value: 'keyword', label: 'Keywords',   path: '/keyword',    hint: '키워드 인덱스 + sphere 탐색' },
-  { value: 'markets', label: 'Markets v2', path: '/markets',    hint: 'Polymarket × News' },
   { value: 'lab',     label: 'Lab',        path: '/admin/lab',  hint: 'multi-query RSS collect' },
 ]
 
@@ -207,9 +206,6 @@ export default function AdminPage() {
             <p className="text-sm text-gray-500">{user.email}</p>
           </div>
           <div className="flex gap-2">
-            <a href="/markets" className="rounded-lg border border-yellow-900/60 bg-yellow-950/30 px-3 py-1.5 text-sm text-yellow-300 transition hover:text-yellow-200">
-              Markets (v2)
-            </a>
             <a href="/admin/lab" className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 transition hover:text-white">
               Lab
             </a>
