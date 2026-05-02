@@ -56,16 +56,27 @@ export async function generateMetadata({
   }
 }
 
+function normalizeCountryParam(raw: string | undefined): string | null {
+  if (!raw) return null
+  return /^[A-Za-z]{2}$/.test(raw) ? raw.toUpperCase() : null
+}
+
 export default async function KeywordPage({
   params,
+  searchParams,
 }: {
   params: { slug: string }
+  searchParams?: { country?: string }
 }) {
   const slug = decodeURIComponent(params.slug)
   const entry = findEntry(slug)
   if (!entry) notFound()
 
-  const articles = await getArticlesByKeyword(entry.slug)
+  const allArticles = await getArticlesByKeyword(entry.slug)
+  const country = normalizeCountryParam(searchParams?.country)
+  const articles = country
+    ? allArticles.filter((a) => a.country.toUpperCase() === country)
+    : allArticles
   const display = entry.labelKo || entry.label
 
   // Build CollectionPage JSON-LD describing the keyword and its articles.
@@ -99,30 +110,17 @@ export default async function KeywordPage({
     })),
   }
 
-  // Group articles by country. Each group is pubDate desc (newest first); the
-  // group whose freshest article is newest comes first — "what's hot now".
-  const pubMs = (s?: string): number => {
-    if (!s) return 0
-    const t = new Date(s).getTime()
-    return isNaN(t) ? 0 : t
+  // Country chip filter — derive from the unfiltered article set so the chip
+  // row stays stable as the user toggles between countries.
+  const allCountryCounts = new Map<string, number>()
+  for (const a of allArticles) {
+    const code = a.country.toUpperCase()
+    allCountryCounts.set(code, (allCountryCounts.get(code) ?? 0) + 1)
   }
-  const groupMap = new Map<string, NewsItem[]>()
-  for (const a of articles) {
-    const list = groupMap.get(a.country) ?? []
-    list.push(a)
-    groupMap.set(a.country, list)
-  }
-  Array.from(groupMap.values()).forEach((list) => {
-    list.sort((a, b) => pubMs(b.pubDate) - pubMs(a.pubDate))
-  })
-  const groups: Array<[string, NewsItem[]]> = Array.from(groupMap.entries())
-  groups.sort((a, b) => {
-    const ta = pubMs(a[1][0]?.pubDate)
-    const tb = pubMs(b[1][0]?.pubDate)
-    if (tb !== ta) return tb - ta
-    return a[0].localeCompare(b[0])
-  })
-  const countryCount = groups.length
+  const countryChips = Array.from(allCountryCounts.entries()).sort(
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+  )
+  const countryCount = countryChips.length
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -162,19 +160,36 @@ export default async function KeywordPage({
           </p>
         </div>
 
-        {groups.length > 0 && (
+        {countryChips.length > 0 && (
           <div className="mb-6 flex flex-wrap gap-1.5">
-            {groups.map(([country, items]) => (
-              <a
-                key={country}
-                href={`#country-${country}`}
-                className="inline-flex items-baseline gap-1 rounded-full border border-gray-800 bg-gray-900 px-2 py-0.5 text-xs text-gray-400 transition hover:border-gray-700 hover:text-gray-200"
-              >
-                <span>{countryFlag(country)}</span>
-                <span>{getCountryNameKo(country)}</span>
-                <span className="text-gray-600">{items.length}</span>
-              </a>
-            ))}
+            <a
+              href={`/keyword/${encodeURIComponent(entry.slug)}`}
+              className={
+                !country
+                  ? 'inline-flex items-baseline gap-1 rounded-full border border-gray-700 bg-gray-800 px-2.5 py-0.5 text-xs text-white'
+                  : 'inline-flex items-baseline gap-1 rounded-full border border-gray-800 bg-gray-900 px-2.5 py-0.5 text-xs text-gray-400 transition hover:border-gray-700 hover:text-gray-200'
+              }
+            >
+              전체
+            </a>
+            {countryChips.map(([code, count]) => {
+              const active = country === code
+              return (
+                <a
+                  key={code}
+                  href={`/keyword/${encodeURIComponent(entry.slug)}?country=${code}`}
+                  className={
+                    active
+                      ? 'inline-flex items-baseline gap-1 rounded-full border border-gray-700 bg-gray-800 px-2.5 py-0.5 text-xs text-white'
+                      : 'inline-flex items-baseline gap-1 rounded-full border border-gray-800 bg-gray-900 px-2 py-0.5 text-xs text-gray-400 transition hover:border-gray-700 hover:text-gray-200'
+                  }
+                >
+                  <span>{countryFlag(code)}</span>
+                  <span>{getCountryNameKo(code)}</span>
+                  <span className="text-gray-600">{count}</span>
+                </a>
+              )
+            })}
             <a
               href="/map"
               className="inline-flex items-center gap-1 rounded-full border border-gray-800 bg-gray-900 px-2 py-0.5 text-xs text-gray-400 transition hover:border-gray-700 hover:text-gray-200"
@@ -216,26 +231,13 @@ export default async function KeywordPage({
               articles={articles}
             />
 
-            <div className="space-y-8">
-              {groups.map(([country, items]) => (
-                <section key={country} id={`country-${country}`} className="scroll-mt-20">
-                  <h2 className="mb-3 flex items-center gap-2 border-b border-gray-800 pb-2 text-lg font-semibold">
-                    <span>{countryFlag(country)}</span>
-                    <span>{getCountryNameKo(country)}</span>
-                    <span className="text-sm font-normal text-gray-500">
-                      ({items.length}건)
-                    </span>
-                  </h2>
-                  <ul className="space-y-3">
-                    {items.map((a) => (
-                      <li key={a.id}>
-                        <NewsCard item={a} defaultExpanded />
-                      </li>
-                    ))}
-                  </ul>
-                </section>
+            <ul className="space-y-3">
+              {articles.map((a) => (
+                <li key={a.id}>
+                  <NewsCard item={a} showCountry defaultExpanded />
+                </li>
               ))}
-            </div>
+            </ul>
           </>
         )}
       </div>

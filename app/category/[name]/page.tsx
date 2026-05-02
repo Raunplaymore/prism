@@ -105,9 +105,14 @@ export default async function CategoryHubPage({
   const meta = CATEGORY_META[categoryKey]
   const country = normalizeCountryParam(searchParams?.country)
 
-  const articles = await fetchCategoryArticles(categoryKey, country)
-  const groups = groupByCountry(articles)
-  const countryCount = groups.length
+  // Always fetch the full category set so the country chip row stays stable
+  // as the user toggles between countries. Filter client-side for the list.
+  const allArticles = await fetchCategoryArticles(categoryKey, null)
+  const articles = country
+    ? allArticles.filter((a) => a.country.toUpperCase() === country)
+    : allArticles
+  const allGroups = groupByCountry(allArticles)
+  const countryCount = allGroups.length
 
   // CollectionPage JSON-LD — same shape as app/keyword/[slug]/page.tsx so
   // crawlers see consistent multi-country news structure across hub types.
@@ -179,7 +184,7 @@ export default async function CategoryHubPage({
           </p>
         </header>
 
-        {(groups.length > 0 || country) && (
+        {(allGroups.length > 0 || country) && (
           <div className="mb-6 flex flex-wrap gap-1.5">
             <a
               href={`/category/${params.name}`}
@@ -191,7 +196,7 @@ export default async function CategoryHubPage({
             >
               전체
             </a>
-            {groups.map(([code, items]) => {
+            {allGroups.map(([code, items]) => {
               const active = country === code
               return (
                 <a
@@ -243,30 +248,13 @@ export default async function CategoryHubPage({
             </p>
           </div>
         ) : (
-          <div className="space-y-8">
-            {groups.map(([code, items]) => (
-              <section
-                key={code}
-                id={`country-${code}`}
-                className="scroll-mt-20"
-              >
-                <h2 className="mb-3 flex items-center gap-2 border-b border-gray-800 pb-2 text-lg font-semibold">
-                  <span>{countryFlag(code)}</span>
-                  <span>{getCountryNameKo(code)}</span>
-                  <span className="text-sm font-normal text-gray-500">
-                    ({items.length}건)
-                  </span>
-                </h2>
-                <ul className="space-y-3">
-                  {items.map((item) => (
-                    <li key={item.id}>
-                      <NewsCard item={item} showCountry={false} />
-                    </li>
-                  ))}
-                </ul>
-              </section>
+          <ul className="space-y-3">
+            {articles.map((item) => (
+              <li key={item.id}>
+                <NewsCard item={item} showCountry />
+              </li>
             ))}
-          </div>
+          </ul>
         )}
 
         <a
