@@ -62,14 +62,16 @@ export async function GET(request: NextRequest) {
     const userInfo: GoogleUserInfo = await userRes.json()
 
     // Create session
+    const userIsAdmin = isAdmin(userInfo.email)
     const sessionToken = await createSessionToken({
       email: userInfo.email,
       name: userInfo.name,
       picture: userInfo.picture,
-      isAdmin: isAdmin(userInfo.email),
+      isAdmin: userIsAdmin,
     })
 
-    const response = NextResponse.redirect(new URL('/', request.url))
+    const dest = userIsAdmin ? '/admin' : '/'
+    const response = NextResponse.redirect(new URL(dest, request.url))
     response.headers.set('Set-Cookie', sessionCookie(sessionToken))
     return response
   } catch {
