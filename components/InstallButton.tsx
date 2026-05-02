@@ -57,11 +57,14 @@ export default function InstallButton() {
 
       {showGuide && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-md"
           onClick={() => setShowGuide(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="앱 설치 안내"
         >
           <div
-            className="mx-4 w-full max-w-sm rounded-2xl border border-gray-700 bg-gray-900 p-6 text-center shadow-2xl"
+            className="mx-4 w-full max-w-sm rounded-2xl border border-gray-600 bg-gray-900 p-6 text-center shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex justify-center">
