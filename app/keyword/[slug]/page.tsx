@@ -120,6 +120,25 @@ export default async function KeywordPage({
       />
       <div className="mx-auto max-w-3xl p-4 sm:p-8">
         <div className="mb-6">
+          <a
+            href="/keyword"
+            className="mb-2 inline-flex items-center gap-1 text-sm text-gray-500 transition hover:text-gray-300"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            모든 키워드
+          </a>
           <p className="text-sm text-gray-500">#{entry.slug}</p>
           <h1 className="mt-1 text-3xl font-bold">{display}</h1>
           <p className="mt-1 text-sm text-gray-400">
