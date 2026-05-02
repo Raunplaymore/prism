@@ -5,6 +5,8 @@ import { SUPPORTED_COUNT } from '@/lib/rss'
 export const metadata: Metadata = {
   title: 'About — Prism',
   description: `Prism은 AI 기반 세계 뉴스 브리핑 서비스입니다. ${SUPPORTED_COUNT}개국의 뉴스를 한국어로 요약하여 제공합니다.`,
+  alternates: { canonical: '/about' },
+  robots: { index: true, follow: true },
 }
 
 export default function AboutPage() {

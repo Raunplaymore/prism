@@ -4,6 +4,8 @@ import Nav from '@/components/Nav'
 export const metadata: Metadata = {
   title: 'Privacy Policy — Prism',
   description: 'Prism 개인정보 처리방침',
+  alternates: { canonical: '/privacy' },
+  robots: { index: true, follow: true },
 }
 
 export default function PrivacyPage() {

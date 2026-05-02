@@ -12,8 +12,18 @@ export const runtime = 'edge'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: '키워드 — Prism',
-  description: '지금 우리 사이트에 살아있는 모든 키워드',
+  title: '키워드로 보는 세계 뉴스 — Prism',
+  description:
+    'Prism이 50여 개국에서 수집한 기사를 인물·국가·조직·기업·토픽·이벤트로 인덱싱한 키워드 클라우드. 같은 주제를 여러 국가가 어떻게 다루는지 비교해보세요.',
+  alternates: { canonical: '/keyword' },
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: '키워드로 보는 세계 뉴스 — Prism',
+    description:
+      'Prism이 50여 개국에서 수집한 기사를 정규화된 키워드로 인덱싱. 같은 주제를 여러 국가가 어떻게 다루는지 비교.',
+    type: 'website',
+    locale: 'ko_KR',
+  },
 }
 
 // Same palette as KeywordSphere — keep visual cue consistent across surfaces.
