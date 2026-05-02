@@ -49,7 +49,7 @@ const ITEMS: NavItem[] = [
     ),
   },
   {
-    href: '/',
+    href: '/map',
     label: 'Global Map',
     exact: true,
     icon: (
