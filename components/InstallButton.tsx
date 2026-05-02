@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 /**
  * Global PWA install affordance. Mounted in Nav so every page exposes it.
@@ -11,8 +12,12 @@ import { useEffect, useRef, useState } from 'react'
 export default function InstallButton() {
   const promptRef = useRef<{ prompt: () => void } | null>(null)
   const [showGuide, setShowGuide] = useState(false)
+  // Portal target only exists after mount; gate createPortal on this so SSR
+  // doesn't try to render into document.body.
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const onBeforeInstall = (e: Event) => {
       e.preventDefault()
       promptRef.current = e as unknown as { prompt: () => void }
@@ -55,7 +60,7 @@ export default function InstallButton() {
         </svg>
       </button>
 
-      {showGuide && (
+      {mounted && showGuide && createPortal(
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-md"
           onClick={() => setShowGuide(false)}
@@ -96,7 +101,8 @@ export default function InstallButton() {
               확인
             </button>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   )
