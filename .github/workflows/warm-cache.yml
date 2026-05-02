@@ -23,6 +23,7 @@ jobs:
       - name: Warm cache for major countries
         run: |
           BASE="https://prism-4gy.pages.dev/api/news"
+          ADMIN_HEADER="x-admin-secret: ${{ secrets.ADMIN_SECRET }}"
           COUNTRIES="US KR JP GB CN FR BR IN RU IR IL UA"
           SUCCESS=0
           FAIL=0
@@ -34,6 +35,7 @@ jobs:
             echo "  collect..."
             local cs=$(curl -s -o /dev/null -w "%{http_code}" \
               -X POST "${BASE}/collect?country=${code}" \
+              -H "${ADMIN_HEADER}" \
               --max-time 30)
             if [ "$cs" != "200" ]; then
               echo "  ✗ collect failed ($cs)"
@@ -49,6 +51,7 @@ jobs:
               echo "  summarize (attempt $((attempt+1)))..."
               local ss=$(curl -s -o /dev/null -w "%{http_code}" \
                 -X POST "${BASE}/collect?country=${code}&lang=ko&step=2" \
+                -H "${ADMIN_HEADER}" \
                 --max-time 90)
               if [ "$ss" = "200" ]; then
                 echo "  ✓ $code done"
