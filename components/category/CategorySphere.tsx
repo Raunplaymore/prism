@@ -55,14 +55,18 @@ export default function CategorySphere({
         useHTML: true,
       })
 
-      // Mirror per-frame opacity → pointer-events so back-of-sphere tags
-      // can't be clicked through the front (same fix as KeywordSphere).
+      // Front hemisphere only — TagCloud's per-frame transform carries
+      // `scale(per)` (>1 front, <1 back). Restricting clicks here ensures
+      // back-of-sphere tags can't be selected through the front.
+      const SCALE_THRESHOLD = 1.0
+      const scaleRe = /scale\(([\d.]+)\)/
       const sync = () => {
         if (destroyed || !ref.current) return
         const tags = ref.current.querySelectorAll<HTMLElement>('span, a')
         tags.forEach((el) => {
-          const op = parseFloat(el.style.opacity || '1')
-          el.style.pointerEvents = op < 0.5 ? 'none' : 'auto'
+          const m = el.style.transform.match(scaleRe)
+          const scale = m ? parseFloat(m[1]) : 1
+          el.style.pointerEvents = scale >= SCALE_THRESHOLD ? 'auto' : 'none'
         })
         rafId = requestAnimationFrame(sync)
       }

@@ -69,15 +69,19 @@ export default function KeywordSphere({
         useHTML: true,
       })
 
-      // TagCloud applies a per-frame `style.opacity` to each tag based on its
-      // perspective scale (back-of-sphere tags fade out). Mirror that opacity
-      // into pointer-events so users can only click the front-facing tags.
+      // TagCloud sets `transform: translate3d(x, y, 0) scale(per)` per frame
+      // where `per = 2*depth / (2*depth + rz)`. Equator → scale=1, front
+      // hemisphere → scale > 1, back hemisphere → scale < 1. Restrict clicks
+      // to the front hemisphere so users select only what they actually see.
+      const SCALE_THRESHOLD = 1.0
+      const scaleRe = /scale\(([\d.]+)\)/
       const sync = () => {
         if (destroyed || !ref.current) return
         const tags = ref.current.querySelectorAll<HTMLElement>('span, a')
         tags.forEach((el) => {
-          const op = parseFloat(el.style.opacity || '1')
-          el.style.pointerEvents = op < 0.5 ? 'none' : 'auto'
+          const m = el.style.transform.match(scaleRe)
+          const scale = m ? parseFloat(m[1]) : 1
+          el.style.pointerEvents = scale >= SCALE_THRESHOLD ? 'auto' : 'none'
         })
         rafId = requestAnimationFrame(sync)
       }
