@@ -146,6 +146,30 @@ export default async function CategoryIndexPage() {
                 <NewsCard key={item.id} item={item} showCountry />
               ))}
             </div>
+            <a
+              href={`/category/${slugForCategory(topCategory)}`}
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border-2 px-5 py-3 text-base font-semibold transition hover:opacity-80"
+              style={{
+                borderColor: CATEGORY_META[topCategory].color,
+                color: CATEGORY_META[topCategory].color,
+              }}
+            >
+              {CATEGORY_META[topCategory].ko} 뉴스 전체 보기
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </a>
           </section>
         )}
       </div>
