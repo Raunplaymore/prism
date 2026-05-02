@@ -26,21 +26,6 @@ export interface NewsResponse {
   cachedAt: string | null
 }
 
-export interface PrismPerspective {
-  region: string
-  perspective: string
-  tone: string
-  key_points: string[]
-}
-
-export interface PrismResponse {
-  topic: string
-  country: string
-  perspectives: PrismPerspective[]
-  generatedAt: string
-  cached: boolean
-}
-
 export interface UsageState {
   clicksToday: number
   lastClickDate: string

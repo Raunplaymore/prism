@@ -1,10 +1,10 @@
 # Prism
 
 ## Product Idea
-인터랙티브 세계 지도 기반 AI 뉴스 브리핑 서비스. 사용자가 지도에서 국가를 클릭하면 AI가 해당 국가의 사회·경제·스포츠 뉴스를 실시간 검색·요약하고, 다양한 언론 시각(Prism 다시각 뷰)을 함께 제공합니다.
+인터랙티브 세계 지도와 키워드 클라우드 기반 AI 뉴스 브리핑 서비스. 사용자가 지도에서 국가를 클릭하거나 키워드를 선택하면 AI가 50여 개국 현지 언론에서 수집한 뉴스를 한국어로 요약하여 제공합니다.
 
 ## Additional Context
-주요 뉴스 매체의 RSS 피드를 직접 파싱하여 뉴스를 무료로 수집하고, OpenAI API(gpt-4o-mini)로 번역/요약만 수행하여 토큰 비용을 최소화합니다. Redis(Upstash) 캐시로 인기 국가 히트율 90% 이상을 목표로 하며, Free/Pro/Team 3단계 플랜으로 페이월을 운영합니다. AI 생성 요약만 표시하고 원문 링크를 필수 포함하여 저작권 문제를 회피합니다.
+주요 뉴스 매체의 RSS 피드를 직접 파싱하여 뉴스를 무료로 수집하고, OpenAI API(gpt-4o-mini)로 번역/요약만 수행하여 토큰 비용을 최소화합니다. Redis(Upstash) 캐시로 인기 국가 히트율 90% 이상을 목표로 하며, 광고(Google AdSense) 단일 수익 모델로 운영합니다. AI 생성 요약만 표시하고 원문 링크를 필수 포함하여 저작권 문제를 회피합니다.
 
 ## Features
 - [ ] D3.js + TopoJSON 세계 지도(국가 클릭
@@ -14,14 +14,11 @@
 - [ ] Economy
 - [ ] Sports) 뉴스 브리핑
 - [ ] Redis 캐시 레이어(TTL 1시간/5분)
-- [ ] Prism 다시각 뷰(US/EU/Arab/Asian Media 시각 비교)
-- [ ] Free 플랜 일일 5클릭 제한 및 페이월 모달
-- [ ] Supabase Auth + Stripe 결제
 - [ ] 모바일 반응형
 - [ ] 원문 링크 제공
 
 ## Tech Stack
-Next.js 14 (App Router); D3.js + TopoJSON; Tailwind CSS; RSS 피드 파싱 + OpenAI API (gpt-4o-mini) 번역/요약; Redis (Upstash); Supabase Auth + Stripe; Vercel; Sentry + Vercel Analytics
+Next.js 14 (App Router); D3.js + TopoJSON; Tailwind CSS; Google News RSS + OpenAI gpt-4o-mini 번역/요약; Redis (Upstash); Cloudflare Pages (Edge Runtime)
 
 ## Architecture
 Next.js 14 Frontend (D3.js 지도) → Next.js API Routes → RSS 피드 파싱 → OpenAI 번역/요약 → Upstash Redis 캐시
@@ -34,7 +31,7 @@ Next.js 14 Frontend (D3.js 지도) → Next.js API Routes → RSS 피드 파싱 
   - 미주: AP News
 - AI: OpenAI gpt-4o-mini — 번역/요약/카테고리 분류만 수행 (토큰 최소화)
 - 캐시: Upstash Redis, 뉴스 TTL 4시간, 사용량 TTL 24시간
-- 사용량 제한: Redis 기반 IP별 일일 5클릭 (Free)
+- 사용량 제한: IP 기반 일일 쿼터(20회/IP) — OpenAI 비용 보호용 (사용자 식별·플랜과 무관)
 
 ## Active Work
 - 백엔드 API 구현 (lib/cache.ts, lib/rss.ts, lib/news.ts, app/api/news/route.ts)
@@ -99,6 +96,8 @@ Next.js 14 Frontend (D3.js 지도) → Next.js API Routes → RSS 피드 파싱 
 ## Decisions
 - Claude API → RSS + OpenAI 전환 → RSS 피드로 무료 뉴스 수집, OpenAI는 번역/요약만 수행하여 토큰 비용 최소화. web_search 불필요
 - MVP에서 Supabase Auth 제외 → Redis IP 기반 사용량 추적으로 단순화
+- 다시각 뷰 폐기 (2026-05-01) → 미구현 6주+ 방치 + PMF는 다국가 커버리지(85+개국)에 집중. .claude memory의 project_direction.md 참조.
+- 광고 단일 수익 모델 (2026-05-01) → Pro/Team/Stripe 미도입. 비용 보호는 IP 쿼터 + 캐시. project_direction.md 참조.
 
 ## Constraints
 <!-- Platform or library limitations discovered during development. -->

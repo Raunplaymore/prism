@@ -40,7 +40,7 @@ export default function AboutPage() {
             <li>- 24시간 누적 피드 — 최신 기사가 상단에 추가</li>
             <li>- 기사 공유 기능 (링크 복사 및 공유)</li>
             <li>- 감성 분석 (긍정/중립/부정)</li>
-            <li>- Google 계정 로그인으로 전체 국가 접근</li>
+            <li>- 전 국가 무료 접근 (로그인 불필요)</li>
           </ul>
         </section>
 
