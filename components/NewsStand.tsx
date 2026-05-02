@@ -18,9 +18,6 @@ const HOT_ZONES = [
   { code: 'UA', name: 'Ukraine', flag: '🇺🇦' },
 ]
 
-// All free-access countries (used for login gate)
-const ALL_FREE_COUNTRIES = [...TOP_COUNTRIES, ...HOT_ZONES]
-
 interface NewsStandProps {
   selectedCountry: string | null
   onSelect: (code: string) => void
@@ -29,7 +26,7 @@ interface NewsStandProps {
   mapOpen?: boolean
 }
 
-export { TOP_COUNTRIES, HOT_ZONES, ALL_FREE_COUNTRIES }
+export { TOP_COUNTRIES, HOT_ZONES }
 
 function CountryButtons({
   countries,

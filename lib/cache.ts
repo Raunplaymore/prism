@@ -266,3 +266,36 @@ export async function incrementUsage(ip: string): Promise<number> {
     return 0
   }
 }
+
+// --- Anonymous IP-based daily quota (OpenAI abuse protection) ---
+
+/** Daily limit per IP for anonymous (non-admin) OpenAI-backed routes. Override via env. */
+export const USAGE_DAILY_LIMIT_ANON = Number(process.env.USAGE_DAILY_LIMIT_ANON) || 20
+
+/**
+ * Edge-runtime compatible client IP extraction.
+ * Cloudflare Pages: cf-connecting-ip 우선, x-forwarded-for fallback.
+ */
+export function getClientIp(request: Request): string {
+  return (
+    request.headers.get('cf-connecting-ip') ||
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    'unknown'
+  )
+}
+
+/**
+ * Anon quota gate: increments usage and returns ok=false if over limit.
+ * Caller should short-circuit with a 429 when ok=false.
+ */
+export async function enforceAnonQuota(
+  request: Request,
+): Promise<{ ok: true } | { ok: false; count: number; limit: number }> {
+  const ip = getClientIp(request)
+  const count = await getUsageCount(ip)
+  if (count >= USAGE_DAILY_LIMIT_ANON) {
+    return { ok: false, count, limit: USAGE_DAILY_LIMIT_ANON }
+  }
+  await incrementUsage(ip)
+  return { ok: true }
+}

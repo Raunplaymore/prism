@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
-import NewsStand, { ALL_FREE_COUNTRIES } from '@/components/NewsStand'
+import NewsStand from '@/components/NewsStand'
 import NewsCard from '@/components/NewsCard'
 import AdSlot from '@/components/AdSlot'
 import KeywordSphere from '@/components/keyword/KeywordSphere'
@@ -12,7 +12,6 @@ import { getAllCountries, getCountryName } from '@/lib/countries'
 
 import { SUPPORTED_COUNTRIES } from '@/lib/rss'
 const allCountries = getAllCountries().filter((c) => SUPPORTED_COUNTRIES.has(c.code))
-const FREE_CODES = new Set(ALL_FREE_COUNTRIES.map((c) => c.code))
 
 const WorldMap = dynamic(() => import('@/components/map/WorldMap'), { ssr: false })
 
@@ -87,24 +86,9 @@ function LoginModal({ onClose }: { onClose: () => void }) {
   )
 }
 
-function CountrySearch({ countries, onSelect, loggedIn, onLoginPrompt }: { countries: { code: string; name: string; nameKo: string }[]; onSelect: (code: string) => void; loggedIn: boolean; onLoginPrompt?: () => void }) {
+function CountrySearch({ countries, onSelect }: { countries: { code: string; name: string; nameKo: string }[]; onSelect: (code: string) => void }) {
   const [query, setQuery] = useState('')
   const [focused, setFocused] = useState(false)
-
-  if (!loggedIn) {
-    return (
-      <div className="relative mt-2" onClick={() => onLoginPrompt?.()}>
-        <div className="relative">
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <div className="w-full cursor-pointer rounded-lg border border-gray-800 bg-gray-900 py-2 pl-8 pr-3 text-sm text-gray-500 sm:w-56">
-            더 많은 국가를 검색하세요
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   const q = query.toLowerCase()
   const filtered = query.length > 0
@@ -171,7 +155,6 @@ export default function ClientHome({
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshMessage, setRefreshMessage] = useState('')
   const refreshMsgTimer = useRef<ReturnType<typeof setInterval> | null>(null)
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [showScrollTop, setShowScrollTop] = useState(false)
@@ -394,15 +377,10 @@ export default function ClientHome({
   }, [])
 
   const handleCountrySelect = useCallback(async (countryCode: string) => {
-    // Skip login gate for shared links
+    // Login gate removed — all users can select any country.
     if (isSharedLinkRef.current) {
       isSharedLinkRef.current = false
-    } else if (!user && !FREE_CODES.has(countryCode)) {
-      setShowLoginPrompt(true)
-      setSelectedCountry(null)
-      return
     }
-    setShowLoginPrompt(false)
 
     currentCountryRef.current = countryCode
     setSelectedCountry(countryCode)
@@ -463,7 +441,7 @@ export default function ClientHome({
       setError('Failed to load news. Please try again.')
       setIsLoading(false)
     }
-  }, [lang, user])
+  }, [lang])
 
   const sortedItems = newsItems
 
@@ -564,17 +542,35 @@ export default function ClientHome({
       </header>
 
       <div className="mx-auto max-w-5xl px-3 py-4 sm:px-4 sm:py-6">
-        {/* SSR-visible page intro — gives crawlers and screen readers a coherent
-            description of what Prism does, even before client-side widgets mount. */}
-        <section className="mb-4 sm:mb-6">
+        {/* SSR-visible page intro — collapsed by default to save space, but
+            the description body stays in the DOM so crawlers/screen readers
+            still see it (native <details> elements are indexed by Google). */}
+        <section className="mb-3 sm:mb-4">
           <h1 className="text-xl font-bold text-white sm:text-2xl">
             세계 뉴스를 키워드와 지도로 — Prism
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-400">
-            전 세계 50여 개국의 현지 언론을 AI가 직접 수집·분류·요약하여 한국어로 제공하는 뉴스 브리핑 서비스입니다.
-            키워드를 누르면 같은 사건을 여러 국가가 어떻게 다루는지 한눈에 비교할 수 있고, 지도에서 국가를 선택하면
-            해당 국가에서 지금 가장 많이 보도되는 이슈를 확인할 수 있습니다.
-          </p>
+          <details className="group mt-1 max-w-2xl">
+            <summary className="flex cursor-pointer list-none items-center gap-1 text-xs text-gray-500 transition hover:text-gray-300">
+              <span>AI가 정제한 50여 개국 뉴스 브리핑</span>
+              <svg
+                className="h-3 w-3 transition-transform group-open:rotate-180"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </summary>
+            <p className="mt-2 text-sm leading-relaxed text-gray-400">
+              전 세계 50여 개국의 현지 언론을 AI가 직접 수집·분류·요약하여 한국어로 제공하는 뉴스 브리핑 서비스입니다.
+              키워드를 누르면 같은 사건을 여러 국가가 어떻게 다루는지 한눈에 비교할 수 있고, 지도에서 국가를 선택하면
+              해당 국가에서 지금 가장 많이 보도되는 이슈를 확인할 수 있습니다.
+            </p>
+          </details>
         </section>
         {pullState !== 'idle' && (
           <div
@@ -626,7 +622,7 @@ export default function ClientHome({
                   setRotateTarget([...coords] as [number, number])
                 }
                 handleCountrySelect(code)
-              }} loggedIn={!!user} onLoginPrompt={() => setShowLoginPrompt(true)} />
+              }} />
 
               {/* Map (collapsible) */}
               {viewMode === 'map' && (
@@ -663,11 +659,6 @@ export default function ClientHome({
             </div>
           )}
         </section>
-
-        {/* Login Modal */}
-        {showLoginPrompt && !user && (
-          <LoginModal onClose={() => setShowLoginPrompt(false)} />
-        )}
 
         {/* Install Guide Modal */}
         {showInstallGuide && (
@@ -793,7 +784,7 @@ export default function ClientHome({
         )}
 
         {/* Latest Feed — shown when no country is selected */}
-        {!selectedCountry && !selectedKeyword && !showLoginPrompt && (
+        {!selectedCountry && !selectedKeyword && (
           <section className="mb-8">
             {latestItems.length > 0 ? (
               <>

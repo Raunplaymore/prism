@@ -2,7 +2,7 @@ export const runtime = 'edge'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { fetchRssArticles, isSupported } from '@/lib/rss'
-import { mergeFeed, getTokenStats } from '@/lib/cache'
+import { mergeFeed, getTokenStats, enforceAnonQuota } from '@/lib/cache'
 import { getCountryName } from '@/lib/countries'
 import { checkCostAlert, notifyNewsCached, notifyError } from '@/lib/telegram'
 import { fetchNewsFromArticles } from '@/lib/news'
@@ -58,6 +58,21 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 }
 
+/** Auth: admin secret header or cookie — same pattern as refresh route */
+async function isAuthorized(request: NextRequest): Promise<boolean> {
+  const secret = process.env.ADMIN_SECRET
+  if (secret && request.headers.get('x-admin-secret') === secret) return true
+
+  const { verifySessionToken, getSessionFromCookie } = await import('@/lib/auth')
+  const token = getSessionFromCookie(request.headers.get('cookie'))
+  if (token) {
+    const user = await verifySessionToken(token)
+    if (user?.isAdmin) return true
+  }
+
+  return false
+}
+
 export async function OPTIONS() {
   return new Response(null, { status: 204, headers: CORS_HEADERS })
 }
@@ -77,6 +92,17 @@ export async function POST(request: NextRequest) {
 /** Step 1: Collect RSS and store in Redis */
 async function handleCollect(request: NextRequest) {
   try {
+    // Admin bypass; otherwise enforce per-IP daily quota (OpenAI abuse protection)
+    if (!(await isAuthorized(request))) {
+      const quota = await enforceAnonQuota(request)
+      if (!quota.ok) {
+        return NextResponse.json(
+          { error: 'rate_limit', message: '오늘 무료 사용량을 모두 사용했습니다. 내일 다시 시도해 주세요.' },
+          { status: 429 },
+        )
+      }
+    }
+
     const country = request.nextUrl.searchParams.get('country')
     if (!country || !isSupported(country.toUpperCase())) {
       return NextResponse.json({ error: 'Invalid country' }, { status: 400 })
@@ -100,6 +126,17 @@ async function handleCollect(request: NextRequest) {
 /** Step 2: Read raw articles from Redis, summarize with OpenAI, save feed */
 async function handleSummarize(request: NextRequest) {
   try {
+    // Admin bypass; otherwise enforce per-IP daily quota (OpenAI abuse protection)
+    if (!(await isAuthorized(request))) {
+      const quota = await enforceAnonQuota(request)
+      if (!quota.ok) {
+        return NextResponse.json(
+          { error: 'rate_limit', message: '오늘 무료 사용량을 모두 사용했습니다. 내일 다시 시도해 주세요.' },
+          { status: 429 },
+        )
+      }
+    }
+
     const country = request.nextUrl.searchParams.get('country')
     if (!country || !isSupported(country.toUpperCase())) {
       return NextResponse.json({ error: 'Invalid country' }, { status: 400 })
@@ -118,8 +155,10 @@ async function handleSummarize(request: NextRequest) {
     const items = await fetchNewsFromArticles(code, lang, articles)
     const merged = await mergeFeed(code, lang, items as unknown as import('@/lib/cache').FeedItem[])
 
+    // Phase 2: populate keyword reverse index (kw:{slug} → {articleId, ...}).
     // MUST await — Edge runtime does not guarantee fire-and-forget execution
-    // after response is returned.
+    // after response is returned (Cloudflare Workers terminates worker context
+    // without waitUntil registration).
     try {
       await indexBatch(items)
     } catch {
