@@ -9,6 +9,7 @@ import KeywordSphere from '@/components/keyword/KeywordSphere'
 import type { NewsItem } from '@/types/news'
 import type { KeywordCount } from '@/lib/keywords/index'
 import { getAllCountries, getCountryName } from '@/lib/countries'
+import { CATEGORY_KEYS, CATEGORY_META, type CategoryKey } from '@/lib/categories'
 
 import { SUPPORTED_COUNTRIES } from '@/lib/rss'
 const allCountries = getAllCountries().filter((c) => SUPPORTED_COUNTRIES.has(c.code))
@@ -130,6 +131,43 @@ function CountrySearch({ countries, onSelect }: { countries: { code: string; nam
 }
 
 type ExploreMode = 'keyword' | 'country'
+
+interface CategoryChipProps {
+  /** 'all' or one of CATEGORY_KEYS — passed to onClick verbatim. */
+  value: 'all' | CategoryKey
+  /** Korean display label rendered inside the chip. */
+  label: string
+  /** English label, surfaced via title attr for hover. */
+  en: string
+  /** Hex color for active state. Omitted for the 'All' chip. */
+  color?: string
+  active: boolean
+  onClick: (value: string) => void
+}
+
+function CategoryChip({ value, label, en, color, active, onClick }: CategoryChipProps) {
+  const activeStyle = active && color
+    ? { backgroundColor: `${color}33`, color, borderColor: `${color}55` }
+    : undefined
+  const className = active
+    ? color
+      ? 'shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium transition'
+      : 'shrink-0 whitespace-nowrap rounded-full border border-gray-600 bg-gray-800 px-3 py-1 text-xs font-medium text-white transition'
+    : 'shrink-0 whitespace-nowrap rounded-full border border-gray-700 bg-gray-900 px-3 py-1 text-xs font-medium text-gray-400 transition hover:border-gray-600 hover:text-gray-200'
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      title={en}
+      onClick={() => onClick(value)}
+      className={className}
+      style={activeStyle}
+    >
+      {label}
+    </button>
+  )
+}
 
 export default function ClientHome({
   initialLatestItems = [],
@@ -788,24 +826,32 @@ export default function ClientHome({
           <section className="mb-8">
             {latestItems.length > 0 ? (
               <>
-                <div className="mb-3 flex items-center justify-between">
+                <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className="text-sm font-semibold text-gray-400">Latest</h2>
-                  <select
-                    value={latestCategory}
-                    onChange={(e) => changeCategory(e.target.value)}
-                    className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-300 outline-none transition focus:border-blue-500"
+                  <div
+                    role="tablist"
+                    aria-label="카테고리 필터"
+                    className="-mx-4 flex gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
                   >
-                    <option value="all">All</option>
-                    <option value="Politics">Politics</option>
-                    <option value="Economy">Economy</option>
-                    <option value="Tech">Tech</option>
-                    <option value="Defense">Defense</option>
-                    <option value="Diplomacy">Diplomacy</option>
-                    <option value="Society">Society</option>
-                    <option value="Health">Health</option>
-                    <option value="Environment">Environment</option>
-                    <option value="Culture">Culture</option>
-                  </select>
+                    <CategoryChip
+                      value="all"
+                      label="전체"
+                      en="All"
+                      active={latestCategory === 'all'}
+                      onClick={changeCategory}
+                    />
+                    {CATEGORY_KEYS.map((k) => (
+                      <CategoryChip
+                        key={k}
+                        value={k}
+                        label={CATEGORY_META[k].ko}
+                        en={CATEGORY_META[k].en}
+                        color={CATEGORY_META[k].color}
+                        active={latestCategory === k}
+                        onClick={changeCategory}
+                      />
+                    ))}
+                  </div>
                 </div>
                 <div className="space-y-3">
                   {latestItems.map((item, i) => (

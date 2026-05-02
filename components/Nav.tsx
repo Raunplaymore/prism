@@ -12,6 +12,7 @@ interface NavItem {
 
 const ITEMS: NavItem[] = [
   { href: '/keyword', label: 'Keywords' },
+  { href: '/category', label: 'Categories' },
   { href: '/', label: 'Map', exact: true },
 ]
 

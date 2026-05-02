@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { NewsItem } from '@/types/news'
+import { CATEGORY_META, isValidCategory } from '@/lib/categories'
 
 interface NewsCardProps {
   item: NewsItem
@@ -36,21 +37,13 @@ const sentimentColors = {
   negative: '#ef4444',
 } as const
 
-const categoryColors: Record<string, string> = {
-  Politics: '#3b82f6',
-  Economy: '#22c55e',
-  Society: '#6b7280',
-  Tech: '#a855f7',
-  Defense: '#ef4444',
-  Diplomacy: '#eab308',
-  Environment: '#10b981',
-  Health: '#06b6d4',
-  Culture: '#ec4899',
-}
-
 export default function NewsCard({ item, showCountry, defaultExpanded }: NewsCardProps) {
   const [expanded, setExpanded] = useState(Boolean(defaultExpanded))
   const [copied, setCopied] = useState(false)
+  const categoryColor =
+    item.category && isValidCategory(item.category)
+      ? CATEGORY_META[item.category].color
+      : '#6b7280'
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -86,8 +79,8 @@ export default function NewsCard({ item, showCountry, defaultExpanded }: NewsCar
             <span
               className="rounded-full px-2 py-0.5 text-[10px] font-medium"
               style={{
-                backgroundColor: `${categoryColors[item.category] ?? '#6b7280'}15`,
-                color: categoryColors[item.category] ?? '#6b7280',
+                backgroundColor: `${categoryColor}15`,
+                color: categoryColor,
               }}
             >
               {item.category}

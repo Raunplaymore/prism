@@ -1,22 +1,11 @@
 import type { NewsItem } from '@/types/news'
 import { getCountryNameKo } from '@/lib/countries'
+import { CATEGORY_META, isValidCategory } from '@/lib/categories'
 
 interface Props {
   label: string
   category: string
   articles: NewsItem[]
-}
-
-const CATEGORY_KO: Record<string, string> = {
-  Politics: '정치',
-  Economy: '경제',
-  Society: '사회',
-  Tech: '기술',
-  Defense: '국방',
-  Diplomacy: '외교',
-  Environment: '환경',
-  Health: '건강',
-  Culture: '문화',
 }
 
 const SENTIMENT_KO: Record<string, string> = {
@@ -103,7 +92,7 @@ export default function KeywordSynthesis({ label, category, articles }: Props) {
   const categoryPart =
     topCategories.length > 0
       ? topCategories
-          .map(([c, n]) => `${CATEGORY_KO[c] ?? c} ${pct(n, total)}%`)
+          .map(([c, n]) => `${isValidCategory(c) ? CATEGORY_META[c].ko : c} ${pct(n, total)}%`)
           .join(', ')
       : null
 
