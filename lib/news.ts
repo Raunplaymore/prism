@@ -19,7 +19,7 @@ interface OpenAIResponse {
   usage?: { prompt_tokens: number; completion_tokens: number }
 }
 
-function simpleHash(str: string): string {
+export function simpleHash(str: string): string {
   let hash = 0
   for (let i = 0; i < str.length; i++) {
     hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0

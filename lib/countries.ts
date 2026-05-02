@@ -101,3 +101,18 @@ export function getAllCountries(): { code: string; name: string; nameKo: string 
     .map(([code, name]) => ({ code, name, nameKo: countryNamesKo[code] ?? name }))
     .sort((a, b) => a.name.localeCompare(b.name))
 }
+
+/** Render an ISO alpha-2 code as a flag emoji using regional indicator symbols. */
+export function countryFlag(code: string): string {
+  return code
+    .toUpperCase()
+    .split('')
+    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
+    .join('')
+}
+
+/** Validate a `?country=XX` searchParam: ASCII A-Z exactly 2 chars. Returns uppercase or null. */
+export function normalizeCountryParam(raw: string | undefined): string | null {
+  if (!raw) return null
+  return /^[A-Za-z]{2}$/.test(raw) ? raw.toUpperCase() : null
+}

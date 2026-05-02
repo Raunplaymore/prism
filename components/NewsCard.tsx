@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { NewsItem } from '@/types/news'
 import { CATEGORY_META, isValidCategory } from '@/lib/categories'
+import { countryFlag } from '@/lib/countries'
 
 interface NewsCardProps {
   item: NewsItem
@@ -10,14 +11,6 @@ interface NewsCardProps {
   /** Render the detail body expanded on first paint (used on keyword pages
    *  where surfacing detail in SSR meaningfully boosts page text content). */
   defaultExpanded?: boolean
-}
-
-function countryFlag(code: string): string {
-  return code
-    .toUpperCase()
-    .split('')
-    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
-    .join('')
 }
 
 function timeAgo(dateStr: string): string {

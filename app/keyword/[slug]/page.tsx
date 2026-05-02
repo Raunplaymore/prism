@@ -5,7 +5,7 @@ import NewsCard from '@/components/NewsCard'
 import Nav from '@/components/Nav'
 import KeywordSynthesis from '@/components/keyword/KeywordSynthesis'
 import { findEntry, getArticlesByKeyword } from '@/lib/keywords/index'
-import { getCountryNameKo } from '@/lib/countries'
+import { getCountryNameKo, countryFlag, normalizeCountryParam } from '@/lib/countries'
 
 export const runtime = 'edge'
 export const dynamic = 'force-dynamic'
@@ -17,14 +17,6 @@ const CATEGORY_LABEL_KO: Record<string, string> = {
   company: '기업',
   topic: '토픽',
   event: '이벤트',
-}
-
-function countryFlag(code: string): string {
-  return code
-    .toUpperCase()
-    .split('')
-    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
-    .join('')
 }
 
 export async function generateMetadata({
@@ -62,11 +54,6 @@ export async function generateMetadata({
       images: ['/og-image.png'],
     },
   }
-}
-
-function normalizeCountryParam(raw: string | undefined): string | null {
-  if (!raw) return null
-  return /^[A-Za-z]{2}$/.test(raw) ? raw.toUpperCase() : null
 }
 
 export default async function KeywordPage({

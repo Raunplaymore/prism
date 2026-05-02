@@ -178,7 +178,7 @@ export function parseRss(xml: string): RssArticle[] {
   return articles
 }
 
-function extractTag(xml: string, tag: string): string {
+export function extractTag(xml: string, tag: string): string {
   // Handle CDATA
   const cdataRegex = new RegExp(`<${tag}[^>]*>\\s*<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>\\s*<\\/${tag}>`, 'i')
   const cdataMatch = xml.match(cdataRegex)
@@ -189,7 +189,7 @@ function extractTag(xml: string, tag: string): string {
   return match ? match[1].trim() : ''
 }
 
-function stripHtml(text: string): string {
+export function stripHtml(text: string): string {
   return text
     .replace(/<[^>]+>/g, '')
     .replace(/&amp;/g, '&')

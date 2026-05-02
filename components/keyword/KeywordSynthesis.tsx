@@ -1,5 +1,5 @@
 import type { NewsItem } from '@/types/news'
-import { getCountryNameKo } from '@/lib/countries'
+import { getCountryNameKo, countryFlag } from '@/lib/countries'
 import { CATEGORY_META, isValidCategory } from '@/lib/categories'
 
 interface Props {
@@ -21,14 +21,6 @@ const CATEGORY_LABEL_KO: Record<string, string> = {
   company: '기업',
   topic: '토픽',
   event: '이벤트',
-}
-
-function countryFlag(code: string): string {
-  return code
-    .toUpperCase()
-    .split('')
-    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
-    .join('')
 }
 
 function topN<T>(map: Map<T, number>, n: number): [T, number][] {

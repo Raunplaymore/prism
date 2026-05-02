@@ -2,6 +2,7 @@ export const runtime = 'edge'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken, getSessionFromCookie } from '@/lib/auth'
+import { extractTag, stripHtml } from '@/lib/rss'
 
 async function isAdmin(request: NextRequest): Promise<boolean> {
   const token = getSessionFromCookie(request.headers.get('cookie'))
@@ -31,26 +32,6 @@ interface RssArticle {
   description: string
   pubDate: string
   source: string
-}
-
-function extractTag(xml: string, tag: string): string {
-  const cdataRegex = new RegExp(`<${tag}[^>]*>\\s*<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>\\s*<\\/${tag}>`, 'i')
-  const cdataMatch = xml.match(cdataRegex)
-  if (cdataMatch) return cdataMatch[1].trim()
-
-  const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i')
-  const match = xml.match(regex)
-  return match ? match[1].trim() : ''
-}
-
-function stripHtml(text: string): string {
-  return text
-    .replace(/<[^>]+>/g, '')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
 }
 
 function parseRss(xml: string): RssArticle[] {

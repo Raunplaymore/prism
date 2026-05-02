@@ -1,5 +1,5 @@
 import type { NewsItem } from '@/types/news'
-import { getCountryNameKo } from '@/lib/countries'
+import { getCountryNameKo, countryFlag } from '@/lib/countries'
 
 interface Props {
   label: string // 한국어 카테고리 라벨 (예: "경제")
@@ -10,14 +10,6 @@ const SENTIMENT_KO: Record<string, string> = {
   positive: '긍정',
   neutral: '중립',
   negative: '부정',
-}
-
-function countryFlag(code: string): string {
-  return code
-    .toUpperCase()
-    .split('')
-    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
-    .join('')
 }
 
 function topN<T>(map: Map<T, number>, n: number): [T, number][] {

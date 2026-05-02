@@ -5,7 +5,7 @@ import NewsCard from '@/components/NewsCard'
 import CategorySynthesis from '@/components/category/CategorySynthesis'
 import type { NewsItem } from '@/types/news'
 import { CATEGORY_META, categoryFromSlug, type CategoryKey } from '@/lib/categories'
-import { getCountryNameKo } from '@/lib/countries'
+import { getCountryNameKo, countryFlag, normalizeCountryParam } from '@/lib/countries'
 import { groupByCountry } from '@/lib/news/groupByCountry'
 
 export const runtime = 'edge'
@@ -14,20 +14,6 @@ export const revalidate = 300
 interface PageProps {
   params: { name: string }
   searchParams?: { country?: string }
-}
-
-function countryFlag(code: string): string {
-  return code
-    .toUpperCase()
-    .split('')
-    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
-    .join('')
-}
-
-/** Validate searchParams.country: A-Z exactly 2 chars. Returns uppercase code or null. */
-function normalizeCountryParam(raw: string | undefined): string | null {
-  if (!raw) return null
-  return /^[A-Za-z]{2}$/.test(raw) ? raw.toUpperCase() : null
 }
 
 /**

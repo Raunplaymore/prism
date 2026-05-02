@@ -2,6 +2,7 @@ export const runtime = 'edge'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { recordTokenUsage } from '@/lib/cache'
+import { simpleHash } from '@/lib/news'
 
 async function redisGet(key: string): Promise<string | null> {
   const url = process.env.UPSTASH_REDIS_REST_URL
@@ -56,14 +57,6 @@ async function callOpenAI(messages: { role: string; content: string }[]): Promis
   }
 
   return res.json()
-}
-
-function simpleHash(str: string): string {
-  let hash = 0
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0
-  }
-  return Math.abs(hash).toString(36)
 }
 
 const CORS_HEADERS = {
