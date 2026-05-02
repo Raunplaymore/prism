@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import InstallButton from '@/components/InstallButton'
 
 export default function Nav() {
   return (
@@ -12,6 +13,8 @@ export default function Nav() {
             <span className="text-[10px] text-gray-500">refracted by AI</span>
           </div>
         </Link>
+        <div className="flex-1" />
+        <InstallButton />
       </div>
     </header>
   )

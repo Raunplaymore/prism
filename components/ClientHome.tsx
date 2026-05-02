@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import NewsStand from '@/components/NewsStand'
 import NewsCard from '@/components/NewsCard'
 import AdSlot from '@/components/AdSlot'
+import InstallButton from '@/components/InstallButton'
 import type { NewsItem } from '@/types/news'
 import { getAllCountries, getCountryName } from '@/lib/countries'
 
@@ -112,8 +113,6 @@ export default function ClientHome({
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [heatmapData, setHeatmapData] = useState<Record<string, number>>({})
-  const [showInstallGuide, setShowInstallGuide] = useState(false)
-  const deferredPromptRef = useRef<{ prompt: () => void } | null>(null)
   const [pullState, setPullState] = useState<'idle' | 'pulling' | 'refreshing'>('idle')
   const [pullDistance, setPullDistance] = useState(0)
   const currentCountryRef = useRef<string | null>(null)
@@ -161,13 +160,6 @@ export default function ClientHome({
 
     refreshLatest()
 
-    // Intercept install prompt — only show when user clicks install button
-    const onBeforeInstall = (e: Event) => {
-      e.preventDefault()
-      deferredPromptRef.current = e as unknown as { prompt: () => void }
-    }
-    window.addEventListener('beforeinstallprompt', onBeforeInstall)
-
     // Pull-to-refresh — only on global feed, only real drag (not taps)
     let pulling = false
     const onTouchStart = (e: TouchEvent) => {
@@ -214,7 +206,6 @@ export default function ClientHome({
     window.addEventListener('touchend', onTouchEnd, { passive: true })
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', onBeforeInstall)
       window.removeEventListener('touchstart', onTouchStart)
       window.removeEventListener('touchmove', onTouchMove)
       window.removeEventListener('touchend', onTouchEnd)
@@ -363,25 +354,7 @@ export default function ClientHome({
             </a>
           </div>
           <div className="flex items-center gap-2">
-            {/* Install */}
-            <button
-              onClick={() => {
-                if (deferredPromptRef.current) {
-                  deferredPromptRef.current.prompt()
-                  deferredPromptRef.current = null
-                } else {
-                  setShowInstallGuide(true)
-                }
-              }}
-              className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-700 text-gray-400 transition hover:border-gray-600 hover:text-white"
-              aria-label="Install app"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-            </button>
+            <InstallButton />
           </div>
         </div>
       </header>
@@ -483,29 +456,6 @@ export default function ClientHome({
         </section>
 
         {/* Install Guide Modal */}
-        {showInstallGuide && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowInstallGuide(false)}>
-            <div className="mx-4 w-full max-w-sm rounded-2xl border border-gray-700 bg-gray-900 p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="mb-4 flex justify-center">
-                <img src="/logo.png" alt="Prism" className="h-12 w-12 rounded-lg" />
-              </div>
-              <h3 className="mb-4 text-lg font-bold text-white">홈 화면에 추가</h3>
-              <div className="mb-4 space-y-3 text-left text-sm text-gray-300">
-                <div className="rounded-lg bg-gray-800 p-3">
-                  <p className="mb-1 font-medium text-blue-400">iPhone / iPad</p>
-                  <p className="text-xs text-gray-400">Safari 하단 공유 버튼(↑) → &quot;홈 화면에 추가&quot;</p>
-                </div>
-                <div className="rounded-lg bg-gray-800 p-3">
-                  <p className="mb-1 font-medium text-green-400">Android</p>
-                  <p className="text-xs text-gray-400">Chrome 메뉴(⋮) → &quot;홈 화면에 추가&quot;</p>
-                </div>
-              </div>
-              <p className="mb-4 text-xs text-gray-500">앱처럼 빠르게 접속할 수 있습니다</p>
-              <button onClick={() => setShowInstallGuide(false)} className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white transition hover:bg-blue-500">확인</button>
-            </div>
-          </div>
-        )}
-
         {/* <AdSlot slot="top-banner" type="banner" /> */}
 
         {/* News Section */}
