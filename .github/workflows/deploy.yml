@@ -1,0 +1,53 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # main에 빠르게 여러 푸시가 들어오면 직전 deploy를 취소하고 최신만 진행
+  group: deploy-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install
+        run: npm ci
+
+      - name: Build for Cloudflare Pages
+        run: npm run pages:build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: 1ff44f415f8e1035dfbc71bb19300b05
+          command: pages deploy .vercel/output/static --project-name=prism --branch=${{ github.ref_name }} --commit-hash=${{ github.sha }}
+
+      - name: Notify deploy result
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          ICON="✅"
+          [ "$STATUS" = "failure" ] && ICON="❌"
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "$(printf '{"chat_id":"%s","text":"%s <b>Pages Deploy %s</b>\nSHA: <code>%s</code>","parse_mode":"HTML"}' \
+              "${{ secrets.TELEGRAM_CHAT_ID }}" \
+              "$ICON" \
+              "$STATUS" \
+              "${GITHUB_SHA:0:7}")"
