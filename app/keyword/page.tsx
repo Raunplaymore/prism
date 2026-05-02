@@ -15,6 +15,16 @@ export const metadata: Metadata = {
   description: '지금 우리 사이트에 살아있는 모든 키워드',
 }
 
+// Same palette as KeywordSphere — keep visual cue consistent across surfaces.
+const CATEGORY_COLOR: Record<string, string> = {
+  person: '#fbbf24',
+  country: '#60a5fa',
+  org: '#a78bfa',
+  company: '#34d399',
+  topic: '#f87171',
+  event: '#fb923c',
+}
+
 export default async function KeywordIndexPage() {
   const all = await getLiveKeywordCounts()
   const totalArticleHits = all.reduce((sum, kc) => sum + kc.count, 0)
@@ -99,6 +109,30 @@ export default async function KeywordIndexPage() {
                     <NewsCard key={item.id} item={item} showCountry />
                   ))}
                 </div>
+                <a
+                  href={`/keyword/${encodeURIComponent(topKeyword.entry.slug)}`}
+                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border-2 px-5 py-3 text-base font-semibold transition hover:opacity-80"
+                  style={{
+                    borderColor: CATEGORY_COLOR[topKeyword.entry.category] ?? '#9ca3af',
+                    color: CATEGORY_COLOR[topKeyword.entry.category] ?? '#9ca3af',
+                  }}
+                >
+                  #{topKeyword.entry.labelKo || topKeyword.entry.label} 뉴스 전체 보기
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </a>
               </section>
             )}
           </>
