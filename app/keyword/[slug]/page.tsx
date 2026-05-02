@@ -74,35 +74,51 @@ export default async function KeywordPage({
     : allArticles
   const display = entry.labelKo || entry.label
 
-  // Build CollectionPage JSON-LD describing the keyword and its articles.
-  // Including a description plus hasPart NewsArticle entries gives crawlers
-  // a structured anchor for the page's original synthesis + sources.
+  // CollectionPage + BreadcrumbList JSON-LD. @graph로 두 type을 묶어 SERP에서
+  // collection rich result + breadcrumb 모두 노출 가능하도록.
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
-    name: `${display} — Prism`,
-    description:
-      articles.length > 0
-        ? `Prism이 ${display} 관련 ${articles.length}건의 기사를 ${
-            new Set(articles.map((a) => a.country)).size
-          }개국에서 종합한 다국가 보도 분석입니다.`
-        : `${display} 관련 다국가 보도 분석`,
-    inLanguage: 'ko',
-    isPartOf: {
-      '@type': 'WebSite',
-      name: 'Prism',
-      url: 'https://prismglobe.com',
-    },
-    hasPart: articles.slice(0, 20).map((a) => ({
-      '@type': 'NewsArticle',
-      headline: a.title,
-      description: a.summary,
-      datePublished: a.pubDate,
-      inLanguage: 'ko',
-      url: a.url,
-      publisher: { '@type': 'Organization', name: a.source },
-      contentLocation: { '@type': 'Country', name: getCountryNameKo(a.country) },
-    })),
+    '@graph': [
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: '홈', item: 'https://prismglobe.com/' },
+          { '@type': 'ListItem', position: 2, name: '키워드', item: 'https://prismglobe.com/keyword' },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: display,
+            item: `https://prismglobe.com/keyword/${encodeURIComponent(entry.slug)}`,
+          },
+        ],
+      },
+      {
+        '@type': 'CollectionPage',
+        name: `${display} — Prism`,
+        description:
+          articles.length > 0
+            ? `Prism이 ${display} 관련 ${articles.length}건의 기사를 ${
+                new Set(articles.map((a) => a.country)).size
+              }개국에서 종합한 다국가 보도 분석입니다.`
+            : `${display} 관련 다국가 보도 분석`,
+        inLanguage: 'ko',
+        isPartOf: {
+          '@type': 'WebSite',
+          name: 'Prism',
+          url: 'https://prismglobe.com',
+        },
+        hasPart: articles.slice(0, 20).map((a) => ({
+          '@type': 'NewsArticle',
+          headline: a.title,
+          description: a.summary,
+          datePublished: a.pubDate,
+          inLanguage: 'ko',
+          url: a.url,
+          publisher: { '@type': 'Organization', name: a.source },
+          contentLocation: { '@type': 'Country', name: getCountryNameKo(a.country) },
+        })),
+      },
+    ],
   }
 
   // Country chip filter — derive from the unfiltered article set so the chip

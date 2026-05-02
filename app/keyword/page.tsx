@@ -49,9 +49,38 @@ export default async function KeywordIndexPage() {
     ? await getArticlesByKeyword(topKeyword.entry.slug)
     : []
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: '홈', item: 'https://prismglobe.com/' },
+          { '@type': 'ListItem', position: 2, name: '키워드', item: 'https://prismglobe.com/keyword' },
+        ],
+      },
+      {
+        '@type': 'ItemList',
+        name: '살아있는 키워드',
+        numberOfItems: all.length,
+        // 너무 많으면 SERP가 무시. 상위 50으로 제한.
+        itemListElement: all.slice(0, 50).map((kc, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          url: `https://prismglobe.com/keyword/${encodeURIComponent(kc.entry.slug)}`,
+          name: kc.entry.labelKo || kc.entry.label,
+        })),
+      },
+    ],
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <Nav />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="mx-auto max-w-3xl p-4 sm:p-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold">키워드로 보는 세계 뉴스</h1>

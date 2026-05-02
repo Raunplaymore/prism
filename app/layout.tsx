@@ -42,15 +42,57 @@ export const metadata: Metadata = {
   verification: { google: 'QY09AFQmbMM0PxNDQg7eRaVx-ouDrjLWChRp1KTPaXU' },
 }
 
+// 사이트 전체 entity — Google이 brand search 시 site name, 검색박스, 로고를
+// SERP에 직접 노출하도록 명시. WebSite/Organization는 모든 페이지에 하나만
+// 있으면 충분해서 layout에 inline.
+const siteJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': 'https://prismglobe.com/#website',
+      url: 'https://prismglobe.com',
+      name: 'Prism',
+      description: 'AI 세계 뉴스 브리핑',
+      inLanguage: 'ko',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: 'https://prismglobe.com/keyword/{search_term_string}',
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@type': 'Organization',
+      '@id': 'https://prismglobe.com/#organization',
+      name: 'Prism',
+      url: 'https://prismglobe.com',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://prismglobe.com/icon-512.png',
+        width: 512,
+        height: 512,
+      },
+    },
+  ],
+}
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
   return (
     <html lang="ko">
       <head>
         <meta property="fb:app_id" content="3828444140798151" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
+        />
       </head>
       <body className="bg-gray-950 text-white antialiased pb-[calc(56px+env(safe-area-inset-bottom))]">
         {children}
@@ -62,6 +104,22 @@ export default function RootLayout({
           crossOrigin="anonymous"
           strategy="lazyOnload"
         />
+        {gaId && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${gaId}');
+              `}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   )

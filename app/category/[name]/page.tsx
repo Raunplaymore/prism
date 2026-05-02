@@ -102,32 +102,44 @@ export default async function CategoryHubPage({
   const allGroups = groupByCountry(allArticles)
   const countryCount = allGroups.length
 
-  // CollectionPage JSON-LD — same shape as app/keyword/[slug]/page.tsx so
-  // crawlers see consistent multi-country news structure across hub types.
+  // CollectionPage + BreadcrumbList JSON-LD. @graph로 두 type을 묶어 SERP에서
+  // collection rich result + breadcrumb 모두 노출 가능하도록.
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
-    name: `${meta.ko} 뉴스 — Prism`,
-    description:
-      articles.length > 0
-        ? `Prism이 ${countryCount}개국에서 수집한 ${meta.ko} 분야 기사 ${articles.length}건의 다국가 보도 분석`
-        : `${meta.ko} 분야 다국가 보도 분석`,
-    inLanguage: 'ko',
-    isPartOf: {
-      '@type': 'WebSite',
-      name: 'Prism',
-      url: 'https://prismglobe.com',
-    },
-    hasPart: articles.slice(0, 20).map((a) => ({
-      '@type': 'NewsArticle',
-      headline: a.title,
-      description: a.summary,
-      datePublished: a.pubDate,
-      inLanguage: 'ko',
-      url: a.url,
-      publisher: { '@type': 'Organization', name: a.source },
-      contentLocation: { '@type': 'Country', name: getCountryNameKo(a.country) },
-    })),
+    '@graph': [
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: '홈', item: 'https://prismglobe.com/' },
+          { '@type': 'ListItem', position: 2, name: '카테고리', item: 'https://prismglobe.com/category' },
+          { '@type': 'ListItem', position: 3, name: meta.ko, item: `https://prismglobe.com/category/${params.name}` },
+        ],
+      },
+      {
+        '@type': 'CollectionPage',
+        name: `${meta.ko} 뉴스 — Prism`,
+        description:
+          articles.length > 0
+            ? `Prism이 ${countryCount}개국에서 수집한 ${meta.ko} 분야 기사 ${articles.length}건의 다국가 보도 분석`
+            : `${meta.ko} 분야 다국가 보도 분석`,
+        inLanguage: 'ko',
+        isPartOf: {
+          '@type': 'WebSite',
+          name: 'Prism',
+          url: 'https://prismglobe.com',
+        },
+        hasPart: articles.slice(0, 20).map((a) => ({
+          '@type': 'NewsArticle',
+          headline: a.title,
+          description: a.summary,
+          datePublished: a.pubDate,
+          inLanguage: 'ko',
+          url: a.url,
+          publisher: { '@type': 'Organization', name: a.source },
+          contentLocation: { '@type': 'Country', name: getCountryNameKo(a.country) },
+        })),
+      },
+    ],
   }
 
   return (

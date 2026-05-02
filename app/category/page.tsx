@@ -68,6 +68,30 @@ export default async function CategoryIndexPage() {
     count: counts[key] ?? 0,
   }))
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: '홈', item: 'https://prismglobe.com/' },
+          { '@type': 'ListItem', position: 2, name: '카테고리', item: 'https://prismglobe.com/category' },
+        ],
+      },
+      {
+        '@type': 'ItemList',
+        name: '뉴스 카테고리 9개 분류',
+        numberOfItems: items.length,
+        itemListElement: items.map((it, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          url: `https://prismglobe.com/category/${it.slug}`,
+          name: it.ko,
+        })),
+      },
+    ],
+  }
+
   // Top category preview: pick the busiest category, surface its latest
   // articles below the sphere. counts initializes every key to 0, so we
   // guard against the all-zero (empty cloud) case by checking the max.
@@ -86,6 +110,10 @@ export default async function CategoryIndexPage() {
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <Nav />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="mx-auto max-w-3xl p-4 sm:p-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold">카테고리로 보는 세계 뉴스</h1>
