@@ -111,7 +111,8 @@ export default function ClientHome({
   const [refreshMessage, setRefreshMessage] = useState('')
   const refreshMsgTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
+  // /map 페이지 진입 시 기본값은 globe(map). 사용자는 토글로 list 전환 가능.
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('map')
   const [heatmapData, setHeatmapData] = useState<Record<string, number>>({})
   const [pullState, setPullState] = useState<'idle' | 'pulling' | 'refreshing'>('idle')
   const [pullDistance, setPullDistance] = useState(0)
