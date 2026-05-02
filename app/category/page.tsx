@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Nav from '@/components/Nav'
+import NewsCard from '@/components/NewsCard'
 import CategorySphere from '@/components/category/CategorySphere'
 import {
   CATEGORY_KEYS,
@@ -8,6 +9,25 @@ import {
   type CategoryKey,
 } from '@/lib/categories'
 import { getCategoryCounts } from '@/lib/categories/counts'
+import type { NewsItem } from '@/types/news'
+
+/**
+ * Fetch the freshest articles for a single category to render a preview
+ * underneath the sphere. Mirrors app/page.tsx and app/category/[name]/page.tsx
+ * by hitting the public origin so the same edge fleet that owns the Redis
+ * cache serves the request; revalidate=300 dedupes within a render cycle.
+ */
+async function fetchCategoryPreview(key: CategoryKey): Promise<NewsItem[]> {
+  const url = `https://prism-4gy.pages.dev/api/news/latest?lang=ko&category=${key}&limit=8`
+  try {
+    const res = await fetch(url, { next: { revalidate: 300 } })
+    if (!res.ok) return []
+    const data = (await res.json()) as { items?: NewsItem[] }
+    return data.items ?? []
+  } catch {
+    return []
+  }
+}
 
 export const runtime = 'edge'
 export const revalidate = 300
@@ -45,6 +65,21 @@ export default async function CategoryIndexPage() {
     color: CATEGORY_META[key].color,
     count: counts[key] ?? 0,
   }))
+
+  // Top category preview: pick the busiest category, surface its latest
+  // articles below the sphere. counts initializes every key to 0, so we
+  // guard against the all-zero (empty cloud) case by checking the max.
+  const topCategory: CategoryKey | null = CATEGORY_KEYS.reduce<CategoryKey | null>(
+    (max, key) => {
+      if ((counts[key] ?? 0) <= 0) return max
+      if (max === null) return key
+      return (counts[key] ?? 0) > (counts[max] ?? 0) ? key : max
+    },
+    null,
+  )
+  const topCategoryArticles = topCategory
+    ? await fetchCategoryPreview(topCategory)
+    : []
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -86,6 +121,33 @@ export default async function CategoryIndexPage() {
             클릭해서 들어가기
           </p>
         </div>
+
+        {topCategory && topCategoryArticles.length > 0 && (
+          <section className="mb-12">
+            <div className="mb-4 flex items-baseline justify-between">
+              <h2 className="text-lg font-semibold text-white">
+                지금 가장 활발한 분류:{' '}
+                <span style={{ color: CATEGORY_META[topCategory].color }}>
+                  {CATEGORY_META[topCategory].ko}
+                </span>
+                <span className="ml-2 text-sm text-gray-500">
+                  ({counts[topCategory]}건)
+                </span>
+              </h2>
+              <a
+                href={`/category/${slugForCategory(topCategory)}`}
+                className="text-xs text-gray-500 transition hover:text-gray-300"
+              >
+                전체 보기 →
+              </a>
+            </div>
+            <div className="space-y-3">
+              {topCategoryArticles.slice(0, 8).map((item) => (
+                <NewsCard key={item.id} item={item} showCountry />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   )

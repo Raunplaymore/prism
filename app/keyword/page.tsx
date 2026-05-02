@@ -1,7 +1,12 @@
 import type { Metadata } from 'next'
-import { getLiveKeywordCounts, type KeywordCount } from '@/lib/keywords/index'
+import {
+  getArticlesByKeyword,
+  getLiveKeywordCounts,
+  type KeywordCount,
+} from '@/lib/keywords/index'
 import type { KeywordCategory } from '@/lib/keywords/vocabulary'
 import KeywordSphere from '@/components/keyword/KeywordSphere'
+import NewsCard from '@/components/NewsCard'
 import Nav from '@/components/Nav'
 
 export const runtime = 'edge'
@@ -52,6 +57,14 @@ export default async function KeywordIndexPage() {
     byCat.set(kc.entry.category, list)
   }
 
+  // Top keyword preview: surface the most-active keyword's articles directly
+  // below the sphere so the index page ships real content (better SEO + less
+  // "click sphere to find anything" friction). all[] is already count-desc.
+  const topKeyword = all[0] ?? null
+  const topKeywordArticles = topKeyword
+    ? await getArticlesByKeyword(topKeyword.entry.slug)
+    : []
+
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <Nav />
@@ -100,6 +113,32 @@ export default async function KeywordIndexPage() {
                 클릭해서 들어가기
               </p>
             </div>
+            {topKeyword && topKeywordArticles.length > 0 && (
+              <section className="mb-12">
+                <div className="mb-4 flex items-baseline justify-between">
+                  <h2 className="text-lg font-semibold text-white">
+                    지금 가장 활발한 키워드:{' '}
+                    <span className="text-white">
+                      #{topKeyword.entry.labelKo || topKeyword.entry.label}
+                    </span>
+                    <span className="ml-2 text-sm text-gray-500">
+                      ({topKeyword.count}건)
+                    </span>
+                  </h2>
+                  <a
+                    href={`/keyword/${encodeURIComponent(topKeyword.entry.slug)}`}
+                    className="text-xs text-gray-500 transition hover:text-gray-300"
+                  >
+                    전체 보기 →
+                  </a>
+                </div>
+                <div className="space-y-3">
+                  {topKeywordArticles.slice(0, 8).map((item) => (
+                    <NewsCard key={item.id} item={item} showCountry />
+                  ))}
+                </div>
+              </section>
+            )}
             {CATEGORY_ORDER.map((cat) => {
             const items = byCat.get(cat.id) ?? []
             if (items.length === 0) return null
