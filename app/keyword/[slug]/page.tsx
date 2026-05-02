@@ -112,14 +112,15 @@ export default async function KeywordPage({
     list.push(a)
     groupMap.set(a.country, list)
   }
-  for (const list of groupMap.values()) {
+  Array.from(groupMap.values()).forEach((list) => {
     list.sort((a, b) => pubMs(b.pubDate) - pubMs(a.pubDate))
-  }
-  const groups = Array.from(groupMap.entries()).sort(([ca, la], [cb, lb]) => {
-    const ta = pubMs(la[0]?.pubDate)
-    const tb = pubMs(lb[0]?.pubDate)
+  })
+  const groups: Array<[string, NewsItem[]]> = Array.from(groupMap.entries())
+  groups.sort((a, b) => {
+    const ta = pubMs(a[1][0]?.pubDate)
+    const tb = pubMs(b[1][0]?.pubDate)
     if (tb !== ta) return tb - ta
-    return ca.localeCompare(cb)
+    return a[0].localeCompare(b[0])
   })
   const countryCount = groups.length
 
