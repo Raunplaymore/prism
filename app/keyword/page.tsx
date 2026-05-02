@@ -2,9 +2,7 @@ import type { Metadata } from 'next'
 import {
   getArticlesByKeyword,
   getLiveKeywordCounts,
-  type KeywordCount,
 } from '@/lib/keywords/index'
-import type { KeywordCategory } from '@/lib/keywords/vocabulary'
 import KeywordSphere from '@/components/keyword/KeywordSphere'
 import NewsCard from '@/components/NewsCard'
 import Nav from '@/components/Nav'
@@ -17,45 +15,9 @@ export const metadata: Metadata = {
   description: '지금 우리 사이트에 살아있는 모든 키워드',
 }
 
-interface CategoryMeta {
-  id: KeywordCategory
-  label: string
-  emoji: string
-}
-
-const CATEGORY_ORDER: CategoryMeta[] = [
-  { id: 'person',  label: '인물',     emoji: '👤' },
-  { id: 'country', label: '국가·지역', emoji: '🌍' },
-  { id: 'org',     label: '조직',     emoji: '🏛' },
-  { id: 'company', label: '기업',     emoji: '🏢' },
-  { id: 'topic',   label: '토픽',     emoji: '🏷' },
-  { id: 'event',   label: '이벤트',   emoji: '📅' },
-]
-
-function Chip({ kc }: { kc: KeywordCount }) {
-  const display = kc.entry.labelKo || kc.entry.label
-  return (
-    <a
-      href={`/keyword/${encodeURIComponent(kc.entry.slug)}`}
-      className="inline-flex items-baseline gap-1.5 rounded-full border border-gray-800 bg-gray-900 px-3 py-1 text-sm text-gray-300 transition hover:border-gray-700 hover:bg-gray-800 hover:text-white"
-    >
-      <span>{display}</span>
-      <span className="text-xs text-gray-500">{kc.count}</span>
-    </a>
-  )
-}
-
 export default async function KeywordIndexPage() {
   const all = await getLiveKeywordCounts()
   const totalArticleHits = all.reduce((sum, kc) => sum + kc.count, 0)
-
-  // Bucket by category (preserve count-desc order within each)
-  const byCat = new Map<KeywordCategory, KeywordCount[]>()
-  for (const kc of all) {
-    const list = byCat.get(kc.entry.category) ?? []
-    list.push(kc)
-    byCat.set(kc.entry.category, list)
-  }
 
   // Top keyword preview: surface the most-active keyword's articles directly
   // below the sphere so the index page ships real content (better SEO + less
@@ -139,26 +101,6 @@ export default async function KeywordIndexPage() {
                 </div>
               </section>
             )}
-            {CATEGORY_ORDER.map((cat) => {
-            const items = byCat.get(cat.id) ?? []
-            if (items.length === 0) return null
-            return (
-              <section key={cat.id} className="mb-8">
-                <div className="mb-3 flex items-baseline gap-2">
-                  <h2 className="text-xl font-semibold">
-                    <span className="mr-1.5">{cat.emoji}</span>
-                    {cat.label}
-                  </h2>
-                  <span className="text-sm text-gray-500">{items.length}</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {items.map((kc) => (
-                    <Chip key={kc.entry.slug} kc={kc} />
-                  ))}
-                </div>
-              </section>
-            )
-          })}
           </>
         )}
       </div>
