@@ -32,6 +32,7 @@ export default function CategorySphere({
 
     let destroyed = false
     let cloudInstance: { destroy: () => void } | null = null
+    let rafId = 0
 
     import('TagCloud').then((mod) => {
       if (destroyed || !ref.current) return
@@ -53,10 +54,24 @@ export default function CategorySphere({
         keep: true,
         useHTML: true,
       })
+
+      // Mirror per-frame opacity → pointer-events so back-of-sphere tags
+      // can't be clicked through the front (same fix as KeywordSphere).
+      const sync = () => {
+        if (destroyed || !ref.current) return
+        const tags = ref.current.querySelectorAll<HTMLElement>('span, a')
+        tags.forEach((el) => {
+          const op = parseFloat(el.style.opacity || '1')
+          el.style.pointerEvents = op < 0.5 ? 'none' : 'auto'
+        })
+        rafId = requestAnimationFrame(sync)
+      }
+      rafId = requestAnimationFrame(sync)
     })
 
     return () => {
       destroyed = true
+      if (rafId) cancelAnimationFrame(rafId)
       try {
         cloudInstance?.destroy()
       } catch {

@@ -40,6 +40,7 @@ export default function KeywordSphere({
 
     let destroyed = false
     let cloudInstance: { destroy: () => void } | null = null
+    let rafId = 0
 
     import('TagCloud').then((mod) => {
       if (destroyed || !ref.current) return
@@ -67,6 +68,20 @@ export default function KeywordSphere({
         keep: true,
         useHTML: true,
       })
+
+      // TagCloud applies a per-frame `style.opacity` to each tag based on its
+      // perspective scale (back-of-sphere tags fade out). Mirror that opacity
+      // into pointer-events so users can only click the front-facing tags.
+      const sync = () => {
+        if (destroyed || !ref.current) return
+        const tags = ref.current.querySelectorAll<HTMLElement>('span, a')
+        tags.forEach((el) => {
+          const op = parseFloat(el.style.opacity || '1')
+          el.style.pointerEvents = op < 0.5 ? 'none' : 'auto'
+        })
+        rafId = requestAnimationFrame(sync)
+      }
+      rafId = requestAnimationFrame(sync)
     })
 
     // Click delegation — fire onSelect when any .kw-tag inside the sphere is clicked
@@ -84,6 +99,7 @@ export default function KeywordSphere({
 
     return () => {
       destroyed = true
+      if (rafId) cancelAnimationFrame(rafId)
       node.removeEventListener('click', handler)
       try {
         cloudInstance?.destroy()
