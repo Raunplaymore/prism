@@ -118,9 +118,13 @@ async function handleSummarize(request: NextRequest) {
     const items = await fetchNewsFromArticles(code, lang, articles)
     const merged = await mergeFeed(code, lang, items as unknown as import('@/lib/cache').FeedItem[])
 
-    // Phase 2: populate keyword reverse index (kw:{slug} → {articleId, ...}).
-    // Cache write failures are swallowed inside indexBatch.
-    indexBatch(items).catch(() => {})
+    // MUST await — Edge runtime does not guarantee fire-and-forget execution
+    // after response is returned.
+    try {
+      await indexBatch(items)
+    } catch {
+      // non-critical: index will be rebuilt on next ingest
+    }
 
     const countryName = getCountryName(code)
     notifyNewsCached(code, countryName, lang, items.length).catch(() => {})
