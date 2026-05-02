@@ -348,7 +348,7 @@ export default function ClientHome({
           <div className="flex items-center gap-3 sm:gap-5">
             <a href="/" className="flex items-center gap-2.5">
               <img src="/logo.png" alt="Prism" className="h-7 w-7 rounded-md" />
-              <div className="hidden flex-col leading-none sm:flex">
+              <div className="flex flex-col leading-none">
                 <span className="text-base font-bold tracking-tight">Prism</span>
                 <span className="text-[10px] text-gray-500">refracted by AI</span>
               </div>
