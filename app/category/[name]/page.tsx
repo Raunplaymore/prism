@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Nav from '@/components/Nav'
 import NewsCard from '@/components/NewsCard'
+import CategorySynthesis from '@/components/category/CategorySynthesis'
 import type { NewsItem } from '@/types/news'
 import { CATEGORY_META, categoryFromSlug, type CategoryKey } from '@/lib/categories'
 import { getCountryNameKo } from '@/lib/countries'
@@ -248,13 +249,16 @@ export default async function CategoryHubPage({
             </p>
           </div>
         ) : (
-          <ul className="space-y-3">
-            {articles.map((item) => (
-              <li key={item.id}>
-                <NewsCard item={item} showCountry />
-              </li>
-            ))}
-          </ul>
+          <>
+            <CategorySynthesis label={meta.ko} articles={articles} />
+            <ul className="space-y-3">
+              {articles.map((item) => (
+                <li key={item.id}>
+                  <NewsCard item={item} showCountry />
+                </li>
+              ))}
+            </ul>
+          </>
         )}
 
         <a
