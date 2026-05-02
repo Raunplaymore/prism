@@ -99,16 +99,28 @@ export default async function KeywordPage({
     })),
   }
 
-  // Group articles by country, ordered by article count desc.
+  // Group articles by country. Each group is pubDate desc (newest first); the
+  // group whose freshest article is newest comes first — "what's hot now".
+  const pubMs = (s?: string): number => {
+    if (!s) return 0
+    const t = new Date(s).getTime()
+    return isNaN(t) ? 0 : t
+  }
   const groupMap = new Map<string, NewsItem[]>()
   for (const a of articles) {
     const list = groupMap.get(a.country) ?? []
     list.push(a)
     groupMap.set(a.country, list)
   }
-  const groups = Array.from(groupMap.entries()).sort(
-    (a, b) => b[1].length - a[1].length,
-  )
+  for (const list of groupMap.values()) {
+    list.sort((a, b) => pubMs(b.pubDate) - pubMs(a.pubDate))
+  }
+  const groups = Array.from(groupMap.entries()).sort(([ca, la], [cb, lb]) => {
+    const ta = pubMs(la[0]?.pubDate)
+    const tb = pubMs(lb[0]?.pubDate)
+    if (tb !== ta) return tb - ta
+    return ca.localeCompare(cb)
+  })
   const countryCount = groups.length
 
   return (
