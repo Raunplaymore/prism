@@ -29,11 +29,12 @@ export default function CategorySphere({
     const node = ref.current
     if (!node) return
     const measure = () => {
-      const w = node.offsetWidth
       const h = node.offsetHeight
-      // 9개라 0.34로 사이즈 제어 — 너무 키우면 라벨 사이 갭이 어색.
-      const r = Math.min(w, h) * 0.34
-      const next = Math.max(60, Math.min(maxRadius, Math.round(r)))
+      // 9개라 KeywordSphere보다 작게 — 모바일은 컨테이너 둘레에 가깝게,
+      // desktop은 라벨 간 spacing 확보.
+      const ratio = h < 250 ? 0.55 : 0.42
+      const r = h * ratio
+      const next = Math.max(70, Math.min(maxRadius, Math.round(r)))
       setRadius(next)
     }
     measure()

@@ -145,7 +145,7 @@ export default async function CategoryIndexPage() {
           </details>
         </div>
 
-        <div className="relative mb-3 flex h-[190px] items-center justify-center overflow-hidden rounded-2xl border border-gray-900 bg-gradient-to-b from-gray-950 to-gray-900/40 text-base font-semibold sm:h-[350px] sm:text-lg lg:h-[400px] lg:text-xl">
+        <div className="relative mb-3 flex h-[190px] items-center justify-center overflow-hidden rounded-2xl border border-gray-900 bg-gradient-to-b from-gray-950 to-gray-900/40 text-sm font-semibold sm:h-[350px] sm:text-lg lg:h-[400px] lg:text-xl">
           <CategorySphere items={items} />
           <p className="pointer-events-none absolute bottom-3 right-4 text-xs text-gray-600">
             클릭해서 들어가기
