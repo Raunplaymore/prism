@@ -49,10 +49,18 @@ export async function generateMetadata({
   return {
     title: `#${entry.slug} · ${display} — Prism`,
     description,
+    alternates: { canonical: `/keyword/${encodeURIComponent(entry.slug)}` },
     robots:
       articles.length === 0
         ? { index: false, follow: false }
         : { index: true, follow: true },
+    openGraph: {
+      title: `#${display} — 다국가 보도 종합 — Prism`,
+      description,
+      type: 'website',
+      locale: 'ko_KR',
+      images: ['/og-image.png'],
+    },
   }
 }
 

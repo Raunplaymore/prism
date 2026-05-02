@@ -15,6 +15,7 @@ export const metadata: Metadata = {
       '인터랙티브 세계 지도에서 국가를 클릭해 50여 개국의 최신 뉴스를 한국어로 확인.',
     type: 'website',
     locale: 'ko_KR',
+    images: ['/og-image.png'],
   },
 }
 

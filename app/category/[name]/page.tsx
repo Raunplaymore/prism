@@ -92,6 +92,7 @@ export async function generateMetadata({
           : `${meta.ko} 분야 다국가 보도 분석`,
       type: 'website',
       locale: 'ko_KR',
+      images: ['/og-image.png'],
     },
   }
 }

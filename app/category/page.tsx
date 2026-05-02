@@ -45,6 +45,7 @@ export const metadata: Metadata = {
       'Prism이 매일 50여 개국에서 수집한 기사를 9개 분류로 정리. 같은 주제를 여러 국가가 어떻게 다루는지 한눈에 비교.',
     type: 'website',
     locale: 'ko_KR',
+    images: ['/og-image.png'],
   },
 }
 

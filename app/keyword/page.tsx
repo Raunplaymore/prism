@@ -23,6 +23,7 @@ export const metadata: Metadata = {
       'Prism이 50여 개국에서 수집한 기사를 정규화된 키워드로 인덱싱. 같은 주제를 여러 국가가 어떻게 다루는지 비교.',
     type: 'website',
     locale: 'ko_KR',
+    images: ['/og-image.png'],
   },
 }
 
