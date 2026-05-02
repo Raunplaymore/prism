@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Nav from '@/components/Nav'
 import NewsCard from '@/components/NewsCard'
 import CategorySphere from '@/components/category/CategorySphere'
+import SelectNavigator from '@/components/SelectNavigator'
 import {
   CATEGORY_KEYS,
   CATEGORY_META,
@@ -115,12 +116,20 @@ export default async function CategoryIndexPage() {
           </details>
         </div>
 
-        <div className="relative mb-10 flex h-[190px] items-center justify-center overflow-hidden rounded-2xl border border-gray-900 bg-gradient-to-b from-gray-950 to-gray-900/40 sm:h-[350px] lg:h-[400px]">
+        <div className="relative mb-3 flex h-[190px] items-center justify-center overflow-hidden rounded-2xl border border-gray-900 bg-gradient-to-b from-gray-950 to-gray-900/40 sm:h-[350px] lg:h-[400px]">
           <CategorySphere items={items} radius={120} />
           <p className="pointer-events-none absolute bottom-3 right-4 text-xs text-gray-600">
             클릭해서 들어가기
           </p>
         </div>
+        <SelectNavigator
+          routePrefix="/category"
+          placeholder="카테고리 직접 선택"
+          options={items.map((it) => ({
+            value: it.slug,
+            label: `${it.ko} (${it.count}건)`,
+          }))}
+        />
 
         {topCategory && topCategoryArticles.length > 0 && (
           <section className="mb-12">
