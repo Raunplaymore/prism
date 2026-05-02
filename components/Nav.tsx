@@ -1,5 +1,3 @@
-'use client'
-
 import Link from 'next/link'
 
 export default function Nav() {
@@ -13,13 +11,6 @@ export default function Nav() {
             <span className="text-base font-bold tracking-tight text-white">Prism</span>
             <span className="text-[10px] text-gray-500">refracted by AI</span>
           </div>
-        </Link>
-        <div className="flex-1" />
-        <Link
-          href="/admin"
-          className="text-xs text-gray-500 transition hover:text-gray-300"
-        >
-          Admin
         </Link>
       </div>
     </header>
