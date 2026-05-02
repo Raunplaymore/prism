@@ -654,7 +654,7 @@ export default function ClientHome({
                 </div>
               )}
               <p className="pointer-events-none absolute bottom-3 right-4 text-xs text-gray-600">
-                드래그해서 회전 · 클릭해서 들어가기
+                클릭해서 들어가기
               </p>
             </div>
           )}
