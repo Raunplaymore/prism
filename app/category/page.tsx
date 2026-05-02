@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Nav from '@/components/Nav'
+import CategorySphere from '@/components/category/CategorySphere'
 import {
   CATEGORY_KEYS,
   CATEGORY_META,
@@ -38,6 +39,13 @@ export default async function CategoryIndexPage() {
 
   const totalArticleHits = CATEGORY_KEYS.reduce((sum, key) => sum + counts[key], 0)
 
+  const items = CATEGORY_KEYS.map((key) => ({
+    slug: slugForCategory(key),
+    ko: CATEGORY_META[key].ko,
+    color: CATEGORY_META[key].color,
+    count: counts[key] ?? 0,
+  }))
+
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <Nav />
@@ -72,32 +80,11 @@ export default async function CategoryIndexPage() {
           </details>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {CATEGORY_KEYS.map((key) => {
-            const meta = CATEGORY_META[key]
-            const count = counts[key] ?? 0
-            return (
-              <a
-                key={key}
-                href={`/category/${slugForCategory(key)}`}
-                className="group rounded-xl border border-gray-800 p-4 transition hover:border-gray-700"
-                style={{ backgroundColor: `${meta.color}15` }}
-              >
-                <div
-                  className="text-xl font-semibold"
-                  style={{ color: meta.color }}
-                >
-                  {meta.ko}
-                </div>
-                <div className="mt-0.5 text-xs uppercase tracking-wide text-gray-500">
-                  {meta.en}
-                </div>
-                <div className="mt-2 text-sm text-gray-400">
-                  {count}건
-                </div>
-              </a>
-            )
-          })}
+        <div className="relative mb-10 flex h-[190px] items-center justify-center overflow-hidden rounded-2xl border border-gray-900 bg-gradient-to-b from-gray-950 to-gray-900/40 sm:h-[350px] lg:h-[400px]">
+          <CategorySphere items={items} radius={120} />
+          <p className="pointer-events-none absolute bottom-3 right-4 text-xs text-gray-600">
+            클릭해서 들어가기
+          </p>
         </div>
       </div>
     </div>

@@ -5,11 +5,8 @@ import dynamic from 'next/dynamic'
 import NewsStand from '@/components/NewsStand'
 import NewsCard from '@/components/NewsCard'
 import AdSlot from '@/components/AdSlot'
-import KeywordSphere from '@/components/keyword/KeywordSphere'
 import type { NewsItem } from '@/types/news'
-import type { KeywordCount } from '@/lib/keywords/index'
 import { getAllCountries, getCountryName } from '@/lib/countries'
-import { CATEGORY_KEYS, CATEGORY_META, type CategoryKey } from '@/lib/categories'
 
 import { SUPPORTED_COUNTRIES } from '@/lib/rss'
 const allCountries = getAllCountries().filter((c) => SUPPORTED_COUNTRIES.has(c.code))
@@ -130,64 +127,19 @@ function CountrySearch({ countries, onSelect }: { countries: { code: string; nam
   )
 }
 
-type ExploreMode = 'keyword' | 'country'
-
-interface CategoryChipProps {
-  /** 'all' or one of CATEGORY_KEYS — passed to onClick verbatim. */
-  value: 'all' | CategoryKey
-  /** Korean display label rendered inside the chip. */
-  label: string
-  /** English label, surfaced via title attr for hover. */
-  en: string
-  /** Hex color for active state. Omitted for the 'All' chip. */
-  color?: string
-  active: boolean
-  onClick: (value: string) => void
-}
-
-function CategoryChip({ value, label, en, color, active, onClick }: CategoryChipProps) {
-  const activeStyle = active && color
-    ? { backgroundColor: `${color}33`, color, borderColor: `${color}55` }
-    : undefined
-  const className = active
-    ? color
-      ? 'shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium transition'
-      : 'shrink-0 whitespace-nowrap rounded-full border border-gray-600 bg-gray-800 px-3 py-1 text-xs font-medium text-white transition'
-    : 'shrink-0 whitespace-nowrap rounded-full border border-gray-700 bg-gray-900 px-3 py-1 text-xs font-medium text-gray-400 transition hover:border-gray-600 hover:text-gray-200'
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      title={en}
-      onClick={() => onClick(value)}
-      className={className}
-      style={activeStyle}
-    >
-      {label}
-    </button>
-  )
-}
-
 export default function ClientHome({
   initialLatestItems = [],
-  keywordCounts = [],
 }: {
   initialLatestItems?: NewsItem[]
-  keywordCounts?: KeywordCount[]
 }) {
-  const [exploreMode, setExploreMode] = useState<ExploreMode>('keyword')
   const [user, setUser] = useState<User | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const lang = 'ko' as const
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
-  const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null)
-  const [selectedKeywordLabel, setSelectedKeywordLabel] = useState<string | null>(null)
   const [newsItems, setNewsItems] = useState<NewsItem[]>([])
   const [needsScrape, setNeedsScrape] = useState(false)
   const [latestItems, setLatestItems] = useState<NewsItem[]>(initialLatestItems)
   const [latestHasMore, setLatestHasMore] = useState(false)
-  const [latestCategory, setLatestCategory] = useState<string>('all')
   const [latestLoading, setLatestLoading] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -209,22 +161,19 @@ export default function ClientHome({
   const pullStartY = useRef(0)
   const pullDistRef = useRef(0)
 
-  const refreshLatest = useCallback((category?: string) => {
-    const cat = category ?? latestCategory
-    const catParam = cat !== 'all' ? `&category=${cat}` : ''
-    fetch(`/api/news/latest?lang=${lang}&limit=20${catParam}`)
+  const refreshLatest = useCallback(() => {
+    fetch(`/api/news/latest?lang=${lang}&limit=20`)
       .then((r) => r.json())
       .then((data) => {
         if (data.items) setLatestItems(data.items)
         setLatestHasMore(data.hasMore ?? false)
       })
       .catch(() => {})
-  }, [lang, latestCategory])
+  }, [lang])
 
   const loadMoreLatest = useCallback(() => {
     setLatestLoading(true)
-    const catParam = latestCategory !== 'all' ? `&category=${latestCategory}` : ''
-    fetch(`/api/news/latest?lang=${lang}&offset=${latestItems.length}&limit=20${catParam}`)
+    fetch(`/api/news/latest?lang=${lang}&offset=${latestItems.length}&limit=20`)
       .then((r) => r.json())
       .then((data) => {
         if (data.items) setLatestItems((prev) => [...prev, ...data.items])
@@ -232,12 +181,7 @@ export default function ClientHome({
       })
       .catch(() => {})
       .finally(() => setLatestLoading(false))
-  }, [lang, latestItems.length, latestCategory])
-
-  const changeCategory = (cat: string) => {
-    setLatestCategory(cat)
-    refreshLatest(cat)
-  }
+  }, [lang, latestItems.length])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -391,29 +335,6 @@ export default function ClientHome({
     }, 5000)
   }, [lang]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleKeywordSelect = useCallback(async (slug: string) => {
-    setSelectedKeyword(slug)
-    setSelectedCountry(null)
-    setError(null)
-    setIsLoading(true)
-    try {
-      const res = await fetch(`/api/keyword?slug=${encodeURIComponent(slug)}`)
-      if (!res.ok) {
-        setNewsItems([])
-        setSelectedKeywordLabel(null)
-        return
-      }
-      const data = await res.json()
-      setNewsItems(data.items ?? [])
-      setSelectedKeywordLabel(data.label ?? slug)
-    } catch {
-      setNewsItems([])
-      setSelectedKeywordLabel(null)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
   const handleCountrySelect = useCallback(async (countryCode: string) => {
     // Login gate removed — all users can select any country.
     if (isSharedLinkRef.current) {
@@ -496,46 +417,6 @@ export default function ClientHome({
                 <span className="text-[10px] text-gray-500">refracted by AI</span>
               </div>
             </a>
-            <nav className="flex items-center gap-0.5">
-              <button
-                type="button"
-                onClick={() => {
-                  if (exploreMode === 'keyword') return
-                  setExploreMode('keyword')
-                  setSelectedCountry(null)
-                  setSelectedKeyword(null)
-                  setSelectedKeywordLabel(null)
-                  setNewsItems([])
-                  setNeedsScrape(false)
-                }}
-                className={
-                  exploreMode === 'keyword'
-                    ? 'rounded-md bg-gray-800 px-2.5 py-1 text-sm font-medium text-white'
-                    : 'rounded-md px-2.5 py-1 text-sm text-gray-400 transition hover:bg-gray-900 hover:text-white'
-                }
-              >
-                Keywords
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (exploreMode === 'country') return
-                  setExploreMode('country')
-                  setSelectedCountry(null)
-                  setSelectedKeyword(null)
-                  setSelectedKeywordLabel(null)
-                  setNewsItems([])
-                  setNeedsScrape(false)
-                }}
-                className={
-                  exploreMode === 'country'
-                    ? 'rounded-md bg-gray-800 px-2.5 py-1 text-sm font-medium text-white'
-                    : 'rounded-md px-2.5 py-1 text-sm text-gray-400 transition hover:bg-gray-900 hover:text-white'
-                }
-              >
-                Map
-              </button>
-            </nav>
           </div>
           <div className="flex items-center gap-2">
             {/* Install */}
@@ -631,69 +512,46 @@ export default function ClientHome({
         )}
         {/* Country Selector */}
         <section className="mb-4">
-          {exploreMode === 'country' && (
-            <>
-              <NewsStand
-                selectedCountry={selectedCountry}
-                onSelect={(code: string) => {
-                  const coords = COUNTRY_COORDS[code]
-                  if (coords && viewMode === 'map') {
-                    setRotateTarget([...coords] as [number, number])
-                  }
-                  handleCountrySelect(code)
-                }}
-                isLoading={isLoading}
-                onToggleMap={() => {
-                  if (viewMode === 'map') {
-                    setViewMode('list'); viewModeRef.current = 'list'
-                  } else {
-                    setViewMode('map'); viewModeRef.current = 'map'
-                    setSelectedCountry(null)
-                    setNewsItems([])
-                  }
-                }}
-                mapOpen={viewMode === 'map'}
-              />
-              <CountrySearch countries={allCountries} onSelect={(code) => {
-                const coords = COUNTRY_COORDS[code]
-                if (coords && viewMode === 'map') {
-                  setRotateTarget([...coords] as [number, number])
-                }
-                handleCountrySelect(code)
-              }} />
+          <NewsStand
+            selectedCountry={selectedCountry}
+            onSelect={(code: string) => {
+              const coords = COUNTRY_COORDS[code]
+              if (coords && viewMode === 'map') {
+                setRotateTarget([...coords] as [number, number])
+              }
+              handleCountrySelect(code)
+            }}
+            isLoading={isLoading}
+            onToggleMap={() => {
+              if (viewMode === 'map') {
+                setViewMode('list'); viewModeRef.current = 'list'
+              } else {
+                setViewMode('map'); viewModeRef.current = 'map'
+                setSelectedCountry(null)
+                setNewsItems([])
+              }
+            }}
+            mapOpen={viewMode === 'map'}
+          />
+          <CountrySearch countries={allCountries} onSelect={(code) => {
+            const coords = COUNTRY_COORDS[code]
+            if (coords && viewMode === 'map') {
+              setRotateTarget([...coords] as [number, number])
+            }
+            handleCountrySelect(code)
+          }} />
 
-              {/* Map (collapsible) */}
-              {viewMode === 'map' && (
-                <div className="mt-3 overflow-hidden rounded-xl border border-gray-800 bg-gray-900">
-                  <div className="h-[190px] sm:h-[350px] lg:h-[400px]">
-                    <WorldMap
-                      onCountrySelect={handleCountrySelect}
-                      heatmapData={heatmapData}
-                      selectedCountry={selectedCountry}
-                      rotateTarget={rotateTarget}
-                    />
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-
-          {exploreMode === 'keyword' && (
-            <div className="relative flex h-[190px] items-center justify-center overflow-hidden rounded-xl border border-gray-800 bg-gradient-to-b from-gray-950 to-gray-900/40 sm:h-[350px] lg:h-[400px]">
-              {keywordCounts.length > 0 ? (
-                <KeywordSphere
-                  items={keywordCounts}
-                  radius={140}
-                  onSelect={handleKeywordSelect}
+          {/* Map (collapsible) */}
+          {viewMode === 'map' && (
+            <div className="mt-3 overflow-hidden rounded-xl border border-gray-800 bg-gray-900">
+              <div className="h-[190px] sm:h-[350px] lg:h-[400px]">
+                <WorldMap
+                  onCountrySelect={handleCountrySelect}
+                  heatmapData={heatmapData}
+                  selectedCountry={selectedCountry}
+                  rotateTarget={rotateTarget}
                 />
-              ) : (
-                <div className="flex h-full items-center justify-center px-6 text-sm text-gray-500">
-                  아직 인덱스된 키워드가 없습니다.
-                </div>
-              )}
-              <p className="pointer-events-none absolute bottom-3 right-4 text-xs text-gray-600">
-                클릭해서 들어가기
-              </p>
+              </div>
             </div>
           )}
         </section>
@@ -725,30 +583,10 @@ export default function ClientHome({
         {/* <AdSlot slot="top-banner" type="banner" /> */}
 
         {/* News Section */}
-        {(selectedCountry || selectedKeyword) && (
+        {selectedCountry && (
           <section className="mb-8">
             <div className="mb-4 flex items-center gap-3">
-              {selectedKeyword ? (
-                <>
-                  <h2 className="text-lg font-bold">
-                    {selectedKeywordLabel ?? selectedKeyword}
-                  </h2>
-                  <span className="text-sm text-gray-500">#{selectedKeyword}</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedKeyword(null)
-                      setSelectedKeywordLabel(null)
-                      setNewsItems([])
-                    }}
-                    className="ml-auto rounded-md border border-gray-800 px-2 py-0.5 text-xs text-gray-500 transition hover:border-gray-700 hover:text-gray-300"
-                  >
-                    ✕ 해제
-                  </button>
-                </>
-              ) : (
-                <h2 className="text-lg font-bold">{getCountryName(selectedCountry!)}</h2>
-              )}
+              <h2 className="text-lg font-bold">{getCountryName(selectedCountry)}</h2>
             </div>
 
             {/* News List */}
@@ -757,8 +595,7 @@ export default function ClientHome({
                 <span>{error}</span>
                 <button
                   onClick={() => {
-                    if (selectedKeyword) handleKeywordSelect(selectedKeyword)
-                    else if (selectedCountry) handleCountrySelect(selectedCountry)
+                    if (selectedCountry) handleCountrySelect(selectedCountry)
                   }}
                   className="rounded-md bg-red-900/50 px-3 py-1 text-xs text-red-300 transition hover:bg-red-900/70"
                 >
@@ -822,36 +659,12 @@ export default function ClientHome({
         )}
 
         {/* Latest Feed — shown when no country is selected */}
-        {!selectedCountry && !selectedKeyword && (
+        {!selectedCountry && (
           <section className="mb-8">
             {latestItems.length > 0 ? (
               <>
-                <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mb-3 flex items-center justify-between">
                   <h2 className="text-sm font-semibold text-gray-400">Latest</h2>
-                  <div
-                    role="tablist"
-                    aria-label="카테고리 필터"
-                    className="-mx-4 flex gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
-                  >
-                    <CategoryChip
-                      value="all"
-                      label="전체"
-                      en="All"
-                      active={latestCategory === 'all'}
-                      onClick={changeCategory}
-                    />
-                    {CATEGORY_KEYS.map((k) => (
-                      <CategoryChip
-                        key={k}
-                        value={k}
-                        label={CATEGORY_META[k].ko}
-                        en={CATEGORY_META[k].en}
-                        color={CATEGORY_META[k].color}
-                        active={latestCategory === k}
-                        onClick={changeCategory}
-                      />
-                    ))}
-                  </div>
                 </div>
                 <div className="space-y-3">
                   {latestItems.map((item, i) => (
@@ -895,7 +708,7 @@ export default function ClientHome({
       {showScrollTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-5 right-4 z-50 flex h-9 w-9 items-center justify-center rounded-full bg-gray-700/90 text-white shadow-lg transition hover:bg-gray-600"
+          className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] right-4 z-50 flex h-9 w-9 items-center justify-center rounded-full bg-gray-700/90 text-white shadow-lg transition hover:bg-gray-600"
           aria-label="Scroll to top"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

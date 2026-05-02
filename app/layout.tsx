@@ -2,11 +2,13 @@ import type { Metadata } from 'next'
 import Script from 'next/script'
 import './globals.css'
 import { SUPPORTED_COUNT } from '@/lib/rss'
+import BottomNav from '@/components/BottomNav'
 
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  viewportFit: 'cover' as const,
 }
 
 const desc = `${SUPPORTED_COUNT}개국의 뉴스를 AI가 한국어로 요약하여 제공합니다.`
@@ -40,8 +42,9 @@ export default function RootLayout({
       <head>
         <meta property="fb:app_id" content="3828444140798151" />
       </head>
-      <body className="bg-gray-950 text-white antialiased">
+      <body className="bg-gray-950 text-white antialiased pb-[calc(56px+env(safe-area-inset-bottom))]">
         {children}
+        <BottomNav />
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8772509301822103"
