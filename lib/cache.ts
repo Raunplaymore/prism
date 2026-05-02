@@ -126,27 +126,9 @@ export async function mergeFeed(
   return pruned
 }
 
-// --- Legacy compat: used by admin cache clear ---
+// --- Admin cache clear helpers ---
 function newsKey(country: string, lang: string): string {
   return `feed:${country.toUpperCase()}:${lang}`
-}
-
-export async function getCachedNews(country: string, lang: string) {
-  return getFeed(country, lang)
-}
-
-export async function setCachedNews(
-  country: string,
-  lang: string,
-  items: unknown[],
-): Promise<void> {
-  // Wrap items with addedAt for feed format
-  const now = new Date().toISOString()
-  const feedItems = (items as FeedItem[]).map((item) => ({
-    ...item,
-    addedAt: item.addedAt || now,
-  }))
-  await mergeFeed(country, lang, feedItems)
 }
 
 export async function deleteCachedNews(country: string, lang: string): Promise<boolean> {

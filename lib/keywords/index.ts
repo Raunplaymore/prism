@@ -5,30 +5,6 @@ import { VOCABULARY, type KeywordEntry } from './vocabulary'
 const KW_TTL = 24 * 60 * 60 // 24h — match feed TTL
 
 /**
- * Add an article id to each of its keyword Sets, refreshing TTL.
- * Idempotent: SADD on an existing member is a no-op.
- */
-export async function indexArticleKeywords(
-  articleId: string,
-  keywords: string[],
-): Promise<void> {
-  if (!articleId || !keywords || keywords.length === 0) return
-  const cmds: string[][] = []
-  for (const slug of keywords) {
-    if (!slug) continue
-    const key = `kw:${slug}`
-    cmds.push(['SADD', key, articleId])
-    cmds.push(['EXPIRE', key, String(KW_TTL)])
-  }
-  if (cmds.length === 0) return
-  try {
-    await redisPipeline(cmds)
-  } catch {
-    // non-critical — keyword index is rebuilt on next ingest
-  }
-}
-
-/**
  * Bulk-index a batch of articles in one round trip.
  * Used by the /api/news/collect summarize step.
  */
