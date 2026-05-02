@@ -86,7 +86,7 @@ export default async function CategoryIndexPage() {
       <Nav />
       <div className="mx-auto max-w-3xl p-4 sm:p-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">카테고리로 보는 세계 뉴스</h1>
+          <h1 className="text-2xl font-bold">카테고리로 보는 세계 뉴스</h1>
           <p className="mt-1 text-sm text-gray-500">
             지금 살아있는 기사 {totalArticleHits}건을 9개 분류로 둘러보세요
           </p>

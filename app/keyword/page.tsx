@@ -42,7 +42,7 @@ export default async function KeywordIndexPage() {
       <Nav />
       <div className="mx-auto max-w-3xl p-4 sm:p-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">키워드로 보는 세계 뉴스</h1>
+          <h1 className="text-2xl font-bold">키워드로 보는 세계 뉴스</h1>
           <p className="mt-1 text-sm text-gray-500">
             지금 살아있는 키워드 {all.length}개 · 총 {totalArticleHits}건
           </p>

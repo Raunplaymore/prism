@@ -461,7 +461,7 @@ export default function ClientHome({
             still see it (native <details> elements are indexed by Google). */}
         <section className="mb-3 sm:mb-4">
           <h1 className="text-xl font-bold text-white sm:text-2xl">
-            세계 뉴스를 키워드와 지도로 — Prism
+            지구를 굴려 만나는 세계 뉴스
           </h1>
           <details className="group mt-1 max-w-2xl">
             <summary className="flex cursor-pointer list-none items-center gap-1 text-xs text-gray-500 transition hover:text-gray-300">
