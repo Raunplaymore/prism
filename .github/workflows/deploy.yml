@@ -2,12 +2,13 @@ name: Deploy to Cloudflare Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   workflow_dispatch:
 
 concurrency:
-  # main에 빠르게 여러 푸시가 들어오면 직전 deploy를 취소하고 최신만 진행
-  group: deploy-main
+  # 같은 브랜치에 빠르게 여러 푸시가 들어오면 직전 deploy를 취소하고 최신만 진행.
+  # branch별로 그룹을 분리해 main/dev가 서로 cancel되지 않게 한다.
+  group: deploy-${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -42,12 +43,17 @@ jobs:
         if: always()
         run: |
           STATUS="${{ job.status }}"
+          BRANCH="${{ github.ref_name }}"
+          ENV="preview"
+          [ "$BRANCH" = "main" ] && ENV="production"
           ICON="✅"
           [ "$STATUS" = "failure" ] && ICON="❌"
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -H "Content-Type: application/json" \
-            -d "$(printf '{"chat_id":"%s","text":"%s <b>Pages Deploy %s</b>\nSHA: <code>%s</code>","parse_mode":"HTML"}' \
+            -d "$(printf '{"chat_id":"%s","text":"%s <b>Pages Deploy %s</b>\nEnv: <b>%s</b> (branch: <code>%s</code>)\nSHA: <code>%s</code>","parse_mode":"HTML"}' \
               "${{ secrets.TELEGRAM_CHAT_ID }}" \
               "$ICON" \
               "$STATUS" \
+              "$ENV" \
+              "$BRANCH" \
               "${GITHUB_SHA:0:7}")"
