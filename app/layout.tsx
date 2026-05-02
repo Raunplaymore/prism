@@ -84,7 +84,10 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
+  // GA4 Measurement ID는 client-side로 노출되는 public 식별자 (secret 아님).
+  // 기본값을 코드에 박아두고 env로 override 허용 — staging/dev에서 별도 GA
+  // property를 쓰고 싶을 때만 env 설정.
+  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-8BFTN9EE24'
   return (
     <html lang="ko">
       <head>
