@@ -138,7 +138,7 @@ export default async function CategoryIndexPage() {
                 href={`/category/${slugForCategory(topCategory)}`}
                 className="text-xs text-gray-500 transition hover:text-gray-300"
               >
-                전체 보기 →
+                카테고리 상세 →
               </a>
             </div>
             <div className="space-y-3">
@@ -154,7 +154,7 @@ export default async function CategoryIndexPage() {
                 color: CATEGORY_META[topCategory].color,
               }}
             >
-              {CATEGORY_META[topCategory].ko} 뉴스 전체 보기
+              {CATEGORY_META[topCategory].ko} 카테고리 상세
               <svg
                 width="18"
                 height="18"

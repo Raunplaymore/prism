@@ -101,7 +101,7 @@ export default async function KeywordIndexPage() {
                     href={`/keyword/${encodeURIComponent(topKeyword.entry.slug)}`}
                     className="text-xs text-gray-500 transition hover:text-gray-300"
                   >
-                    전체 보기 →
+                    키워드 상세 →
                   </a>
                 </div>
                 <div className="space-y-3">
@@ -117,7 +117,7 @@ export default async function KeywordIndexPage() {
                     color: CATEGORY_COLOR[topKeyword.entry.category] ?? '#9ca3af',
                   }}
                 >
-                  #{topKeyword.entry.labelKo || topKeyword.entry.label} 뉴스 전체 보기
+                  #{topKeyword.entry.labelKo || topKeyword.entry.label} 키워드 상세
                   <svg
                     width="18"
                     height="18"
