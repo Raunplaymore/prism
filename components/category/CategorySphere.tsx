@@ -32,7 +32,7 @@ export default function CategorySphere({
       const h = node.offsetHeight
       // 9개라 KeywordSphere보다 작게 — 모바일은 컨테이너 둘레에 가깝게,
       // desktop은 라벨 간 spacing 확보.
-      const ratio = h < 250 ? 0.55 : 0.42
+      const ratio = h < 250 ? 0.62 : 0.42
       const r = h * ratio
       const next = Math.max(70, Math.min(maxRadius, Math.round(r)))
       setRadius(next)

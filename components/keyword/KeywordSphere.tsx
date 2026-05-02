@@ -41,7 +41,7 @@ export default function KeywordSphere({
       // 모바일(작은 컨테이너)에선 sphere가 컨테이너 둘레에 거의 차도록 큰
       // 비율, desktop에선 컨테이너의 절반 수준으로 라벨 spacing 확보. 일괄
       // 0.42를 쓰면 모바일에서 sphere가 작아져 라벨이 빽빽하게 모임.
-      const ratio = h < 250 ? 0.65 : 0.5
+      const ratio = h < 250 ? 0.72 : 0.5
       const r = h * ratio
       const next = Math.max(80, Math.min(maxRadius, Math.round(r)))
       setRadius(next)
