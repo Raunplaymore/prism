@@ -247,6 +247,28 @@ export default async function CategoryHubPage({
             ))}
           </div>
         )}
+
+        <a
+          href="/map"
+          className="mt-10 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-700 bg-gray-900/40 px-5 py-3 text-base font-semibold text-white transition hover:border-gray-600 hover:bg-gray-900"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z" />
+          </svg>
+          더 많은 국가 뉴스 검색
+        </a>
       </div>
     </div>
   )
