@@ -147,7 +147,6 @@ export default function ClientHome({
   const refreshMsgTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
-  const [showScrollTop, setShowScrollTop] = useState(false)
   const [heatmapData, setHeatmapData] = useState<Record<string, number>>({})
   const [showInstallGuide, setShowInstallGuide] = useState(false)
   const deferredPromptRef = useRef<{ prompt: () => void } | null>(null)
@@ -220,9 +219,6 @@ export default function ClientHome({
     }
     window.addEventListener('beforeinstallprompt', onBeforeInstall)
 
-    const onScroll = () => setShowScrollTop(window.scrollY > 400)
-    window.addEventListener('scroll', onScroll, { passive: true })
-
     // Pull-to-refresh — only on global feed, only real drag (not taps)
     let pulling = false
     const onTouchStart = (e: TouchEvent) => {
@@ -270,7 +266,6 @@ export default function ClientHome({
 
     return () => {
       window.removeEventListener('beforeinstallprompt', onBeforeInstall)
-      window.removeEventListener('scroll', onScroll)
       window.removeEventListener('touchstart', onTouchStart)
       window.removeEventListener('touchmove', onTouchMove)
       window.removeEventListener('touchend', onTouchEnd)
@@ -703,19 +698,6 @@ export default function ClientHome({
           <a href="/privacy" className="hover:text-gray-300">Privacy</a>
         </div>
       </footer>
-
-      {/* Scroll to top */}
-      {showScrollTop && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] right-4 z-50 flex h-9 w-9 items-center justify-center rounded-full bg-gray-700/90 text-white shadow-lg transition hover:bg-gray-600"
-          aria-label="Scroll to top"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="18 15 12 9 6 15" />
-          </svg>
-        </button>
-      )}
     </div>
   )
 }

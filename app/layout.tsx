@@ -3,6 +3,7 @@ import Script from 'next/script'
 import './globals.css'
 import { SUPPORTED_COUNT } from '@/lib/rss'
 import BottomNav from '@/components/BottomNav'
+import ScrollToTop from '@/components/ScrollToTop'
 
 export const viewport = {
   width: 'device-width',
@@ -44,6 +45,7 @@ export default function RootLayout({
       </head>
       <body className="bg-gray-950 text-white antialiased pb-[calc(56px+env(safe-area-inset-bottom))]">
         {children}
+        <ScrollToTop />
         <BottomNav />
         <Script
           async
