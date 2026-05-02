@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export interface CategorySphereItem {
   slug: string
@@ -10,25 +10,40 @@ export interface CategorySphereItem {
 }
 
 /**
- * 3D rotating tag sphere for the /category index, mirroring KeywordSphere
- * but specialised for the 9 fixed news categories. Each tag is rendered as
- * a real anchor that navigates to /category/{slug} so the sphere works
- * without JS-driven state and screen readers / crawlers can follow the
- * sr-only fallback list.
+ * 3D rotating tag sphere for the /category index. 9 categories라 dense하게
+ * 보이도록 0.34 비율로 KeywordSphere보다 작게 잡음 (라벨 사이 spacing 확보).
  */
 export default function CategorySphere({
   items,
-  radius = 120,
+  maxRadius = 200,
   maxSpeed = 'normal',
 }: {
   items: CategorySphereItem[]
-  radius?: number
+  maxRadius?: number
   maxSpeed?: 'slow' | 'normal' | 'fast'
 }) {
   const ref = useRef<HTMLDivElement>(null)
+  const [radius, setRadius] = useState(0)
 
   useEffect(() => {
-    if (!ref.current || items.length === 0) return
+    const node = ref.current
+    if (!node) return
+    const measure = () => {
+      const w = node.offsetWidth
+      const h = node.offsetHeight
+      // 9개라 0.34로 사이즈 제어 — 너무 키우면 라벨 사이 갭이 어색.
+      const r = Math.min(w, h) * 0.34
+      const next = Math.max(60, Math.min(maxRadius, Math.round(r)))
+      setRadius(next)
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(node)
+    return () => ro.disconnect()
+  }, [maxRadius])
+
+  useEffect(() => {
+    if (!ref.current || items.length === 0 || radius === 0) return
 
     let destroyed = false
     let cloudInstance: { destroy: () => void } | null = null
@@ -88,8 +103,7 @@ export default function CategorySphere({
     <>
       <div
         ref={ref}
-        className="flex items-center justify-center"
-        style={{ minHeight: radius * 2 }}
+        className="flex h-full w-full items-center justify-center"
         aria-hidden="true"
       />
       {/* SSR-visible textual fallback for crawlers and screen readers.

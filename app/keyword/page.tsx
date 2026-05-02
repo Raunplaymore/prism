@@ -121,7 +121,7 @@ export default async function KeywordIndexPage() {
         ) : (
           <>
             <div className="relative mb-3 flex h-[190px] items-center justify-center overflow-hidden rounded-2xl border border-gray-900 bg-gradient-to-b from-gray-950 to-gray-900/40 sm:h-[350px] lg:h-[400px]">
-              <KeywordSphere items={all} radius={140} />
+              <KeywordSphere items={all} />
               <p className="pointer-events-none absolute bottom-3 right-4 text-xs text-gray-600">
                 클릭해서 들어가기
               </p>

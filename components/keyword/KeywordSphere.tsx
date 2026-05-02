@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { KeywordCount } from '@/lib/keywords/index'
 
 const CATEGORY_COLOR: Record<string, string> = {
@@ -16,20 +16,43 @@ const CATEGORY_COLOR: Record<string, string> = {
  * 3D rotating tag sphere using mcc108/TagCloud (CSS 3D, ~10KB).
  * Each tag is a real anchor that navigates to /keyword/[slug] — no JS-driven
  * state, so screen readers / crawlers can follow the sr-only fallback list.
+ *
+ * `maxRadius`는 상한이고, 실제 radius는 컨테이너 크기에 비례하여 동적으로
+ * 결정 (작은 viewport에서 작게, 큰 viewport에서 커짐).
  */
 export default function KeywordSphere({
   items,
-  radius = 180,
+  maxRadius = 220,
   maxSpeed = 'normal',
 }: {
   items: KeywordCount[]
-  radius?: number
+  maxRadius?: number
   maxSpeed?: 'slow' | 'normal' | 'fast'
 }) {
   const ref = useRef<HTMLDivElement>(null)
+  const [radius, setRadius] = useState(0)
+
+  // Track container size → recompute radius so sphere fills available space.
+  useEffect(() => {
+    const node = ref.current
+    if (!node) return
+    const measure = () => {
+      const w = node.offsetWidth
+      const h = node.offsetHeight
+      // 0.42 * smallest dim — sphere가 컨테이너에 꽉 차되 라벨이 잘려 나가지
+      // 않도록. 상한은 maxRadius prop.
+      const r = Math.min(w, h) * 0.42
+      const next = Math.max(60, Math.min(maxRadius, Math.round(r)))
+      setRadius(next)
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(node)
+    return () => ro.disconnect()
+  }, [maxRadius])
 
   useEffect(() => {
-    if (!ref.current || items.length === 0) return
+    if (!ref.current || items.length === 0 || radius === 0) return
 
     let destroyed = false
     let cloudInstance: { destroy: () => void } | null = null
@@ -93,8 +116,7 @@ export default function KeywordSphere({
     <>
       <div
         ref={ref}
-        className="flex items-center justify-center"
-        style={{ minHeight: radius * 2 }}
+        className="flex h-full w-full items-center justify-center"
         aria-hidden="true"
       />
       {/* SSR-visible textual fallback for crawlers and screen readers.
