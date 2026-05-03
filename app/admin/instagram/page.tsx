@@ -1,12 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { NewsItem } from '@/types/news'
 import { getCountryName, getCountryNameKo, countryFlag } from '@/lib/countries'
 import { CATEGORY_META, isValidCategory } from '@/lib/categories'
 import { findEntry } from '@/lib/keywords/index'
 
 type Status = 'idle' | 'loading' | 'ok' | 'error'
+
+interface User {
+  email: string
+  name: string
+  picture: string
+  isAdmin: boolean
+}
 
 interface Material {
   cardJsx: React.ReactNode
@@ -138,11 +145,50 @@ function buildMaterial(item: NewsItem): Material {
 }
 
 export default function InstagramAdmin() {
+  const [user, setUser] = useState<User | null>(null)
+  const [authLoading, setAuthLoading] = useState(true)
   const [input, setInput] = useState('')
   const [status, setStatus] = useState<Status>('idle')
   const [errorMsg, setErrorMsg] = useState<string>('')
   const [material, setMaterial] = useState<Material | null>(null)
   const [copied, setCopied] = useState<'caption' | 'hashtags' | 'all' | null>(null)
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => r.json())
+      .then((d) => setUser(d.user))
+      .catch(() => {})
+      .finally(() => setAuthLoading(false))
+  }, [])
+
+  if (authLoading) {
+    return <div className="flex min-h-screen items-center justify-center bg-gray-950 text-sm text-gray-500">로딩 중…</div>
+  }
+
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-950 p-4 text-white">
+        <div className="text-center">
+          <h1 className="mb-3 text-xl font-bold">로그인이 필요합니다</h1>
+          <a href="/signin" className="text-sm text-blue-400 hover:text-blue-300">
+            Sign in →
+          </a>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user.isAdmin) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-950 p-4 text-white">
+        <div className="text-center">
+          <h1 className="mb-3 text-xl font-bold">Access Denied</h1>
+          <p className="mb-2 text-sm text-gray-400">{user.email} is not an admin account.</p>
+          <a href="/" className="text-sm text-blue-400 hover:text-blue-300">Back home</a>
+        </div>
+      </div>
+    )
+  }
 
   const handleLoad = async () => {
     const id = parseArticleId(input)
