@@ -1,26 +1,24 @@
 'use client'
 
+// Quick Access — 권역 + 사용 빈도 순 (KR 먼저, 미국·동아시아·유럽·분쟁·기타).
 const TOP_COUNTRIES = [
   { code: 'KR', name: 'South Korea', flag: '🇰🇷' },
+  { code: 'US', name: 'United States', flag: '🇺🇸' },
   { code: 'JP', name: 'Japan', flag: '🇯🇵' },
-  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
   { code: 'CN', name: 'China', flag: '🇨🇳' },
+  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
   { code: 'DE', name: 'Germany', flag: '🇩🇪' },
   { code: 'FR', name: 'France', flag: '🇫🇷' },
-  { code: 'CA', name: 'Canada', flag: '🇨🇦' },
-  { code: 'AU', name: 'Australia', flag: '🇦🇺' },
-  { code: 'BR', name: 'Brazil', flag: '🇧🇷' },
-  { code: 'MX', name: 'Mexico', flag: '🇲🇽' },
-  { code: 'IN', name: 'India', flag: '🇮🇳' },
-  { code: 'SA', name: 'Saudi Arabia', flag: '🇸🇦' },
-]
-
-const HOT_ZONES = [
-  { code: 'US', name: 'United States', flag: '🇺🇸' },
   { code: 'IL', name: 'Israel', flag: '🇮🇱' },
   { code: 'IR', name: 'Iran', flag: '🇮🇷' },
   { code: 'RU', name: 'Russia', flag: '🇷🇺' },
   { code: 'UA', name: 'Ukraine', flag: '🇺🇦' },
+  { code: 'BR', name: 'Brazil', flag: '🇧🇷' },
+  { code: 'MX', name: 'Mexico', flag: '🇲🇽' },
+  { code: 'IN', name: 'India', flag: '🇮🇳' },
+  { code: 'CA', name: 'Canada', flag: '🇨🇦' },
+  { code: 'AU', name: 'Australia', flag: '🇦🇺' },
+  { code: 'SA', name: 'Saudi Arabia', flag: '🇸🇦' },
 ]
 
 interface NewsStandProps {
@@ -31,39 +29,7 @@ interface NewsStandProps {
   mapOpen?: boolean
 }
 
-export { TOP_COUNTRIES, HOT_ZONES }
-
-function CountryButtons({
-  countries,
-  selectedCountry,
-  onSelect,
-  isLoading,
-}: {
-  countries: typeof TOP_COUNTRIES
-  selectedCountry: string | null
-  onSelect: (code: string) => void
-  isLoading: boolean
-}) {
-  return (
-    <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-      {countries.map(({ code, name, flag }) => (
-        <button
-          key={code}
-          onClick={() => onSelect(code)}
-          className={`flex shrink-0 items-center gap-1 rounded-md border px-2.5 py-1.5 text-sm font-medium transition ${
-            selectedCountry === code
-              ? 'border-blue-500 bg-blue-600/20 text-blue-400'
-              : 'border-gray-800 bg-gray-900 text-gray-400 hover:border-gray-700 hover:text-white'
-          } ${isLoading && selectedCountry === code ? 'cursor-wait' : ''}`}
-        >
-          <span className="text-sm">{flag}</span>
-          <span className="hidden sm:inline">{name}</span>
-          <span className="sm:hidden">{code}</span>
-        </button>
-      ))}
-    </div>
-  )
-}
+export { TOP_COUNTRIES }
 
 export default function NewsStand({
   selectedCountry,
@@ -110,10 +76,6 @@ export default function NewsStand({
             </button>
           ))}
         </div>
-      </div>
-      <div>
-        <h3 className="mb-2 text-xs font-medium text-red-400/70">Hot Zones</h3>
-        <CountryButtons countries={HOT_ZONES} selectedCountry={selectedCountry} onSelect={onSelect} isLoading={isLoading} />
       </div>
     </div>
   )
