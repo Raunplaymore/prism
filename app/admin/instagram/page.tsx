@@ -52,6 +52,20 @@ function parseArticleId(input: string): string | null {
   return null
 }
 
+/** 단어 경계를 보존하는 길이 제한. */
+function trim(s: string, max: number): string {
+  if (!s) return ''
+  if (s.length <= max) return s
+  return s.slice(0, max).replace(/\s+\S*$/, '') + '…'
+}
+
+/** detail에서 첫 한 문장만 추출 — 카드 보조 라인용. */
+function firstSentence(s: string): string {
+  if (!s) return ''
+  const m = s.match(/^[\s\S]+?[.!?。！？](?=\s|$)/)
+  return m ? m[0].trim() : s
+}
+
 function buildMaterial(item: NewsItem): Material {
   const country = item.country.toUpperCase()
   const flag = countryFlag(country)
@@ -61,17 +75,20 @@ function buildMaterial(item: NewsItem): Material {
   const catKo = cat ? CATEGORY_META[cat].ko : item.category
   const catColor = cat ? CATEGORY_META[cat].color : '#6b7280'
 
-  // Caption: 제목 → 1문장 요약 → 출처 → prism 링크 → 해시태그.
+  const hasDetail = Boolean(item.detail) && item.detail.trim() !== item.summary.trim()
+
+  // Caption: 제목 → 요약 → (detail 본문) → 출처 → prism 링크 → 해시태그.
   const captionLines: string[] = [
     `${flag} ${koCountry} · ${catKo}`,
     '',
     item.title,
     '',
     item.summary,
-    '',
-    `🔗 출처: ${item.source}`,
-    '👉 prismglobe.com',
   ]
+  if (hasDetail) {
+    captionLines.push('', trim(item.detail, 800))
+  }
+  captionLines.push('', `🔗 출처: ${item.source}`, '👉 prismglobe.com')
   const caption = captionLines.join('\n')
 
   // Hashtags: #prism + #세계뉴스 + #{국가}뉴스 + #{카테고리} + keywords (Korean labels).
@@ -128,6 +145,11 @@ function buildMaterial(item: NewsItem): Material {
           {item.title}
         </h2>
         <p className="text-sm leading-relaxed text-gray-300 sm:text-base">{item.summary}</p>
+        {hasDetail && (
+          <p className="mt-3 text-xs leading-relaxed text-gray-400 sm:text-sm">
+            {trim(firstSentence(item.detail), 140)}
+          </p>
+        )}
       </div>
 
       {/* 하단 출처 */}
