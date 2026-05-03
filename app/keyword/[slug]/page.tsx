@@ -4,6 +4,7 @@ import type { NewsItem } from '@/types/news'
 import NewsCard from '@/components/NewsCard'
 import Nav from '@/components/Nav'
 import KeywordSynthesis from '@/components/keyword/KeywordSynthesis'
+import ShareButton from '@/components/ShareButton'
 import { findEntry, getArticlesByKeyword } from '@/lib/keywords/index'
 import { getCountryNameKo, countryFlag, normalizeCountryParam } from '@/lib/countries'
 
@@ -162,7 +163,10 @@ export default async function KeywordPage({
             모든 키워드
           </a>
           <p className="text-sm text-gray-500">#{entry.slug}</p>
-          <h1 className="mt-1 text-3xl font-bold">{display}</h1>
+          <div className="mt-1 flex items-start justify-between gap-3">
+            <h1 className="text-3xl font-bold">{display}</h1>
+            <ShareButton title={`#${display} — Prism`} />
+          </div>
           <p className="mt-1 text-sm text-gray-400">
             {articles.length}건 · {countryCount}개 국가
             <span className="ml-2 rounded bg-gray-900 px-1.5 py-0.5 text-xs text-gray-500">

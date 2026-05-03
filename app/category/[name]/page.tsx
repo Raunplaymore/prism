@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Nav from '@/components/Nav'
 import NewsCard from '@/components/NewsCard'
 import CategorySynthesis from '@/components/category/CategorySynthesis'
+import ShareButton from '@/components/ShareButton'
 import type { NewsItem } from '@/types/news'
 import { CATEGORY_META, categoryFromSlug, type CategoryKey } from '@/lib/categories'
 import { getCountryNameKo, countryFlag, normalizeCountryParam } from '@/lib/countries'
@@ -173,12 +174,15 @@ export default async function CategoryHubPage({
           <p className="text-sm uppercase tracking-wide text-gray-500">
             {meta.en}
           </p>
-          <h1
-            className="mt-1 text-3xl font-bold"
-            style={{ color: meta.color }}
-          >
-            {meta.ko} 뉴스
-          </h1>
+          <div className="mt-1 flex items-start justify-between gap-3">
+            <h1
+              className="text-3xl font-bold"
+              style={{ color: meta.color }}
+            >
+              {meta.ko} 뉴스
+            </h1>
+            <ShareButton title={`${meta.ko} 뉴스 — Prism`} />
+          </div>
           <p className="mt-1 text-sm text-gray-400">
             {articles.length}건 · {countryCount}개 국가 · 다국가 시각 비교
           </p>
