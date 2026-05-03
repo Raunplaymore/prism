@@ -310,6 +310,7 @@ export default function InstagramAdmin() {
   const [status, setStatus] = useState<Status>('idle')
   const [errorMsg, setErrorMsg] = useState<string>('')
   const [material, setMaterial] = useState<Material | null>(null)
+  const [articleId, setArticleId] = useState<string | null>(null)
   const [copied, setCopied] = useState<'caption' | 'hashtags' | 'all' | 'threads' | null>(null)
 
   useEffect(() => {
@@ -370,6 +371,7 @@ export default function InstagramAdmin() {
       }
       const data = (await res.json()) as { item: NewsItem }
       setMaterial(buildMaterial(data.item))
+      setArticleId(data.item.id)
       setStatus('ok')
     } catch (e) {
       setStatus('error')
@@ -446,14 +448,27 @@ export default function InstagramAdmin() {
               </div>
 
               <section>
-                <h3 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-500">
-                  첨부 이미지 (Hook 카드 1장)
-                </h3>
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                    첨부 이미지 (Hook 카드 1장)
+                  </h3>
+                  {articleId && (
+                    <a
+                      href={`/api/og/social?article=${encodeURIComponent(articleId)}&card=1`}
+                      download={`${articleId}-threads.png`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-blue-500"
+                    >
+                      PNG 다운로드
+                    </a>
+                  )}
+                </div>
                 <div className="flex justify-center">
                   <div className="w-[80%] sm:w-[55%]">{material.cards[0].jsx}</div>
                 </div>
                 <p className="mt-2 text-center text-xs text-gray-600">
-                  스크린샷 후 Threads 첨부 — Phase 2에서 PNG 자동 export 예정
+                  PNG 1080×1080 · Pretendard · GA4에서 utm_source=threads로 분리 측정
                 </p>
               </section>
 
@@ -498,11 +513,24 @@ export default function InstagramAdmin() {
                   <span className="text-[10px] text-gray-600">Hook → Body → CTA</span>
                 </div>
                 <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3">
-                  {material.cards.map((c) => (
+                  {material.cards.map((c, idx) => (
                     <div key={c.label} className="flex w-[85%] shrink-0 snap-center flex-col items-center sm:w-[60%]">
-                      <span className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-gray-500">
-                        {c.label}
-                      </span>
+                      <div className="mb-1.5 flex w-full items-center justify-between">
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-gray-500">
+                          {c.label}
+                        </span>
+                        {articleId && (
+                          <a
+                            href={`/api/og/social?article=${encodeURIComponent(articleId)}&card=${idx + 1}`}
+                            download={`${articleId}-card-${idx + 1}.png`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded bg-gray-800 px-2 py-0.5 text-[10px] font-medium text-gray-300 transition hover:bg-gray-700 hover:text-white"
+                          >
+                            PNG ↓
+                          </a>
+                        )}
+                      </div>
                       {c.jsx}
                     </div>
                   ))}
