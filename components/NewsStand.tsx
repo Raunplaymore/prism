@@ -42,7 +42,10 @@ export default function NewsStand({
     <div className="space-y-3">
       <div>
         <h3 className="mb-2 text-xs font-medium text-gray-500">Quick Access</h3>
-        <div className="flex flex-wrap gap-1.5 pb-1">
+        <div
+          className="grid grid-flow-col grid-rows-2 auto-cols-max gap-1.5 overflow-x-auto pb-1 scrollbar-hide"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           {onToggleMap && (
             <button
               onClick={onToggleMap}
