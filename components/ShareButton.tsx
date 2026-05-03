@@ -22,7 +22,7 @@ export default function ShareButton({ title, url, className = '' }: Props) {
     const shareUrl = url ?? window.location.href
     if (typeof navigator !== 'undefined' && 'share' in navigator) {
       try {
-        await navigator.share({ title, url: shareUrl })
+        await navigator.share({ title, text: title, url: shareUrl })
         return
       } catch {
         /* user cancelled or share unsupported in context */
