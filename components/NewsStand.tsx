@@ -1,5 +1,8 @@
 'use client'
 
+import { getAllCountries } from '@/lib/countries'
+import { SUPPORTED_COUNTRIES } from '@/lib/rss'
+
 // Quick Access — 권역 + 사용 빈도 순 (KR 먼저, 미국·동아시아·유럽·분쟁·기타).
 const TOP_COUNTRIES = [
   { code: 'KR', name: 'South Korea', flag: '🇰🇷' },
@@ -78,8 +81,44 @@ export default function NewsStand({
               <span className="sm:hidden">{code}</span>
             </button>
           ))}
+          <MoreCountriesSelect onSelect={onSelect} disabled={isLoading} />
         </div>
       </div>
     </div>
+  )
+}
+
+function MoreCountriesSelect({
+  onSelect,
+  disabled,
+}: {
+  onSelect: (code: string) => void
+  disabled: boolean
+}) {
+  const topSet = new Set(TOP_COUNTRIES.map((c) => c.code))
+  const others = getAllCountries().filter(
+    (c) => SUPPORTED_COUNTRIES.has(c.code) && !topSet.has(c.code),
+  )
+
+  return (
+    <select
+      value=""
+      onChange={(e) => {
+        const v = e.target.value
+        if (v) onSelect(v)
+      }}
+      disabled={disabled}
+      aria-label="더 많은 국가 선택"
+      className="shrink-0 cursor-pointer appearance-none rounded-md border border-dashed border-gray-700 bg-gray-900 px-2.5 py-1.5 text-sm font-medium text-gray-400 transition hover:border-gray-600 hover:text-white disabled:cursor-wait disabled:opacity-60"
+    >
+      <option value="" disabled>
+        + 더 많은 국가
+      </option>
+      {others.map((c) => (
+        <option key={c.code} value={c.code}>
+          {c.nameKo} ({c.code})
+        </option>
+      ))}
+    </select>
   )
 }
