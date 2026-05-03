@@ -38,10 +38,7 @@ const CATEGORY_COLOR: Record<string, string> = {
 }
 
 export default async function KeywordIndexPage() {
-  const live = await getLiveKeywordCounts()
-  // Country 슬러그(미국/한국/우크라이나 등)는 sphere에서 제외 — 국가 단위
-  // 탐색은 Global Map + 카테고리 hub의 country chip이 담당. 이중 surface 회피.
-  const all = live.filter((kc) => kc.entry.category !== 'country')
+  const all = await getLiveKeywordCounts()
   const totalArticleHits = all.reduce((sum, kc) => sum + kc.count, 0)
 
   // Top keyword preview: surface the most-active keyword's articles directly

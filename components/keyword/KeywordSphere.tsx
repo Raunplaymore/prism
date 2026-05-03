@@ -67,7 +67,11 @@ export default function KeywordSphere({
         const label = kc.entry.labelKo || kc.entry.label
         const color = CATEGORY_COLOR[kc.entry.category] ?? '#9ca3af'
         const slug = kc.entry.slug
-        const baseStyle = `color:${color};text-shadow:0 0 6px rgba(0,0,0,0.5);cursor:pointer`
+        // country 슬러그는 sphere에서 폰트를 조금 작게 — Global Map / 카테고리
+        // hub의 country chip과 역할이 겹치므로 시각적 weight를 낮춰 person/org/
+        // company/topic/event 키워드가 더 prominent 하게.
+        const fontSize = kc.entry.category === 'country' ? '0.78em' : '1em'
+        const baseStyle = `color:${color};text-shadow:0 0 6px rgba(0,0,0,0.5);cursor:pointer;font-size:${fontSize}`
         return `<a href="/keyword/${encodeURIComponent(slug)}" style="${baseStyle};text-decoration:none">${label}</a>`
       })
 
