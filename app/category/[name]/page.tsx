@@ -253,7 +253,7 @@ export default async function CategoryHubPage({
             <ul className="space-y-3">
               {articles.map((item) => (
                 <li key={item.id}>
-                  <NewsCard item={item} showCountry />
+                  <NewsCard item={item} showCountry defaultExpanded />
                 </li>
               ))}
             </ul>
