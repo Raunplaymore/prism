@@ -1,0 +1,15 @@
+{
+  "version": 10,
+  "timestamp": "20260503T030349",
+  "files": [
+    "plan.md",
+    "pmpt.ai.md",
+    "pmpt.md"
+  ],
+  "changedFiles": [
+    "plan.md",
+    "pmpt.ai.md",
+    "pmpt.md"
+  ],
+  "note": "v9 이후 큰 폭의 방향 정렬과 인프라 강화. 2026-05-01 결정으로 USP를 \"다국가 뉴스 탐험\"으로 좁히고 다시각 뷰·markets v2·Pro/Stripe 흔적을 모두 폐기하면서 광고 단일 수익 모델로 정합. 정보 아키텍처를 3-surface(Categories / Keywords / Global Map)로 재구성해 BottomNav 3-tab + 인덱스 sphere + 상세 hub(평탄 latest list + country chip filter) 흐름으로 일관화했고, 홈은 /category로 redirect되어 진입 즉시 가장 활발한 분야의 articles preview를 노출. 운영 인프라로 Cloudflare Pages 자동 배포(GitHub Actions + dev branch staging-first), 글로벌 ScrollToTop·InstallButton(portal modal) 컴포넌트, IP 쿼터 기반 OpenAI 비용 보호, fire-and-forget 회귀 hotfix(`await indexBatch`) 등을 갖춤. SEO 측면에선 동적 sitemap(65 entries), metadataBase + canonical + Twitter card + 페이지별 og:image, BreadcrumbList/WebSite/Organization/ItemList JSON-LD까지 P0/P1 모두 적용. 측정 인프라로 GA4(G-8BFTN9EE24)와 Search Console 등록 완료. 결정론적 메타데이터 집계 기반의 KeywordSynthesis/CategorySynthesis로 추가 LLM 호출 0 유지하며 hub 페이지 컨텐츠 풍부화. 코드베이스 정리(dead code -180줄, util 통합, @upstash/redis 의존성 제거)와 sphere 앞쪽 반구만 클릭 가능 fix(스케일 기반 pointer-events 토글)도 포함."
+}
