@@ -15,8 +15,13 @@ interface User {
   isAdmin: boolean
 }
 
+interface Card {
+  jsx: React.ReactNode
+  label: string
+}
+
 interface Material {
-  cardJsx: React.ReactNode
+  cards: Card[]
   caption: string
   hashtags: string
   permalink: string
@@ -110,60 +115,145 @@ function buildMaterial(item: NewsItem): Material {
   // 12개 max.
   const hashtags = Array.from(tags).slice(0, 12).join(' ')
 
-  // 1:1 카드 미리보기 (HTML/CSS, 1080×1080 기준 비율)
-  const cardJsx = (
+  // 3장 carousel — 1080×1080 기준 비율. 각 카드 독립 PNG export 가능한 구조.
+  const cardClass =
+    'relative aspect-square w-full max-w-md shrink-0 overflow-hidden rounded-xl border border-gray-800 shadow-2xl'
+
+  const headerBrand = (
+    <div className="flex items-center gap-2">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo.png" alt="Prism" className="h-7 w-7 rounded-md" />
+      <span className="text-base font-bold text-white">Prism</span>
+    </div>
+  )
+
+  const pageBadge = (n: number) => (
+    <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold tracking-wider text-white/80">
+      {n} / 3
+    </span>
+  )
+
+  // Card 1 — Hook: 시선 끌기 (국가flag 큼지막 + 큰 제목)
+  const card1 = (
     <div
-      className="relative aspect-square w-full max-w-md overflow-hidden rounded-xl border border-gray-800 shadow-2xl"
+      className={cardClass}
       style={{
-        background: `linear-gradient(135deg, #050505 0%, #1a1a1a 50%, ${catColor}15 100%)`,
+        background: `linear-gradient(135deg, #050505 0%, #0a0a0a 40%, ${catColor}55 100%)`,
       }}
     >
-      {/* 상단 brand */}
       <div className="flex items-center justify-between px-6 pt-5">
-        <div className="flex items-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Prism" className="h-7 w-7 rounded-md" />
-          <span className="text-base font-bold text-white">Prism</span>
-        </div>
+        {headerBrand}
+        {pageBadge(1)}
+      </div>
+      <div
+        className="flex flex-col justify-center px-6 py-8"
+        style={{ minHeight: 'calc(100% - 130px)' }}
+      >
+        <span className="mb-5 text-6xl leading-none">{flag}</span>
         <span
-          className="rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider"
-          style={{ backgroundColor: `${catColor}25`, color: catColor }}
+          className="mb-5 inline-flex w-fit rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider"
+          style={{ backgroundColor: `${catColor}30`, color: catColor }}
         >
-          {item.category}
+          {koCountry} · {catKo}
         </span>
-      </div>
-
-      {/* 본문 */}
-      <div className="flex flex-col justify-center px-6 py-8" style={{ minHeight: 'calc(100% - 130px)' }}>
-        <div className="mb-3 flex items-center gap-2">
-          <span className="text-2xl">{flag}</span>
-          <span className="text-sm font-medium text-gray-400">
-            {koCountry} · {catKo}
-          </span>
-        </div>
-        <h2 className="mb-4 text-xl font-bold leading-tight text-white sm:text-2xl">
-          {item.title}
+        <h2 className="text-2xl font-bold leading-tight text-white sm:text-3xl">
+          {trim(item.title, 80)}
         </h2>
-        <p className="text-sm leading-relaxed text-gray-300 sm:text-base">{item.summary}</p>
-        {hasDetail && (
-          <p className="mt-3 text-xs leading-relaxed text-gray-400 sm:text-sm">
-            {trim(firstSentence(item.detail), 140)}
-          </p>
-        )}
       </div>
-
-      {/* 하단 출처 */}
-      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between border-t border-white/10 bg-black/40 px-6 py-3">
-        <span className="text-xs text-gray-400">{item.source}</span>
-        <span className="text-xs font-medium text-white">prismglobe.com</span>
+      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-6 py-3">
+        <span className="text-xs font-medium text-gray-400">▶ Swipe</span>
       </div>
     </div>
   )
 
+  // Card 2 — Body: 정보 핵심 (요약 + detail 발췌)
+  const card2 = (
+    <div
+      className={cardClass}
+      style={{ background: 'linear-gradient(135deg, #050505 0%, #1a1a1a 100%)' }}
+    >
+      <div className="flex items-center justify-between px-6 pt-5">
+        {headerBrand}
+        {pageBadge(2)}
+      </div>
+      <div
+        className="flex flex-col justify-start px-6 py-5"
+        style={{ minHeight: 'calc(100% - 130px)' }}
+      >
+        <div className="mb-3 flex items-center gap-2">
+          <span className="text-lg leading-none">{flag}</span>
+          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: catColor }}>
+            {koCountry} · {catKo}
+          </span>
+        </div>
+        <h2 className="mb-3 text-base font-bold leading-snug text-white sm:text-lg">
+          {trim(item.title, 100)}
+        </h2>
+        <p className="mb-3 text-sm leading-relaxed text-gray-200">{item.summary}</p>
+        {hasDetail && (
+          <p className="text-[13px] leading-relaxed text-gray-400">
+            {trim(item.detail, 350)}
+          </p>
+        )}
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-6 py-3">
+        <span className="text-xs font-medium text-gray-400">▶ 더 보기</span>
+      </div>
+    </div>
+  )
+
+  // Card 3 — CTA: 브랜드 메시지 + 출처 + 링크
+  const card3 = (
+    <div
+      className={cardClass}
+      style={{
+        background: `linear-gradient(135deg, ${catColor}30 0%, #0a0a0a 50%, #050505 100%)`,
+      }}
+    >
+      <div className="flex items-center justify-between px-6 pt-5">
+        {headerBrand}
+        {pageBadge(3)}
+      </div>
+      <div
+        className="flex flex-col justify-center px-6 py-6"
+        style={{ minHeight: 'calc(100% - 130px)' }}
+      >
+        <h3 className="mb-4 text-2xl font-bold leading-tight text-white sm:text-3xl">
+          85개국,
+          <br />
+          같은 사건을
+          <br />
+          <span style={{ color: catColor }}>다르게 본다</span>
+        </h3>
+        <p className="mb-5 text-sm leading-relaxed text-gray-300">
+          한 나라의 시선만으로는 보이지 않던 흐름.
+          <br />
+          Prism에서 다국가 뉴스를 한 화면으로.
+        </p>
+        <div className="rounded-md border border-white/10 bg-white/5 px-4 py-3">
+          <p className="text-[10px] uppercase tracking-wider text-gray-500">출처</p>
+          <p className="mt-0.5 text-sm font-medium text-white">{item.source}</p>
+        </div>
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between border-t border-white/10 bg-black/50 px-6 py-3">
+        <span className="text-xs text-gray-500">prismglobe.com</span>
+        <span className="text-xs font-semibold" style={{ color: catColor }}>
+          → 바로가기
+        </span>
+      </div>
+    </div>
+  )
+
+  const cards: Card[] = [
+    { jsx: card1, label: '1. Hook' },
+    { jsx: card2, label: '2. Body' },
+    { jsx: card3, label: '3. CTA' },
+  ]
+
   // 받는 사람이 클릭 시 그 article로 진입하는 deep link.
   const permalink = `https://prismglobe.com/?country=${country}&article=${item.id}`
 
-  return { cardJsx, caption, hashtags, permalink }
+  return { cards, caption, hashtags, permalink }
 }
 
 export default function InstagramAdmin() {
@@ -298,12 +388,26 @@ export default function InstagramAdmin() {
 
         {material && status === 'ok' && (
           <div className="space-y-6">
-            {/* 미리보기 카드 */}
+            {/* 미리보기 카드 — 3장 carousel */}
             <section>
-              <h2 className="mb-2 text-sm font-medium text-gray-500">미리보기 (1:1)</h2>
-              <div className="flex justify-center">{material.cardJsx}</div>
+              <div className="mb-2 flex items-center justify-between">
+                <h2 className="text-sm font-medium text-gray-500">미리보기 (3장 carousel)</h2>
+                <span className="text-[10px] text-gray-600">
+                  좌→우 swipe 순서: Hook → Body → CTA
+                </span>
+              </div>
+              <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3">
+                {material.cards.map((c) => (
+                  <div key={c.label} className="flex w-[85%] shrink-0 snap-center flex-col items-center sm:w-[60%]">
+                    <span className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-gray-500">
+                      {c.label}
+                    </span>
+                    {c.jsx}
+                  </div>
+                ))}
+              </div>
               <p className="mt-2 text-center text-xs text-gray-600">
-                현재는 화면 스크린샷으로 사용 — Phase 2에서 PNG 자동 export 예정
+                각 카드 화면 스크린샷 후 인스타그램에 carousel로 업로드 — Phase 2에서 PNG 자동 export 예정
               </p>
             </section>
 
