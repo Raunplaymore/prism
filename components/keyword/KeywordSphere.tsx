@@ -22,7 +22,7 @@ const CATEGORY_COLOR: Record<string, string> = {
  */
 export default function KeywordSphere({
   items,
-  maxRadius = 280,
+  maxRadius = 340,
   maxSpeed = 'normal',
 }: {
   items: KeywordCount[]
