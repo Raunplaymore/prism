@@ -22,9 +22,15 @@ interface Card {
 
 interface Material {
   cards: Card[]
+  /** Instagram (carousel) 캡션 — 길이 여유, detail 본문 포함. */
   caption: string
   hashtags: string
+  /** Threads용 캡션 — 500자 cap, 링크 + 3개 해시태그 inline. */
+  threadsCaption: string
+  /** UTM 제거된 raw permalink (IG 캡션용 — bio 링크 사용시). */
   permalink: string
+  /** Threads/X 등 inline 링크용. utm_source 분기 가능. */
+  threadsLink: string
 }
 
 const CATEGORY_KO: Record<string, string> = {
@@ -114,6 +120,50 @@ function buildMaterial(item: NewsItem): Material {
   }
   // 12개 max.
   const hashtags = Array.from(tags).slice(0, 12).join(' ')
+
+  // Threads용 짧은 해시태그 (3개) — 500자 캡 안에서 핵심만.
+  const tagPriority = [
+    '#prism',
+    `#${koCountry}뉴스`,
+    catKo ? `#${catKo}` : null,
+  ].filter((t): t is string => Boolean(t))
+  const threadsTags = tagPriority.slice(0, 3).join(' ')
+
+  // GA4에서 referral 분리하기 위한 utm_source 분기.
+  const permalink = `https://prismglobe.com/?country=${country}&article=${item.id}`
+  const threadsLink = `${permalink}&utm_source=threads&utm_medium=social`
+
+  // Threads 포스트 — 텍스트 first, 링크 직접 노출. 500자 한도.
+  // 형식: 헤더 / 제목 / summary / CTA 한줄 / 링크 / 해시태그
+  const titleForThreads = trim(item.title, 100)
+  const summaryForThreads = trim(item.summary, 180)
+  const threadsCore = [
+    `${flag} ${koCountry} · ${catKo}`,
+    '',
+    titleForThreads,
+    '',
+    summaryForThreads,
+    '',
+    '📊 다른 나라들은 어떻게 보도했을까?',
+    threadsLink,
+    '',
+    threadsTags,
+  ].join('\n')
+  // 안전 cap: 500자 넘으면 summary 줄여서 재구성.
+  const threadsCaption =
+    threadsCore.length <= 500
+      ? threadsCore
+      : [
+          `${flag} ${koCountry} · ${catKo}`,
+          '',
+          titleForThreads,
+          '',
+          trim(item.summary, 100),
+          '',
+          threadsLink,
+          '',
+          threadsTags,
+        ].join('\n')
 
   // 3장 carousel — 1080×1080 기준 비율. 각 카드 독립 PNG export 가능한 구조.
   const cardClass =
@@ -250,10 +300,7 @@ function buildMaterial(item: NewsItem): Material {
     { jsx: card3, label: '3. CTA' },
   ]
 
-  // 받는 사람이 클릭 시 그 article로 진입하는 deep link.
-  const permalink = `https://prismglobe.com/?country=${country}&article=${item.id}`
-
-  return { cards, caption, hashtags, permalink }
+  return { cards, caption, hashtags, threadsCaption, permalink, threadsLink }
 }
 
 export default function InstagramAdmin() {
@@ -263,7 +310,7 @@ export default function InstagramAdmin() {
   const [status, setStatus] = useState<Status>('idle')
   const [errorMsg, setErrorMsg] = useState<string>('')
   const [material, setMaterial] = useState<Material | null>(null)
-  const [copied, setCopied] = useState<'caption' | 'hashtags' | 'all' | null>(null)
+  const [copied, setCopied] = useState<'caption' | 'hashtags' | 'all' | 'threads' | null>(null)
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -330,11 +377,12 @@ export default function InstagramAdmin() {
     }
   }
 
-  const copy = async (kind: 'caption' | 'hashtags' | 'all') => {
+  const copy = async (kind: 'caption' | 'hashtags' | 'all' | 'threads') => {
     if (!material) return
     let text = ''
     if (kind === 'caption') text = material.caption
     else if (kind === 'hashtags') text = material.hashtags
+    else if (kind === 'threads') text = material.threadsCaption
     else text = `${material.caption}\n\n${material.hashtags}\n\n${material.permalink}`
     await navigator.clipboard.writeText(text)
     setCopied(kind)
@@ -351,10 +399,10 @@ export default function InstagramAdmin() {
           >
             ← Admin
           </a>
-          <h1 className="text-2xl font-bold">Instagram 콘텐츠 워크플로우</h1>
+          <h1 className="text-2xl font-bold">소셜 콘텐츠 워크플로우</h1>
           <p className="mt-1 text-sm text-gray-400">
-            article URL이나 id를 붙여넣으면 카드 미리보기 + 캡션 + 해시태그가 자동 생성됩니다.
-            처음엔 수동 업로드, 추후 n8n에서 <code>/api/admin/article</code>로 동일 데이터 fetch 가능.
+            Threads + Instagram 동시 운영. article URL이나 id를 붙여넣으면 두 채널용 재료가 자동 생성됩니다.
+            n8n 자동화는 <code>/api/admin/article</code>로 동일 데이터 fetch 가능.
           </p>
         </header>
 
@@ -387,78 +435,127 @@ export default function InstagramAdmin() {
         </div>
 
         {material && status === 'ok' && (
-          <div className="space-y-6">
-            {/* 미리보기 카드 — 3장 carousel */}
-            <section>
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-sm font-medium text-gray-500">미리보기 (3장 carousel)</h2>
-                <span className="text-[10px] text-gray-600">
-                  좌→우 swipe 순서: Hook → Body → CTA
+          <div className="space-y-10">
+            {/* ===== Threads 섹션 ===== */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 border-b border-gray-800 pb-2">
+                <span className="rounded-md bg-white px-2 py-0.5 text-[11px] font-bold text-black">
+                  Threads
                 </span>
+                <span className="text-xs text-gray-500">텍스트 + 이미지 1장 / 링크 직접 노출</span>
               </div>
-              <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3">
-                {material.cards.map((c) => (
-                  <div key={c.label} className="flex w-[85%] shrink-0 snap-center flex-col items-center sm:w-[60%]">
-                    <span className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-gray-500">
-                      {c.label}
-                    </span>
-                    {c.jsx}
-                  </div>
-                ))}
-              </div>
-              <p className="mt-2 text-center text-xs text-gray-600">
-                각 카드 화면 스크린샷 후 인스타그램에 carousel로 업로드 — Phase 2에서 PNG 자동 export 예정
-              </p>
-            </section>
 
-            {/* 캡션 */}
-            <section>
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-sm font-medium text-gray-500">캡션</h2>
-                <button
-                  onClick={() => copy('caption')}
-                  className="text-xs text-gray-400 transition hover:text-white"
+              <section>
+                <h3 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-500">
+                  첨부 이미지 (Hook 카드 1장)
+                </h3>
+                <div className="flex justify-center">
+                  <div className="w-[80%] sm:w-[55%]">{material.cards[0].jsx}</div>
+                </div>
+                <p className="mt-2 text-center text-xs text-gray-600">
+                  스크린샷 후 Threads 첨부 — Phase 2에서 PNG 자동 export 예정
+                </p>
+              </section>
+
+              <section>
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Threads 본문 ({material.threadsCaption.length}/500자)
+                  </h3>
+                  <button
+                    onClick={() => copy('threads')}
+                    className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-blue-500"
+                  >
+                    {copied === 'threads' ? '✓ 복사됨' : '본문 복사'}
+                  </button>
+                </div>
+                <pre className="whitespace-pre-wrap rounded-md border border-gray-800 bg-gray-900 p-3 text-sm text-gray-300">
+                  {material.threadsCaption}
+                </pre>
+                <p className="mt-1.5 text-[11px] text-gray-600">
+                  링크에 <code>utm_source=threads</code> 자동 부착 — GA4에서 referral 분리 측정
+                </p>
+              </section>
+            </div>
+
+            {/* ===== Instagram 섹션 ===== */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 border-b border-gray-800 pb-2">
+                <span
+                  className="rounded-md px-2 py-0.5 text-[11px] font-bold text-white"
+                  style={{ background: 'linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)' }}
                 >
-                  {copied === 'caption' ? '✓ 복사됨' : '복사'}
+                  Instagram
+                </span>
+                <span className="text-xs text-gray-500">3장 carousel + 캡션 (링크 비활성)</span>
+              </div>
+
+              <section>
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Carousel 미리보기
+                  </h3>
+                  <span className="text-[10px] text-gray-600">Hook → Body → CTA</span>
+                </div>
+                <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3">
+                  {material.cards.map((c) => (
+                    <div key={c.label} className="flex w-[85%] shrink-0 snap-center flex-col items-center sm:w-[60%]">
+                      <span className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-gray-500">
+                        {c.label}
+                      </span>
+                      {c.jsx}
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section>
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500">캡션</h3>
+                  <button
+                    onClick={() => copy('caption')}
+                    className="text-xs text-gray-400 transition hover:text-white"
+                  >
+                    {copied === 'caption' ? '✓ 복사됨' : '복사'}
+                  </button>
+                </div>
+                <pre className="whitespace-pre-wrap rounded-md border border-gray-800 bg-gray-900 p-3 text-sm text-gray-300">
+                  {material.caption}
+                </pre>
+              </section>
+
+              <section>
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500">해시태그</h3>
+                  <button
+                    onClick={() => copy('hashtags')}
+                    className="text-xs text-gray-400 transition hover:text-white"
+                  >
+                    {copied === 'hashtags' ? '✓ 복사됨' : '복사'}
+                  </button>
+                </div>
+                <pre className="whitespace-pre-wrap rounded-md border border-gray-800 bg-gray-900 p-3 text-sm text-gray-300">
+                  {material.hashtags}
+                </pre>
+              </section>
+
+              <section>
+                <h3 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-500">
+                  Deep link (받는 사람용)
+                </h3>
+                <pre className="whitespace-pre-wrap rounded-md border border-gray-800 bg-gray-900 p-3 text-xs text-blue-400">
+                  {material.permalink}
+                </pre>
+              </section>
+
+              <div className="flex justify-center">
+                <button
+                  onClick={() => copy('all')}
+                  className="rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-blue-500"
+                >
+                  {copied === 'all' ? '✓ 캡션 + 해시태그 + 링크 복사됨' : '전체 복사 (캡션 + 해시태그 + 링크)'}
                 </button>
               </div>
-              <pre className="whitespace-pre-wrap rounded-md border border-gray-800 bg-gray-900 p-3 text-sm text-gray-300">
-                {material.caption}
-              </pre>
-            </section>
-
-            {/* 해시태그 */}
-            <section>
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-sm font-medium text-gray-500">해시태그</h2>
-                <button
-                  onClick={() => copy('hashtags')}
-                  className="text-xs text-gray-400 transition hover:text-white"
-                >
-                  {copied === 'hashtags' ? '✓ 복사됨' : '복사'}
-                </button>
-              </div>
-              <pre className="whitespace-pre-wrap rounded-md border border-gray-800 bg-gray-900 p-3 text-sm text-gray-300">
-                {material.hashtags}
-              </pre>
-            </section>
-
-            {/* Deep link */}
-            <section>
-              <h2 className="mb-2 text-sm font-medium text-gray-500">Deep link (받는 사람용)</h2>
-              <pre className="whitespace-pre-wrap rounded-md border border-gray-800 bg-gray-900 p-3 text-xs text-blue-400">
-                {material.permalink}
-              </pre>
-            </section>
-
-            {/* 통합 복사 */}
-            <div className="flex justify-center">
-              <button
-                onClick={() => copy('all')}
-                className="rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-blue-500"
-              >
-                {copied === 'all' ? '✓ 캡션 + 해시태그 + 링크 복사됨' : '전체 복사 (캡션 + 해시태그 + 링크)'}
-              </button>
             </div>
           </div>
         )}
