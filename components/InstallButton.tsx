@@ -9,12 +9,25 @@ import { createPortal } from 'react-dom'
  * - Falls back to a manual instruction modal when the event never fires
  *   (Safari / iOS, browsers that already installed, etc.).
  */
+const SITE_URL = 'https://prismglobe.com'
+
 export default function InstallButton() {
   const promptRef = useRef<{ prompt: () => void } | null>(null)
   const [showGuide, setShowGuide] = useState(false)
+  const [copied, setCopied] = useState(false)
   // Portal target only exists after mount; gate createPortal on this so SSR
   // doesn't try to render into document.body.
   const [mounted, setMounted] = useState(false)
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(SITE_URL)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      /* clipboard blocked — user can long-press the URL text instead */
+    }
+  }
 
   useEffect(() => {
     setMounted(true)
@@ -91,9 +104,30 @@ export default function InstallButton() {
                 </p>
               </div>
             </div>
-            <p className="mb-4 text-xs text-gray-500">
+            <p className="mb-3 text-xs text-gray-500">
               앱처럼 빠르게 접속할 수 있습니다
             </p>
+            <div className="mb-4 rounded-lg border border-gray-700 bg-gray-800 p-3 text-left">
+              <p className="mb-1.5 text-[11px] font-medium text-gray-400">
+                사이트 주소
+              </p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 select-all break-all rounded bg-gray-950 px-2 py-1.5 text-xs text-blue-300">
+                  {SITE_URL}
+                </code>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="shrink-0 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-blue-500"
+                  aria-label="주소 복사"
+                >
+                  {copied ? '✓ 복사됨' : '복사'}
+                </button>
+              </div>
+              <p className="mt-2 text-[11px] leading-snug text-gray-500">
+                카카오톡 / 네이버 등 인앱 브라우저라면 주소 복사 후 Safari에 붙여넣어 열어주세요.
+              </p>
+            </div>
             <button
               onClick={() => setShowGuide(false)}
               className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white transition hover:bg-blue-500"
