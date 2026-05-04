@@ -6,31 +6,31 @@ import { getCountryName, getCountryNameKo, countryFlag } from '@/lib/countries'
 import { CATEGORY_META, isValidCategory } from '@/lib/categories'
 import { findEntry } from '@/lib/keywords/index'
 
-/** Capture a DOM node as a 1080×1080 PNG blob and trigger download.
+/** Capture a DOM node as a 1080×1080 PNG and trigger download.
  *  Cloudflare Pages edge can't run @vercel/og (Yoga/Resvg WASM doesn't init),
- *  so we render in the browser via html2canvas. Dynamic import keeps the
- *  admin-only library out of the public bundle. */
+ *  so we render in the browser. html2canvas mis-positioned text vertically
+ *  inside flex pills (baseline math drift). html-to-image uses SVG
+ *  foreignObject so the browser's own renderer paints the pixels — preview
+ *  and PNG are pixel-identical. Dynamic import keeps the admin-only library
+ *  out of the public bundle. */
 async function downloadCardPng(node: HTMLElement, filename: string) {
-  const html2canvas = (await import('html2canvas')).default
+  const { toBlob } = await import('html-to-image')
   const rect = node.getBoundingClientRect()
-  const scale = 1080 / rect.width
-  const canvas = await html2canvas(node, {
-    backgroundColor: null,
-    scale,
-    useCORS: true,
-    logging: false,
+  const pixelRatio = 1080 / rect.width
+  const blob = await toBlob(node, {
+    pixelRatio,
+    cacheBust: true,
+    backgroundColor: undefined,
   })
-  canvas.toBlob((blob) => {
-    if (!blob) return
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }, 'image/png')
+  if (!blob) return
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
 
 type Status = 'idle' | 'loading' | 'ok' | 'error'
