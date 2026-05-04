@@ -313,11 +313,8 @@ function buildMaterial(item: NewsItem): Material {
           <p className="mt-0.5 text-sm font-medium text-white">{item.source}</p>
         </div>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between border-t border-white/10 bg-black/50 px-6 py-3.5">
-        <span className="text-xs leading-none text-gray-500">prismglobe.com</span>
-        <span className="text-xs font-semibold leading-none" style={{ color: catColor }}>
-          → 바로가기
-        </span>
+      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center border-t border-white/10 bg-black/50 px-6 py-3.5">
+        <span className="text-xs font-medium leading-none text-gray-400">prismglobe.com</span>
       </div>
     </div>
   )
