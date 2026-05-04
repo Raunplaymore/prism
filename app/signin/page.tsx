@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 export const runtime = 'edge'
 
 export const metadata: Metadata = {
-  title: 'Sign in — prismglobe',
+  title: 'Sign in — Prism Globe',
   // 일반 사용자에게는 무가치한 페이지. 검색 노출/링크 유통 X.
   robots: { index: false, follow: false },
   alternates: { canonical: '/signin' },
@@ -15,7 +15,7 @@ export default function SignInPage() {
       <div className="w-full max-w-sm rounded-2xl border border-gray-800 bg-gray-900 p-8 text-center shadow-2xl">
         <div className="mb-4 flex justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="prismglobe" className="h-12 w-12 rounded-lg" />
+          <img src="/logo.png" alt="Prism Globe" className="h-12 w-12 rounded-lg" />
         </div>
         <h1 className="mb-1 text-lg font-bold text-white">Sign in</h1>
         <p className="mb-6 text-xs text-gray-500">

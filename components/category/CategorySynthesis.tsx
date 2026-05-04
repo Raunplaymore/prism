@@ -74,7 +74,7 @@ export default function CategorySynthesis({ label, articles }: Props) {
   const sentences: string[] = []
 
   sentences.push(
-    `prismglobe은 지난 24시간 동안 ${label} 분야 기사를 ${countryCount}개국에서 총 ${total}건 수집했습니다.`,
+    `Prism Globe은 지난 24시간 동안 ${label} 분야 기사를 ${countryCount}개국에서 총 ${total}건 수집했습니다.`,
   )
   if (countryPart) sentences.push(`가장 활발히 보도한 국가는 ${countryPart} 순입니다.`)
   if (sentimentPart) sentences.push(`보도 톤은 ${sentimentPart}했습니다.`)
@@ -100,7 +100,7 @@ export default function CategorySynthesis({ label, articles }: Props) {
     <section className="mb-6 rounded-xl border border-gray-800 bg-gray-900/50 p-4 sm:p-5">
       <div className="mb-2 flex items-center gap-2">
         <span className="rounded-md bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-blue-400">
-          prismglobe 분석
+          Prism Globe 분석
         </span>
         <h2 className="text-sm font-semibold text-gray-300">
           {label} — 다국가 보도 종합
@@ -125,7 +125,7 @@ export default function CategorySynthesis({ label, articles }: Props) {
       )}
 
       <p className="mt-4 text-[11px] text-gray-600">
-        본 종합은 prismglobe이 위 기사들의 메타데이터(국가, 보도 톤, 발행 시각)를 기계적으로
+        본 종합은 Prism Globe이 위 기사들의 메타데이터(국가, 보도 톤, 발행 시각)를 기계적으로
         집계한 결과입니다. 개별 기사의 정확한 내용은 아래 카드를 통해 원문 출처로 확인해 주세요.
       </p>
     </section>

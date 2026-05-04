@@ -74,7 +74,7 @@ export default function InstallButton() {
           >
             <div className="mb-4 flex justify-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="prismglobe" className="h-12 w-12 rounded-lg" />
+              <img src="/logo.png" alt="Prism Globe" className="h-12 w-12 rounded-lg" />
             </div>
             <h3 className="mb-4 text-lg font-bold text-white">홈 화면에 추가</h3>
             <div className="mb-4 space-y-3 text-left text-sm text-gray-300">

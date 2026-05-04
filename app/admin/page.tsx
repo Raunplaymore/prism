@@ -166,7 +166,7 @@ export default function AdminPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-950 p-4 text-white">
         <div className="text-center">
-          <h1 className="mb-4 text-xl font-bold">prismglobe Admin</h1>
+          <h1 className="mb-4 text-xl font-bold">Prism Globe Admin</h1>
           <p className="mb-6 text-sm text-gray-400">Sign in with an admin account to continue</p>
           <a
             href="/api/auth/login"
@@ -202,7 +202,7 @@ export default function AdminPage() {
       <div className="mx-auto max-w-3xl">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold">prismglobe Admin</h1>
+            <h1 className="text-xl font-bold">Prism Globe Admin</h1>
             <p className="text-sm text-gray-500">{user.email}</p>
           </div>
           <div className="flex gap-2">

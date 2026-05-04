@@ -34,15 +34,15 @@ export const runtime = 'edge'
 export const revalidate = 300
 
 export const metadata: Metadata = {
-  title: '카테고리 — 세계 뉴스 9개 분류 — prismglobe',
+  title: '카테고리 — 세계 뉴스 9개 분류 — Prism Globe',
   description:
-    'prismglobe이 매일 50여 개국에서 수집한 기사를 정치·경제·사회·기술·국방·외교·환경·건강·문화 9개 분류로 정리합니다. 같은 주제를 여러 국가가 어떻게 다루는지 비교하세요.',
+    'Prism Globe이 매일 50여 개국에서 수집한 기사를 정치·경제·사회·기술·국방·외교·환경·건강·문화 9개 분류로 정리합니다. 같은 주제를 여러 국가가 어떻게 다루는지 비교하세요.',
   alternates: { canonical: '/category' },
   robots: { index: true, follow: true },
   openGraph: {
-    title: '카테고리 — 세계 뉴스 9개 분류 — prismglobe',
+    title: '카테고리 — 세계 뉴스 9개 분류 — Prism Globe',
     description:
-      'prismglobe이 매일 50여 개국에서 수집한 기사를 9개 분류로 정리. 같은 주제를 여러 국가가 어떻게 다루는지 한눈에 비교.',
+      'Prism Globe이 매일 50여 개국에서 수집한 기사를 9개 분류로 정리. 같은 주제를 여러 국가가 어떻게 다루는지 한눈에 비교.',
     type: 'website',
     locale: 'ko_KR',
     images: ['/og-image.png'],
@@ -137,7 +137,7 @@ export default async function CategoryIndexPage() {
               </svg>
             </summary>
             <p className="mt-2 text-sm leading-relaxed text-gray-300">
-              prismglobe은 매일 50여 개국 현지 언론에서 수집한 기사를
+              Prism Globe은 매일 50여 개국 현지 언론에서 수집한 기사를
               정치·경제·사회·기술·국방·외교·환경·건강·문화 9개 분류로 정리합니다.
               한 카테고리를 누르면 같은 주제를 여러 국가가 어떻게 다루는지
               한눈에 비교할 수 있습니다.
