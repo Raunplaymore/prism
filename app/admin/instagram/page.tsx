@@ -204,8 +204,10 @@ function buildMaterial(item: NewsItem): Material {
     </div>
   )
 
+  // inline-flex + leading-none — html2canvas의 vertical-align baseline 버그 회피.
+  // padding으로만 중앙정렬 시도하면 PNG 캡처 시 텍스트가 1-2px 아래로 밀림.
   const pageBadge = (n: number) => (
-    <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold tracking-wider text-white/80">
+    <span className="inline-flex items-center justify-center rounded-full bg-white/10 px-2.5 py-1.5 text-[10px] font-semibold leading-none tracking-wider text-white/80">
       {n} / 3
     </span>
   )
@@ -228,7 +230,7 @@ function buildMaterial(item: NewsItem): Material {
       >
         <span className="mb-5 text-6xl leading-none">{flag}</span>
         <span
-          className="mb-5 inline-flex w-fit rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider"
+          className="mb-5 inline-flex w-fit items-center justify-center rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase leading-none tracking-wider"
           style={{ backgroundColor: `${catColor}30`, color: catColor }}
         >
           {koCountry} · {catKo}
@@ -237,12 +239,11 @@ function buildMaterial(item: NewsItem): Material {
           {trim(item.title, 80)}
         </h2>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-6 py-3">
-        <span className="text-xs font-medium text-gray-400">▶ Swipe</span>
+      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-6 py-3.5">
+        <span className="text-xs font-medium leading-none text-gray-400">▶ Swipe</span>
       </div>
     </div>
   )
-
   // Card 2 — Body: 정보 핵심 (요약 + detail 발췌)
   const card2 = (
     <div
@@ -273,8 +274,8 @@ function buildMaterial(item: NewsItem): Material {
           </p>
         )}
       </div>
-      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-6 py-3">
-        <span className="text-xs font-medium text-gray-400">▶ 더 보기</span>
+      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-6 py-3.5">
+        <span className="text-xs font-medium leading-none text-gray-400">▶ 더 보기</span>
       </div>
     </div>
   )
@@ -312,9 +313,9 @@ function buildMaterial(item: NewsItem): Material {
           <p className="mt-0.5 text-sm font-medium text-white">{item.source}</p>
         </div>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between border-t border-white/10 bg-black/50 px-6 py-3">
-        <span className="text-xs text-gray-500">prismglobe.com</span>
-        <span className="text-xs font-semibold" style={{ color: catColor }}>
+      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between border-t border-white/10 bg-black/50 px-6 py-3.5">
+        <span className="text-xs leading-none text-gray-500">prismglobe.com</span>
+        <span className="text-xs font-semibold leading-none" style={{ color: catColor }}>
           → 바로가기
         </span>
       </div>
