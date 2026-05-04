@@ -1,10 +1,37 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { NewsItem } from '@/types/news'
 import { getCountryName, getCountryNameKo, countryFlag } from '@/lib/countries'
 import { CATEGORY_META, isValidCategory } from '@/lib/categories'
 import { findEntry } from '@/lib/keywords/index'
+
+/** Capture a DOM node as a 1080×1080 PNG blob and trigger download.
+ *  Cloudflare Pages edge can't run @vercel/og (Yoga/Resvg WASM doesn't init),
+ *  so we render in the browser via html2canvas. Dynamic import keeps the
+ *  admin-only library out of the public bundle. */
+async function downloadCardPng(node: HTMLElement, filename: string) {
+  const html2canvas = (await import('html2canvas')).default
+  const rect = node.getBoundingClientRect()
+  const scale = 1080 / rect.width
+  const canvas = await html2canvas(node, {
+    backgroundColor: null,
+    scale,
+    useCORS: true,
+    logging: false,
+  })
+  canvas.toBlob((blob) => {
+    if (!blob) return
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }, 'image/png')
+}
 
 type Status = 'idle' | 'loading' | 'ok' | 'error'
 
@@ -312,6 +339,9 @@ export default function InstagramAdmin() {
   const [material, setMaterial] = useState<Material | null>(null)
   const [articleId, setArticleId] = useState<string | null>(null)
   const [copied, setCopied] = useState<'caption' | 'hashtags' | 'all' | 'threads' | null>(null)
+  const [downloading, setDownloading] = useState<string | null>(null)
+  const threadsCardRef = useRef<HTMLDivElement | null>(null)
+  const igCardRefs = useRef<(HTMLDivElement | null)[]>([])
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -453,22 +483,32 @@ export default function InstagramAdmin() {
                     첨부 이미지 (Hook 카드 1장)
                   </h3>
                   {articleId && (
-                    <a
-                      href={`/api/og/social?article=${encodeURIComponent(articleId)}&card=1`}
-                      download={`${articleId}-threads.png`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-blue-500"
+                    <button
+                      type="button"
+                      disabled={downloading === 'threads'}
+                      onClick={async () => {
+                        const node = threadsCardRef.current
+                        if (!node) return
+                        setDownloading('threads')
+                        try {
+                          await downloadCardPng(node, `${articleId}-threads.png`)
+                        } finally {
+                          setDownloading(null)
+                        }
+                      }}
+                      className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-blue-500 disabled:cursor-wait disabled:opacity-60"
                     >
-                      PNG 다운로드
-                    </a>
+                      {downloading === 'threads' ? '저장 중…' : 'PNG 다운로드'}
+                    </button>
                   )}
                 </div>
                 <div className="flex justify-center">
-                  <div className="w-[80%] sm:w-[55%]">{material.cards[0].jsx}</div>
+                  <div ref={threadsCardRef} className="w-[80%] sm:w-[55%]">
+                    {material.cards[0].jsx}
+                  </div>
                 </div>
                 <p className="mt-2 text-center text-xs text-gray-600">
-                  PNG 1080×1080 · Pretendard · GA4에서 utm_source=threads로 분리 측정
+                  1080×1080 PNG · 브라우저 캡처 · GA4에서 utm_source=threads로 분리 측정
                 </p>
               </section>
 
@@ -513,27 +553,40 @@ export default function InstagramAdmin() {
                   <span className="text-[10px] text-gray-600">Hook → Body → CTA</span>
                 </div>
                 <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3">
-                  {material.cards.map((c, idx) => (
-                    <div key={c.label} className="flex w-[85%] shrink-0 snap-center flex-col items-center sm:w-[60%]">
-                      <div className="mb-1.5 flex w-full items-center justify-between">
-                        <span className="text-[10px] font-medium uppercase tracking-wider text-gray-500">
-                          {c.label}
-                        </span>
-                        {articleId && (
-                          <a
-                            href={`/api/og/social?article=${encodeURIComponent(articleId)}&card=${idx + 1}`}
-                            download={`${articleId}-card-${idx + 1}.png`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="rounded bg-gray-800 px-2 py-0.5 text-[10px] font-medium text-gray-300 transition hover:bg-gray-700 hover:text-white"
-                          >
-                            PNG ↓
-                          </a>
-                        )}
+                  {material.cards.map((c, idx) => {
+                    const dlKey = `ig-${idx}`
+                    return (
+                      <div key={c.label} className="flex w-[85%] shrink-0 snap-center flex-col items-center sm:w-[60%]">
+                        <div className="mb-1.5 flex w-full items-center justify-between">
+                          <span className="text-[10px] font-medium uppercase tracking-wider text-gray-500">
+                            {c.label}
+                          </span>
+                          {articleId && (
+                            <button
+                              type="button"
+                              disabled={downloading === dlKey}
+                              onClick={async () => {
+                                const node = igCardRefs.current[idx]
+                                if (!node) return
+                                setDownloading(dlKey)
+                                try {
+                                  await downloadCardPng(node, `${articleId}-card-${idx + 1}.png`)
+                                } finally {
+                                  setDownloading(null)
+                                }
+                              }}
+                              className="rounded bg-gray-800 px-2 py-0.5 text-[10px] font-medium text-gray-300 transition hover:bg-gray-700 hover:text-white disabled:cursor-wait disabled:opacity-60"
+                            >
+                              {downloading === dlKey ? '저장…' : 'PNG ↓'}
+                            </button>
+                          )}
+                        </div>
+                        <div ref={(el) => { igCardRefs.current[idx] = el }} className="w-full">
+                          {c.jsx}
+                        </div>
                       </div>
-                      {c.jsx}
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </section>
 
