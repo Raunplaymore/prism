@@ -204,10 +204,10 @@ function buildMaterial(item: NewsItem): Material {
     </div>
   )
 
-  // inline-flex + leading-none — html2canvas의 vertical-align baseline 버그 회피.
-  // padding으로만 중앙정렬 시도하면 PNG 캡처 시 텍스트가 1-2px 아래로 밀림.
+  // 고정 높이 + flex center — padding 기반 정렬은 html2canvas가 baseline metric을
+  // 다르게 계산해서 1-2px 어긋남. 높이 고정하면 어떻게 렌더링되든 픽셀 단위로 정확.
   const pageBadge = (n: number) => (
-    <span className="inline-flex items-center justify-center rounded-full bg-white/10 px-2.5 py-1.5 text-[10px] font-semibold leading-none tracking-wider text-white/80">
+    <span className="inline-flex h-6 items-center justify-center rounded-full bg-white/10 px-2.5 text-[10px] font-semibold leading-none tracking-wider text-white/80">
       {n} / 3
     </span>
   )
@@ -230,7 +230,7 @@ function buildMaterial(item: NewsItem): Material {
       >
         <span className="mb-5 text-6xl leading-none">{flag}</span>
         <span
-          className="mb-5 inline-flex w-fit items-center justify-center rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase leading-none tracking-wider"
+          className="mb-5 inline-flex h-7 w-fit items-center justify-center rounded-full px-3 text-[11px] font-semibold uppercase leading-none tracking-wider"
           style={{ backgroundColor: `${catColor}30`, color: catColor }}
         >
           {koCountry} · {catKo}
