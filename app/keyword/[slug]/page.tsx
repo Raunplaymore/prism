@@ -28,7 +28,7 @@ export async function generateMetadata({
   const entry = findEntry(decodeURIComponent(params.slug))
   if (!entry) {
     return {
-      title: 'Keyword not found — Prism',
+      title: 'Keyword not found — prismglobe',
       robots: { index: false, follow: false },
     }
   }
@@ -37,10 +37,10 @@ export async function generateMetadata({
   const countryCount = new Set(articles.map((a) => a.country)).size
   const description =
     articles.length > 0
-      ? `${display} 관련 ${articles.length}건의 기사를 ${countryCount}개국에서 수집했습니다. Prism이 다국가 보도 양상을 종합하여 한국어로 제공합니다.`
+      ? `${display} 관련 ${articles.length}건의 기사를 ${countryCount}개국에서 수집했습니다. prismglobe이 다국가 보도 양상을 종합하여 한국어로 제공합니다.`
       : `${display} 관련 모든 국가의 최신 기사`
   return {
-    title: `#${entry.slug} · ${display} — Prism`,
+    title: `#${entry.slug} · ${display} — prismglobe`,
     description,
     alternates: { canonical: `/keyword/${encodeURIComponent(entry.slug)}` },
     robots:
@@ -48,7 +48,7 @@ export async function generateMetadata({
         ? { index: false, follow: false }
         : { index: true, follow: true },
     openGraph: {
-      title: `#${display} — 다국가 보도 종합 — Prism`,
+      title: `#${display} — 다국가 보도 종합 — prismglobe`,
       description,
       type: 'website',
       locale: 'ko_KR',
@@ -95,17 +95,17 @@ export default async function KeywordPage({
       },
       {
         '@type': 'CollectionPage',
-        name: `${display} — Prism`,
+        name: `${display} — prismglobe`,
         description:
           articles.length > 0
-            ? `Prism이 ${display} 관련 ${articles.length}건의 기사를 ${
+            ? `prismglobe이 ${display} 관련 ${articles.length}건의 기사를 ${
                 new Set(articles.map((a) => a.country)).size
               }개국에서 종합한 다국가 보도 분석입니다.`
             : `${display} 관련 다국가 보도 분석`,
         inLanguage: 'ko',
         isPartOf: {
           '@type': 'WebSite',
-          name: 'Prism',
+          name: 'prismglobe',
           url: 'https://prismglobe.com',
         },
         hasPart: articles.slice(0, 20).map((a) => ({
@@ -165,7 +165,7 @@ export default async function KeywordPage({
           <p className="text-sm text-gray-500">#{entry.slug}</p>
           <div className="mt-1 flex items-start justify-between gap-3">
             <h1 className="text-3xl font-bold">{display}</h1>
-            <ShareButton title={`#${display} — Prism`} />
+            <ShareButton title={`#${display} — prismglobe`} />
           </div>
           <p className="mt-1 text-sm text-gray-400">
             {articles.length}건 · {countryCount}개 국가

@@ -7,9 +7,9 @@ export default function Nav() {
       <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-2.5 sm:gap-5">
         <Link href="/" className="flex items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Prism" className="h-7 w-7 rounded-md" />
+          <img src="/logo.png" alt="prismglobe" className="h-7 w-7 rounded-md" />
           <div className="flex flex-col leading-none">
-            <span className="text-base font-bold tracking-tight text-white">Prism</span>
+            <span className="text-base font-bold tracking-tight text-white">prismglobe</span>
             <span className="text-[10px] text-gray-500">refracted by AI</span>
           </div>
         </Link>

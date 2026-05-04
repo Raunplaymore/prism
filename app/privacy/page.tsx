@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import Nav from '@/components/Nav'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — Prism',
-  description: 'Prism 개인정보 처리방침',
+  title: 'Privacy Policy — prismglobe',
+  description: 'prismglobe 개인정보 처리방침',
   alternates: { canonical: '/privacy' },
   robots: { index: true, follow: true },
 }
@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <section className="mb-8">
           <h2 className="mb-3 text-lg font-semibold text-blue-400">수집하는 정보</h2>
           <p className="mb-4 text-sm leading-relaxed text-gray-300">
-            Prism은 서비스 제공을 위해 최소한의 정보만 수집합니다.
+            prismglobe은 서비스 제공을 위해 최소한의 정보만 수집합니다.
           </p>
           <ul className="space-y-2 text-sm text-gray-300">
             <li>- <strong>Google 로그인 시:</strong> 이메일 주소, 이름, 프로필 사진 (Google OAuth를 통해 제공)</li>
@@ -38,7 +38,7 @@ export default function PrivacyPage() {
         <section className="mb-8">
           <h2 className="mb-3 text-lg font-semibold text-blue-400">쿠키</h2>
           <p className="text-sm leading-relaxed text-gray-300">
-            Prism은 로그인 세션 유지를 위해 HttpOnly 쿠키를 사용합니다. 이 쿠키는 7일 후 자동 만료됩니다.
+            prismglobe은 로그인 세션 유지를 위해 HttpOnly 쿠키를 사용합니다. 이 쿠키는 7일 후 자동 만료됩니다.
             로그아웃 시 즉시 삭제됩니다.
           </p>
         </section>
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
         <section className="mb-8">
           <h2 className="mb-3 text-lg font-semibold text-blue-400">광고</h2>
           <p className="text-sm leading-relaxed text-gray-300">
-            Prism은 Google AdSense를 통해 광고를 게재할 수 있습니다. Google AdSense는 사용자의 관심사에 기반한
+            prismglobe은 Google AdSense를 통해 광고를 게재할 수 있습니다. Google AdSense는 사용자의 관심사에 기반한
             광고를 제공하기 위해 쿠키를 사용할 수 있습니다. 자세한 내용은
             Google의 광고 정책(https://policies.google.com/technologies/ads)을 참고해 주세요.
           </p>
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
         </section>
 
         <div className="mt-12 text-center">
-          <a href="/" className="text-sm text-blue-400 hover:text-blue-300">← Back to Prism</a>
+          <a href="/" className="text-sm text-blue-400 hover:text-blue-300">← Back to prismglobe</a>
         </div>
       </div>
     </div>

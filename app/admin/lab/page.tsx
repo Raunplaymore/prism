@@ -252,7 +252,7 @@ export default function LabPage() {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold">Prism Lab</h1>
+            <h1 className="text-xl font-bold">prismglobe Lab</h1>
             <p className="text-sm text-gray-500">{user.email}</p>
           </div>
           <div className="flex gap-2">

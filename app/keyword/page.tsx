@@ -12,15 +12,15 @@ export const runtime = 'edge'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: '키워드로 보는 세계 뉴스 — Prism',
+  title: '키워드로 보는 세계 뉴스 — prismglobe',
   description:
-    'Prism이 50여 개국에서 수집한 기사를 인물·국가·조직·기업·토픽·이벤트로 인덱싱한 키워드 클라우드. 같은 주제를 여러 국가가 어떻게 다루는지 비교해보세요.',
+    'prismglobe이 50여 개국에서 수집한 기사를 인물·국가·조직·기업·토픽·이벤트로 인덱싱한 키워드 클라우드. 같은 주제를 여러 국가가 어떻게 다루는지 비교해보세요.',
   alternates: { canonical: '/keyword' },
   robots: { index: true, follow: true },
   openGraph: {
-    title: '키워드로 보는 세계 뉴스 — Prism',
+    title: '키워드로 보는 세계 뉴스 — prismglobe',
     description:
-      'Prism이 50여 개국에서 수집한 기사를 정규화된 키워드로 인덱싱. 같은 주제를 여러 국가가 어떻게 다루는지 비교.',
+      'prismglobe이 50여 개국에서 수집한 기사를 정규화된 키워드로 인덱싱. 같은 주제를 여러 국가가 어떻게 다루는지 비교.',
     type: 'website',
     locale: 'ko_KR',
     images: ['/og-image.png'],
@@ -104,7 +104,7 @@ export default async function KeywordIndexPage() {
               </svg>
             </summary>
             <p className="mt-2 text-sm leading-relaxed text-gray-300">
-              Prism은 매일 50여 개국의 현지 언론에서 수집한 기사를 AI가 분류·요약하고,
+              prismglobe은 매일 50여 개국의 현지 언론에서 수집한 기사를 AI가 분류·요약하고,
               인물·국가·조직·기업·토픽·이벤트 6개 분류의 정규화된 키워드로 인덱싱합니다.
               아래 키워드를 누르면 같은 주제를 여러 국가가 어떻게 다루고 있는지 한눈에 비교할 수 있습니다.
             </p>

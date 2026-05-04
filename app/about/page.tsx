@@ -3,8 +3,8 @@ import Nav from '@/components/Nav'
 import { SUPPORTED_COUNT } from '@/lib/rss'
 
 export const metadata: Metadata = {
-  title: 'About — Prism',
-  description: `Prism은 AI 기반 세계 뉴스 브리핑 서비스입니다. ${SUPPORTED_COUNT}개국의 뉴스를 한국어로 요약하여 제공합니다.`,
+  title: 'About — prismglobe',
+  description: `prismglobe은 AI 기반 세계 뉴스 브리핑 서비스입니다. ${SUPPORTED_COUNT}개국의 뉴스를 한국어로 요약하여 제공합니다.`,
   alternates: { canonical: '/about' },
   robots: { index: true, follow: true },
 }
@@ -14,15 +14,15 @@ export default function AboutPage() {
     <div className="min-h-screen bg-gray-950 text-white">
       <Nav />
       <div className="mx-auto max-w-2xl px-4 py-12">
-        <h1 className="mb-2 text-3xl font-bold">About Prism</h1>
+        <h1 className="mb-2 text-3xl font-bold">About prismglobe</h1>
         <p className="mb-10 text-sm text-gray-400">
-          AI가 정제한 세계 뉴스 — Prism / refracted by AI
+          AI가 정제한 세계 뉴스 — prismglobe / refracted by AI
         </p>
 
         <section className="mb-8">
           <h2 className="mb-3 text-lg font-semibold text-blue-400">서비스 소개</h2>
           <p className="mb-4 text-sm leading-relaxed text-gray-300">
-            Prism은 전 세계 {SUPPORTED_COUNT}개국의 주요 뉴스를 AI가 수집, 분류, 요약하여 한국어로 제공하는 뉴스 브리핑 서비스입니다.
+            prismglobe은 전 세계 {SUPPORTED_COUNT}개국의 주요 뉴스를 AI가 수집, 분류, 요약하여 한국어로 제공하는 뉴스 브리핑 서비스입니다.
             Google News RSS를 통해 각국의 현지 언어 뉴스를 실시간으로 수집하고, OpenAI의 gpt-4o-mini 모델을 활용하여
             정치, 경제, 사회, 기술, 외교, 국방, 환경, 건강, 문화 등 다양한 카테고리로 분류하고 요약합니다.
           </p>
@@ -49,7 +49,7 @@ export default function AboutPage() {
         <section className="mb-8">
           <h2 className="mb-3 text-lg font-semibold text-blue-400">콘텐츠 제작 방식</h2>
           <p className="mb-3 text-sm leading-relaxed text-gray-300">
-            Prism은 단순한 기사 모음이 아닙니다. 각 기사에 대해 다음 단계의 처리를 거쳐 독자적인 한국어 브리핑을 만듭니다.
+            prismglobe은 단순한 기사 모음이 아닙니다. 각 기사에 대해 다음 단계의 처리를 거쳐 독자적인 한국어 브리핑을 만듭니다.
           </p>
           <ol className="space-y-2 text-sm text-gray-300">
             <li>1. <span className="text-white">수집</span> — 각국 Google News RSS에서 현지 언어 원문 수집</li>
@@ -92,7 +92,7 @@ export default function AboutPage() {
         <section className="mb-8">
           <h2 className="mb-3 text-lg font-semibold text-blue-400">광고 및 콘텐츠 정책</h2>
           <p className="mb-3 text-sm leading-relaxed text-gray-300">
-            Prism은 운영 비용 일부를 Google AdSense를 통한 광고로 충당합니다. 다음 원칙을 지킵니다.
+            prismglobe은 운영 비용 일부를 Google AdSense를 통한 광고로 충당합니다. 다음 원칙을 지킵니다.
           </p>
           <ul className="space-y-2 text-sm text-gray-300">
             <li>- 광고 영역은 콘텐츠 영역과 명확히 구분되며, 기사처럼 보이도록 위장하지 않습니다.</li>
@@ -105,7 +105,7 @@ export default function AboutPage() {
         <section className="mb-8">
           <h2 className="mb-3 text-lg font-semibold text-blue-400">면책 조항</h2>
           <p className="text-sm leading-relaxed text-gray-300">
-            Prism에서 제공하는 뉴스 요약은 AI가 생성한 것으로, 정확성을 보장하지 않습니다.
+            prismglobe에서 제공하는 뉴스 요약은 AI가 생성한 것으로, 정확성을 보장하지 않습니다.
             정확한 정보는 원문 기사를 참고해 주세요. 각 기사 하단의 &quot;원문 보기&quot; 링크를 통해 원본 기사를 확인할 수 있습니다.
             번역 및 요약 과정에서 원문의 뉘앙스가 일부 손실될 수 있습니다.
           </p>
@@ -131,7 +131,7 @@ export default function AboutPage() {
         </section>
 
         <div className="mt-12 text-center">
-          <a href="/" className="text-sm text-blue-400 hover:text-blue-300">← Back to Prism</a>
+          <a href="/" className="text-sm text-blue-400 hover:text-blue-300">← Back to prismglobe</a>
         </div>
       </div>
     </div>

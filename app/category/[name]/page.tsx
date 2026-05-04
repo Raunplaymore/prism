@@ -61,18 +61,18 @@ export async function generateMetadata({
   const countryCount = new Set(articles.map((a) => a.country)).size
 
   return {
-    title: `${meta.ko} 뉴스 — 다국가 시각 비교 — Prism`,
+    title: `${meta.ko} 뉴스 — 다국가 시각 비교 — prismglobe`,
     description:
       articles.length > 0
-        ? `Prism이 ${countryCount}개국에서 수집한 ${meta.ko} 분야 기사 ${articles.length}건. 국가별 보도 차이를 한국어로 비교합니다.`
-        : `${meta.ko} 분야 기사를 다국가 시각으로 비교하는 Prism 카테고리 페이지`,
+        ? `prismglobe이 ${countryCount}개국에서 수집한 ${meta.ko} 분야 기사 ${articles.length}건. 국가별 보도 차이를 한국어로 비교합니다.`
+        : `${meta.ko} 분야 기사를 다국가 시각으로 비교하는 prismglobe 카테고리 페이지`,
     alternates: { canonical: `/category/${params.name}` },
     robots:
       articles.length === 0
         ? { index: false, follow: true }
         : { index: true, follow: true },
     openGraph: {
-      title: `${meta.ko} 뉴스 — 다국가 시각 비교 — Prism`,
+      title: `${meta.ko} 뉴스 — 다국가 시각 비교 — prismglobe`,
       description:
         articles.length > 0
           ? `${countryCount}개국 ${meta.ko} 분야 기사 ${articles.length}건의 다국가 보도 분석`
@@ -118,15 +118,15 @@ export default async function CategoryHubPage({
       },
       {
         '@type': 'CollectionPage',
-        name: `${meta.ko} 뉴스 — Prism`,
+        name: `${meta.ko} 뉴스 — prismglobe`,
         description:
           articles.length > 0
-            ? `Prism이 ${countryCount}개국에서 수집한 ${meta.ko} 분야 기사 ${articles.length}건의 다국가 보도 분석`
+            ? `prismglobe이 ${countryCount}개국에서 수집한 ${meta.ko} 분야 기사 ${articles.length}건의 다국가 보도 분석`
             : `${meta.ko} 분야 다국가 보도 분석`,
         inLanguage: 'ko',
         isPartOf: {
           '@type': 'WebSite',
-          name: 'Prism',
+          name: 'prismglobe',
           url: 'https://prismglobe.com',
         },
         hasPart: articles.slice(0, 20).map((a) => ({
@@ -181,7 +181,7 @@ export default async function CategoryHubPage({
             >
               {meta.ko} 뉴스
             </h1>
-            <ShareButton title={`${meta.ko} 뉴스 — Prism`} />
+            <ShareButton title={`${meta.ko} 뉴스 — prismglobe`} />
           </div>
           <p className="mt-1 text-sm text-gray-400">
             {articles.length}건 · {countryCount}개 국가 · 다국가 시각 비교

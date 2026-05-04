@@ -131,7 +131,7 @@ function buildMaterial(item: NewsItem): Material {
 
   // Hashtags: #prism + #세계뉴스 + #{국가}뉴스 + #{카테고리} + keywords (Korean labels).
   const tags = new Set<string>()
-  tags.add('#prism')
+  tags.add('#prismglobe')
   tags.add('#세계뉴스')
   tags.add(`#${koCountry}뉴스`)
   tags.add(`#${enCountry.replace(/\s+/g, '')}News`)
@@ -150,7 +150,7 @@ function buildMaterial(item: NewsItem): Material {
 
   // Threads용 짧은 해시태그 (3개) — 500자 캡 안에서 핵심만.
   const tagPriority = [
-    '#prism',
+    '#prismglobe',
     `#${koCountry}뉴스`,
     catKo ? `#${catKo}` : null,
   ].filter((t): t is string => Boolean(t))
@@ -199,8 +199,8 @@ function buildMaterial(item: NewsItem): Material {
   const headerBrand = (
     <div className="flex items-center gap-2">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo.png" alt="Prism" className="h-7 w-7 rounded-md" />
-      <span className="text-base font-bold text-white">Prism</span>
+      <img src="/logo.png" alt="prismglobe" className="h-7 w-7 rounded-md" />
+      <span className="text-base font-bold text-white">prismglobe</span>
     </div>
   )
 
@@ -306,7 +306,7 @@ function buildMaterial(item: NewsItem): Material {
         <p className="mb-5 text-sm leading-relaxed text-gray-300">
           한 나라의 시선만으로는 보이지 않던 흐름.
           <br />
-          Prism에서 다국가 뉴스를 한 화면으로.
+          prismglobe에서 다국가 뉴스를 한 화면으로.
         </p>
         <div className="rounded-md border border-white/10 bg-white/5 px-4 py-3">
           <p className="text-[10px] uppercase tracking-wider text-gray-500">출처</p>

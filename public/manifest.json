@@ -1,6 +1,6 @@
 {
-  "name": "Prism — AI 세계 뉴스 브리핑",
-  "short_name": "Prism",
+  "name": "prismglobe — AI 세계 뉴스 브리핑",
+  "short_name": "prismglobe",
   "description": "83개국의 뉴스를 AI가 한국어로 요약하여 제공합니다.",
   "start_url": "/",
   "display": "standalone",
