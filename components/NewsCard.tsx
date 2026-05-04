@@ -40,7 +40,7 @@ export default function NewsCard({ item, showCountry, defaultExpanded }: NewsCar
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    const shareUrl = `${window.location.origin}?country=${item.country}&article=${item.id}`
+    const shareUrl = `${window.location.origin}/map?country=${item.country}&article=${item.id}`
     // text 필드도 포함해야 일부 클라이언트(예: macOS 메시지/메일)에서 url
     // preview가 잘 잡힘. share 실패/취소는 clipboard fallback으로 회복.
     const data = { title: item.title, text: item.title, url: shareUrl }

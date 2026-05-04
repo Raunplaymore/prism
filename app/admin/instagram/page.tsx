@@ -157,7 +157,7 @@ function buildMaterial(item: NewsItem): Material {
   const threadsTags = tagPriority.slice(0, 3).join(' ')
 
   // GA4에서 referral 분리하기 위한 utm_source 분기.
-  const permalink = `https://prismglobe.com/?country=${country}&article=${item.id}`
+  const permalink = `https://prismglobe.com/map?country=${country}&article=${item.id}`
   const threadsLink = `${permalink}&utm_source=threads&utm_medium=social`
 
   // Threads 포스트 — 텍스트 first, 링크 직접 노출. 500자 한도.
@@ -448,7 +448,7 @@ export default function InstagramAdmin() {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleLoad()
               }}
-              placeholder="https://prismglobe.com/?country=KR&article=KR-abc123 또는 KR-abc123"
+              placeholder="https://prismglobe.com/map?country=KR&article=KR-abc123 또는 KR-abc123"
               className="flex-1 rounded-md border border-gray-800 bg-gray-900 px-3 py-2 text-sm text-gray-300 outline-none focus:border-blue-500"
             />
             <button
