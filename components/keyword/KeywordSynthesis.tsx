@@ -6,6 +6,7 @@ interface Props {
   label: string
   category: string
   articles: NewsItem[]
+  lensCountry?: string | null
 }
 
 const SENTIMENT_KO: Record<string, string> = {
@@ -40,7 +41,7 @@ function pct(count: number, total: number): number {
  * no new LLM calls. Each keyword renders a unique paragraph driven by its
  * actual cross-country coverage profile.
  */
-export default function KeywordSynthesis({ label, category, articles }: Props) {
+export default function KeywordSynthesis({ label, category, articles, lensCountry }: Props) {
   if (articles.length === 0) return null
 
   const total = articles.length
@@ -101,11 +102,17 @@ export default function KeywordSynthesis({ label, category, articles }: Props) {
   // Build the prose paragraph from data. Each clause is driven by real numbers.
   const sentences: string[] = []
 
-  sentences.push(
-    `Prism Globe은 지난 24시간 동안 ${categoryLabel} 카테고리 키워드 "${label}"에 대한 기사를 ${countryCount}개국에서 총 ${total}건 수집했습니다.`,
-  )
+  if (lensCountry) {
+    sentences.push(
+      `${countryFlag(lensCountry)} ${getCountryNameKo(lensCountry)} 매체가 본 ${categoryLabel} 카테고리 키워드 "${label}" — Prism Globe이 ${total}건의 보도를 수집했습니다.`,
+    )
+  } else {
+    sentences.push(
+      `Prism Globe은 지난 24시간 동안 ${categoryLabel} 카테고리 키워드 "${label}"에 대한 기사를 ${countryCount}개국에서 총 ${total}건 수집했습니다.`,
+    )
+  }
 
-  if (countryPart) {
+  if (countryPart && !lensCountry) {
     sentences.push(`가장 활발히 보도한 국가는 ${countryPart} 순입니다.`)
   }
 
@@ -136,6 +143,17 @@ export default function KeywordSynthesis({ label, category, articles }: Props) {
     .map(([code]) => ({ code, item: leadByCountry.get(code) }))
     .filter((x): x is { code: string; item: NewsItem } => Boolean(x.item))
 
+  const lensLeads: NewsItem[] = lensCountry
+    ? articles
+        .slice()
+        .sort((a, b) => {
+          const ta = a.pubDate ? new Date(a.pubDate).getTime() : 0
+          const tb = b.pubDate ? new Date(b.pubDate).getTime() : 0
+          return tb - ta
+        })
+        .slice(0, 3)
+    : []
+
   return (
     <section className="mb-6 rounded-xl border border-gray-800 bg-gray-900/50 p-4 sm:p-5">
       <div className="mb-2 flex items-center gap-2">
@@ -143,12 +161,29 @@ export default function KeywordSynthesis({ label, category, articles }: Props) {
           Prism Globe 분석
         </span>
         <h2 className="text-sm font-semibold text-gray-300">
-          {label} — 다국가 보도 종합
+          {lensCountry
+            ? `${countryFlag(lensCountry)} ${getCountryNameKo(lensCountry)} 시각으로 본 ${label}`
+            : `${label} — 다국가 보도 종합`}
         </h2>
       </div>
       <p className="text-sm leading-relaxed text-gray-300">{sentences.join(' ')}</p>
 
-      {leadCountries.length > 0 && (
+      {lensCountry && lensLeads.length > 0 && (
+        <div className="mt-4 space-y-2 border-t border-gray-800 pt-3">
+          <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
+            이 시각의 주요 보도
+          </p>
+          {lensLeads.map((item) => (
+            <p key={item.id} className="text-sm leading-relaxed text-gray-300">
+              <span className="text-gray-400">&ldquo;{item.title}&rdquo;</span>
+              <span className="text-gray-500"> · </span>
+              <span className="text-gray-500">{item.source}</span>
+            </p>
+          ))}
+        </div>
+      )}
+
+      {!lensCountry && leadCountries.length > 0 && (
         <div className="mt-4 space-y-2 border-t border-gray-800 pt-3">
           <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
             국가별 주요 보도

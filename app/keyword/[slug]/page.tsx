@@ -22,8 +22,10 @@ const CATEGORY_LABEL_KO: Record<string, string> = {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: { slug: string }
+  searchParams?: { country?: string }
 }): Promise<Metadata> {
   const entry = findEntry(decodeURIComponent(params.slug))
   if (!entry) {
@@ -33,14 +35,21 @@ export async function generateMetadata({
     }
   }
   const display = entry.labelKo || entry.label
-  const articles = await getArticlesByKeyword(entry.slug)
-  const countryCount = new Set(articles.map((a) => a.country)).size
+  const country = normalizeCountryParam(searchParams?.country)
+  const allArticles = await getArticlesByKeyword(entry.slug)
+  const articles = country
+    ? allArticles.filter((a) => a.country.toUpperCase() === country)
+    : allArticles
+  const countryCount = new Set(allArticles.map((a) => a.country)).size
+  const lensSuffix = country ? ` — ${getCountryNameKo(country)} 시각` : ''
   const description =
     articles.length > 0
-      ? `${display} 관련 ${articles.length}건의 기사를 ${countryCount}개국에서 수집했습니다. Prism Globe이 다국가 보도 양상을 종합하여 한국어로 제공합니다.`
+      ? country
+        ? `${getCountryNameKo(country)} 매체가 본 ${display} — Prism Globe이 ${articles.length}건의 보도를 수집했습니다.`
+        : `${display} 관련 ${articles.length}건의 기사를 ${countryCount}개국에서 수집했습니다. Prism Globe이 다국가 보도 양상을 종합하여 한국어로 제공합니다.`
       : `${display} 관련 모든 국가의 최신 기사`
   return {
-    title: `#${entry.slug} · ${display} — Prism Globe`,
+    title: `#${entry.slug} · ${display}${lensSuffix} — Prism Globe`,
     description,
     alternates: { canonical: `/keyword/${encodeURIComponent(entry.slug)}` },
     robots:
@@ -48,7 +57,7 @@ export async function generateMetadata({
         ? { index: false, follow: false }
         : { index: true, follow: true },
     openGraph: {
-      title: `#${display} — 다국가 보도 종합 — Prism Globe`,
+      title: `#${display}${lensSuffix} — 다국가 보도 종합 — Prism Globe`,
       description,
       type: 'website',
       locale: 'ko_KR',
@@ -176,57 +185,55 @@ export default async function KeywordPage({
         </div>
 
         {countryChips.length > 0 && (
-          <div className="mb-6 flex flex-wrap gap-1.5">
-            <a
-              href={`/keyword/${encodeURIComponent(entry.slug)}`}
-              className={
-                !country
-                  ? 'inline-flex items-baseline gap-1 rounded-full border border-gray-700 bg-gray-800 px-2.5 py-0.5 text-xs text-white'
-                  : 'inline-flex items-baseline gap-1 rounded-full border border-gray-800 bg-gray-900 px-2.5 py-0.5 text-xs text-gray-400 transition hover:border-gray-700 hover:text-gray-200'
-              }
-            >
-              전체
-            </a>
-            {countryChips.map(([code, count]) => {
-              const active = country === code
-              return (
-                <a
-                  key={code}
-                  href={`/keyword/${encodeURIComponent(entry.slug)}?country=${code}`}
-                  className={
-                    active
-                      ? 'inline-flex items-baseline gap-1 rounded-full border border-gray-700 bg-gray-800 px-2.5 py-0.5 text-xs text-white'
-                      : 'inline-flex items-baseline gap-1 rounded-full border border-gray-800 bg-gray-900 px-2 py-0.5 text-xs text-gray-400 transition hover:border-gray-700 hover:text-gray-200'
-                  }
-                >
-                  <span>{countryFlag(code)}</span>
-                  <span>{getCountryNameKo(code)}</span>
-                  <span className="text-gray-600">{count}</span>
-                </a>
-              )
-            })}
-            <a
-              href="/map"
-              className="inline-flex items-center gap-1 rounded-full border border-gray-800 bg-gray-900 px-2 py-0.5 text-xs text-gray-400 transition hover:border-gray-700 hover:text-gray-200"
-            >
-              <svg
-                width="11"
-                height="11"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
+          <section
+            aria-label="Country Lens"
+            className="mb-6 rounded-xl border border-gray-800 bg-gray-900/40 p-4"
+          >
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                Country Lens
+              </h2>
+              <span className="text-[11px] text-gray-600">시각을 바꿔 비교해보세요</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={`/keyword/${encodeURIComponent(entry.slug)}`}
+                className={
+                  !country
+                    ? 'inline-flex items-center gap-1.5 rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-1.5 text-sm font-medium text-blue-200'
+                    : 'inline-flex items-center gap-1.5 rounded-lg border border-gray-800 bg-gray-900 px-3 py-1.5 text-sm text-gray-400 transition hover:border-gray-700 hover:text-gray-200'
+                }
               >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="2" y1="12" x2="22" y2="12" />
-                <path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z" />
-              </svg>
-              <span>글로벌</span>
-            </a>
-          </div>
+                <span aria-hidden="true">🌐</span>
+                <span>전체 시각</span>
+              </a>
+              {countryChips.slice(0, 7).map(([code, count]) => {
+                const active = country === code
+                return (
+                  <a
+                    key={code}
+                    href={`/keyword/${encodeURIComponent(entry.slug)}?country=${code}`}
+                    className={
+                      active
+                        ? 'inline-flex items-center gap-1.5 rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-1.5 text-sm font-medium text-blue-200'
+                        : 'inline-flex items-center gap-1.5 rounded-lg border border-gray-800 bg-gray-900 px-3 py-1.5 text-sm text-gray-400 transition hover:border-gray-700 hover:text-gray-200'
+                    }
+                  >
+                    <span>{countryFlag(code)}</span>
+                    <span>{getCountryNameKo(code)} 시각</span>
+                    <span className={active ? 'text-blue-300/70' : 'text-gray-600'}>
+                      · {count}건
+                    </span>
+                  </a>
+                )
+              })}
+              {countryChips.length > 7 && (
+                <span className="inline-flex items-center px-2 text-xs text-gray-600">
+                  +{countryChips.length - 7}개국 더 있음
+                </span>
+              )}
+            </div>
+          </section>
         )}
 
         {articles.length === 0 ? (
@@ -244,6 +251,7 @@ export default async function KeywordPage({
               label={display}
               category={entry.category}
               articles={articles}
+              lensCountry={country}
             />
 
             <ul className="space-y-3">
