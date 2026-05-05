@@ -41,7 +41,13 @@ General sports INDUSTRY news (e.g. league deals, stadium economics) is OK.`
 /** RSS description이 이 길이 미만이면 LLM에 보내지 않고 drop.
  *  짧은 입력은 detail이 summary 재진술 수준이라 사용자 가치가 낮음.
  *  hallucination을 차단한 보수 프롬프트와 짝을 이룸. */
-const MIN_DESCRIPTION_LENGTH = 200
+const MIN_DESCRIPTION_LENGTH = 300
+
+/** LLM이 생성한 detail이 이 길이 미만이면 그 기사 자체를 캐시에서 drop.
+ *  input 필터(MIN_DESCRIPTION_LENGTH)를 통과해도 paraphrase 위주의
+ *  description은 facts를 추출할 게 적어 detail이 짧게 끝남.
+ *  사용자에게 빈약한 결과를 안 노출하기 위한 출구 거름망. */
+const MIN_DETAIL_LENGTH = 150
 
 async function callOpenAI(messages: { role: string; content: string }[]): Promise<OpenAIResponse> {
   const apiKey = process.env.OPENAI_API_KEY
@@ -143,8 +149,16 @@ Include all relevant articles (up to 30).`,
 
   if (!parsed.items || !Array.isArray(parsed.items)) return []
 
-  return (parsed.items as SummarizedItem[])
+  const validItems = (parsed.items as SummarizedItem[])
     .filter((item) => typeof item.originalIndex === 'number' && item.originalIndex >= 0 && item.originalIndex < filteredArticles.length)
+    .filter((item) => (item.detail?.length ?? 0) >= MIN_DETAIL_LENGTH)
+
+  if (validItems.length < parsed.items.length) {
+    const droppedShort = parsed.items.length - validItems.length
+    console.log(`[news] ${countryCode}: dropped ${droppedShort} articles with shallow output (input filter or detail<${MIN_DETAIL_LENGTH}c)`)
+  }
+
+  return validItems
     .map((item) => {
       const original: RssArticle = filteredArticles[item.originalIndex]
       // Normalize free-form LLM keywords against the curated vocabulary.
