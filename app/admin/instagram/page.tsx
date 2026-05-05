@@ -301,26 +301,26 @@ function buildMaterial(item: NewsItem): Material {
         background: `linear-gradient(135deg, #050505 0%, #0a0a0a 40%, ${catColor}55 100%)`,
       }}
     >
-      <div className="flex items-center px-6 pt-5">
+      <div className="flex items-center px-8 pt-7">
         {headerBrand}
       </div>
       <div
-        className="flex flex-col justify-center px-6 py-8"
+        className="flex flex-col justify-center gap-7 px-8 py-10"
         style={{ minHeight: 'calc(100% - 130px)' }}
       >
-        <span className="mb-5 text-6xl leading-none">{flag}</span>
+        <span className="text-8xl leading-none">{flag}</span>
         <span
-          className="mb-5 inline-flex h-7 w-fit items-center justify-center rounded-full px-3 text-[11px] font-semibold uppercase leading-none tracking-wider"
+          className="inline-flex h-9 w-fit items-center justify-center rounded-full px-4 text-xs font-semibold uppercase leading-none tracking-wider"
           style={{ backgroundColor: `${catColor}30`, color: catColor }}
         >
           {koCountry} · {catKo}
         </span>
-        <h2 className="text-2xl font-bold leading-tight text-white sm:text-3xl">
+        <h2 className="text-4xl font-bold leading-tight text-white">
           {trim(item.title, 80)}
         </h2>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-6 py-3.5">
-        <span className="text-xs font-medium leading-none text-gray-400">▶ Swipe</span>
+      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-8 py-4">
+        <span className="text-sm font-medium leading-none text-gray-400">▶ Swipe</span>
       </div>
     </div>
   )
@@ -333,32 +333,48 @@ function buildMaterial(item: NewsItem): Material {
   // 본문 카드 헬퍼 — 배경/현재/전망 공통 패턴
   const bodyCard = (theme: string, paragraph: string, gradient: string, footerLabel: string) => (
     <div className={cardClass} style={{ background: gradient }}>
-      <div className="flex items-center px-6 pt-5">
+      <div className="flex items-center px-8 pt-7">
         {headerBrand}
       </div>
-      <div className="flex flex-col justify-start px-6 py-5" style={{ minHeight: 'calc(100% - 130px)' }}>
-        {/* 컨텍스트 미니바: 작은 flag + country/category + title 1줄 trim */}
-        <div className="mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
-          <span className="text-base leading-none">{flag}</span>
-          <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: catColor }}>
+      <div
+        className="flex flex-col justify-between px-8 py-8"
+        style={{ minHeight: 'calc(100% - 130px)' }}
+      >
+        {/* 상단: 컨텍스트 미니바 */}
+        <div className="flex items-center gap-2 border-b border-white/10 pb-4">
+          <span className="text-xl leading-none">{flag}</span>
+          <span
+            className="text-xs font-semibold uppercase tracking-wider"
+            style={{ color: catColor }}
+          >
             {koCountry} · {catKo}
           </span>
-          <span className="ml-auto truncate text-[11px] text-gray-400">{trim(item.title, 40)}</span>
+          <span className="ml-auto truncate text-xs text-gray-400">{trim(item.title, 40)}</span>
         </div>
-        {/* 테마 라벨 */}
-        <span
-          className="mb-3 inline-flex h-7 w-fit items-center justify-center rounded-full px-3 text-[11px] font-semibold uppercase leading-none tracking-wider"
-          style={{ backgroundColor: `${catColor}30`, color: catColor }}
-        >
-          {theme}
-        </span>
-        {/* paragraph 풀텍스트 */}
-        <p className="whitespace-pre-line text-[15px] leading-relaxed text-gray-100">
-          {paragraph}
-        </p>
+
+        {/* 중앙: 큰 테마 디스플레이 + 본문 */}
+        <div className="flex flex-col gap-5">
+          <div>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">
+              {String(theme === '배경' ? '01' : theme === '현재' ? '02' : '03')} · CHAPTER
+            </p>
+            <h2
+              className="text-3xl font-bold leading-tight"
+              style={{ color: catColor }}
+            >
+              {theme}
+            </h2>
+          </div>
+          <p className="whitespace-pre-line text-xl leading-loose text-gray-100">
+            {paragraph}
+          </p>
+        </div>
+
+        {/* 하단: 시각적 균형용 빈 spacer (footer는 absolute라 layout 안 차지) */}
+        <div />
       </div>
-      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-6 py-3.5">
-        <span className="text-xs font-medium leading-none text-gray-400">{footerLabel}</span>
+      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-8 py-4">
+        <span className="text-sm font-medium leading-none text-gray-400">{footerLabel}</span>
       </div>
     </div>
   )
@@ -371,32 +387,32 @@ function buildMaterial(item: NewsItem): Material {
         background: `linear-gradient(135deg, ${catColor}30 0%, #0a0a0a 50%, #050505 100%)`,
       }}
     >
-      <div className="flex items-center px-6 pt-5">
+      <div className="flex items-center px-8 pt-7">
         {headerBrand}
       </div>
       <div
-        className="flex flex-col justify-center px-6 py-6"
+        className="flex flex-col justify-center gap-7 px-8 py-10"
         style={{ minHeight: 'calc(100% - 130px)' }}
       >
-        <h3 className="mb-4 text-2xl font-bold leading-tight text-white sm:text-3xl">
+        <h3 className="text-4xl font-bold leading-tight text-white">
           85개국,
           <br />
           같은 사건을
           <br />
           <span style={{ color: catColor }}>다르게 본다</span>
         </h3>
-        <p className="mb-5 text-sm leading-relaxed text-gray-300">
+        <p className="text-lg leading-relaxed text-gray-300">
           한 나라의 시선만으로는 보이지 않던 흐름.
           <br />
           Prism Globe에서 다국가 뉴스를 한 화면으로.
         </p>
-        <div className="rounded-md border border-white/10 bg-white/5 px-4 py-3">
-          <p className="text-[10px] uppercase tracking-wider text-gray-500">출처</p>
-          <p className="mt-0.5 text-sm font-medium text-white">{item.source}</p>
+        <div className="rounded-lg border border-white/10 bg-white/5 px-5 py-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-500">출처</p>
+          <p className="mt-1 text-base font-medium text-white">{item.source}</p>
         </div>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center border-t border-white/10 bg-black/50 px-6 py-3.5">
-        <span className="text-xs font-medium leading-none text-gray-400">prismglobe.com</span>
+      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center border-t border-white/10 bg-black/50 px-8 py-4">
+        <span className="text-sm font-medium leading-none text-gray-400">prismglobe.com</span>
       </div>
     </div>
   )
