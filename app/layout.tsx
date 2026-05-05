@@ -4,6 +4,8 @@ import './globals.css'
 import { SUPPORTED_COUNT } from '@/lib/rss'
 import BottomNav from '@/components/BottomNav'
 import ScrollToTop from '@/components/ScrollToTop'
+import Footer from '@/components/Footer'
+import { socialSameAs } from '@/lib/social'
 
 export const viewport = {
   width: 'device-width',
@@ -42,41 +44,45 @@ export const metadata: Metadata = {
   verification: { google: 'QY09AFQmbMM0PxNDQg7eRaVx-ouDrjLWChRp1KTPaXU' },
 }
 
-// 사이트 전체 entity — Google이 brand search 시 site name, 검색박스, 로고를
-// SERP에 직접 노출하도록 명시. WebSite/Organization는 모든 페이지에 하나만
-// 있으면 충분해서 layout에 inline.
-const siteJsonLd = {
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'WebSite',
-      '@id': 'https://prismglobe.com/#website',
-      url: 'https://prismglobe.com',
-      name: 'Prism Globe',
-      description: 'AI 세계 뉴스 브리핑',
-      inLanguage: 'ko',
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: {
-          '@type': 'EntryPoint',
-          urlTemplate: 'https://prismglobe.com/keyword/{search_term_string}',
+/** 사이트 전체 entity — Google이 brand search 시 site name, 검색박스, 로고를
+ *  SERP에 직접 노출하도록 명시. WebSite/Organization는 모든 페이지에 하나만
+ *  있으면 충분해서 layout에 inline.
+ *  sameAs는 서버 env에서 읽으므로 RootLayout 함수 안에서 빌드. */
+function buildSiteJsonLd(sameAs: string[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': 'https://prismglobe.com/#website',
+        url: 'https://prismglobe.com',
+        name: 'Prism Globe',
+        description: 'AI 세계 뉴스 브리핑',
+        inLanguage: 'ko',
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: 'https://prismglobe.com/keyword/{search_term_string}',
+          },
+          'query-input': 'required name=search_term_string',
         },
-        'query-input': 'required name=search_term_string',
       },
-    },
-    {
-      '@type': 'Organization',
-      '@id': 'https://prismglobe.com/#organization',
-      name: 'Prism Globe',
-      url: 'https://prismglobe.com',
-      logo: {
-        '@type': 'ImageObject',
-        url: 'https://prismglobe.com/icon-512.png',
-        width: 512,
-        height: 512,
+      {
+        '@type': 'Organization',
+        '@id': 'https://prismglobe.com/#organization',
+        name: 'Prism Globe',
+        url: 'https://prismglobe.com',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://prismglobe.com/icon-512.png',
+          width: 512,
+          height: 512,
+        },
+        ...(sameAs.length > 0 ? { sameAs } : {}),
       },
-    },
-  ],
+    ],
+  }
 }
 
 export default function RootLayout({
@@ -88,6 +94,7 @@ export default function RootLayout({
   // 기본값을 코드에 박아두고 env로 override 허용 — staging/dev에서 별도 GA
   // property를 쓰고 싶을 때만 env 설정.
   const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-8BFTN9EE24'
+  const siteJsonLd = buildSiteJsonLd(socialSameAs())
   return (
     <html lang="ko">
       <head>
@@ -99,6 +106,7 @@ export default function RootLayout({
       </head>
       <body className="bg-gray-950 text-white antialiased pb-[calc(56px+env(safe-area-inset-bottom))]">
         {children}
+        <Footer />
         <ScrollToTop />
         <BottomNav />
         <Script
