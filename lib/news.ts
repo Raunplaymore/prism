@@ -130,7 +130,7 @@ Skip generic words (news, today, world, breaking). Use English slugs even if the
 
 ${CATEGORY_PROMPT}
 
-Include all relevant articles (up to 30).`,
+Include all relevant articles (up to 40).`,
     },
     {
       role: 'user',
