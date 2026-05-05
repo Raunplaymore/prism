@@ -6,6 +6,7 @@ import { fetchNews } from '@/lib/news'
 import { getCountryName } from '@/lib/countries'
 import { isSupported } from '@/lib/rss'
 import { checkCostAlert, notifyNewsCached, notifyError } from '@/lib/telegram'
+import { isProductionRuntime, previewBlockedResponse } from '@/lib/env'
 
 async function redisExec(cmd: string[]): Promise<unknown> {
   const url = process.env.UPSTASH_REDIS_REST_URL
@@ -54,6 +55,8 @@ export async function POST(request: NextRequest) {
   if (!(await isAuthorized(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  if (!isProductionRuntime()) return previewBlockedResponse()
 
   try {
     if (!country || !isSupported(country.toUpperCase())) {

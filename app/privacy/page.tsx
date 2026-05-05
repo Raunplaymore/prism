@@ -74,7 +74,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="mb-3 text-lg font-semibold text-blue-400">문의</h2>
           <p className="text-sm leading-relaxed text-gray-300">
-            개인정보 처리에 대한 문의는 sin2da@gmail.com으로 연락해 주세요.
+            개인정보 처리에 대한 문의는 support@prismglobe.com으로 연락해 주세요.
           </p>
         </section>
 

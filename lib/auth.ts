@@ -7,7 +7,12 @@ export interface SessionUser {
   isAdmin: boolean
 }
 
-const ADMIN_EMAILS = ['sin2da@gmail.com']
+// Admin allow-list — comma-separated emails in ADMIN_EMAIL env. Empty/unset
+// means no admin (safe default). Lowercased for case-insensitive comparison.
+const ADMIN_EMAILS: string[] = (process.env.ADMIN_EMAIL ?? '')
+  .split(',')
+  .map((s) => s.trim().toLowerCase())
+  .filter((s) => s.length > 0)
 const COOKIE_NAME = 'prism_session'
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
 

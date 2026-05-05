@@ -3,6 +3,7 @@ export const runtime = 'edge'
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken, getSessionFromCookie } from '@/lib/auth'
 import { extractTag, stripHtml } from '@/lib/rss'
+import { isProductionRuntime, previewBlockedResponse } from '@/lib/env'
 
 async function isAdmin(request: NextRequest): Promise<boolean> {
   const token = getSessionFromCookie(request.headers.get('cookie'))
@@ -65,6 +66,7 @@ function parseRss(xml: string): RssArticle[] {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isProductionRuntime()) return previewBlockedResponse()
   if (!(await isAdmin(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
