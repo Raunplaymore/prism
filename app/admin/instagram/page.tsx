@@ -265,14 +265,6 @@ function buildMaterial(item: NewsItem): Material {
     </div>
   )
 
-  // 고정 높이 + flex center — padding 기반 정렬은 html2canvas가 baseline metric을
-  // 다르게 계산해서 1-2px 어긋남. 높이 고정하면 어떻게 렌더링되든 픽셀 단위로 정확.
-  const pageBadge = (n: number) => (
-    <span className="inline-flex h-6 items-center justify-center rounded-full bg-white/10 px-2.5 text-[10px] font-semibold leading-none tracking-wider text-white/80">
-      {n} / 3
-    </span>
-  )
-
   // Card 1 — Hook: 시선 끌기 (국가flag 큼지막 + 큰 제목)
   const card1 = (
     <div
@@ -281,9 +273,8 @@ function buildMaterial(item: NewsItem): Material {
         background: `linear-gradient(135deg, #050505 0%, #0a0a0a 40%, ${catColor}55 100%)`,
       }}
     >
-      <div className="flex items-center justify-between px-6 pt-5">
+      <div className="flex items-center px-6 pt-5">
         {headerBrand}
-        {pageBadge(1)}
       </div>
       <div
         className="flex flex-col justify-center px-6 py-8"
@@ -311,9 +302,8 @@ function buildMaterial(item: NewsItem): Material {
       className={cardClass}
       style={{ background: 'linear-gradient(135deg, #050505 0%, #1a1a1a 100%)' }}
     >
-      <div className="flex items-center justify-between px-6 pt-5">
+      <div className="flex items-center px-6 pt-5">
         {headerBrand}
-        {pageBadge(2)}
       </div>
       <div
         className="flex flex-col justify-start px-6 py-5"
@@ -349,9 +339,8 @@ function buildMaterial(item: NewsItem): Material {
         background: `linear-gradient(135deg, ${catColor}30 0%, #0a0a0a 50%, #050505 100%)`,
       }}
     >
-      <div className="flex items-center justify-between px-6 pt-5">
+      <div className="flex items-center px-6 pt-5">
         {headerBrand}
-        {pageBadge(3)}
       </div>
       <div
         className="flex flex-col justify-center px-6 py-6"
