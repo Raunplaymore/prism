@@ -57,7 +57,7 @@ function ScaledCard({
   )
 }
 
-/** Capture a DOM node as a 1080×1080 PNG and trigger download.
+/** Capture a DOM node as a 1080×1080 PNG blob.
  *  Cloudflare Pages edge can't run @vercel/og (Yoga/Resvg WASM doesn't init),
  *  so we render in the browser. html2canvas mis-positioned text vertically
  *  inside flex pills (baseline math drift). html-to-image uses SVG
@@ -68,29 +68,57 @@ function ScaledCard({
  *  The node is already rendered at CARD_PX×CARD_PX (ScaledCard keeps it fixed)
  *  and only visually scaled via transform. We strip the transform before capture
  *  so html-to-image sees the true 1080px box, then restore it afterwards. */
-async function downloadCardPng(node: HTMLElement, filename: string) {
+async function captureCardBlob(node: HTMLElement): Promise<Blob | null> {
   const { toBlob } = await import('html-to-image')
   const prevTransform = node.style.transform
   node.style.transform = 'none'
   try {
-    const blob = await toBlob(node, {
+    return await toBlob(node, {
       pixelRatio: 1,
       width: CARD_PX,
       height: CARD_PX,
       cacheBust: true,
       backgroundColor: undefined,
     })
-    if (!blob) return
+  } finally {
+    node.style.transform = prevTransform
+  }
+}
+
+/** Save 1+ PNG blobs. Mobile-first: prefer Web Share API with files
+ *  (iOS Safari/Android Chrome) so users hit the OS share sheet and
+ *  pick "Save to Photos" or send to a chat. Fall back to per-blob
+ *  <a download> on desktop or when share is blocked/cancelled. */
+async function saveBlobs(items: { blob: Blob; filename: string }[]): Promise<void> {
+  if (items.length === 0) return
+
+  // Try Web Share API first (mobile)
+  if (typeof navigator !== 'undefined' && 'canShare' in navigator && 'share' in navigator) {
+    try {
+      const files = items.map(
+        ({ blob, filename }) => new File([blob], filename, { type: 'image/png' }),
+      )
+      if (navigator.canShare({ files })) {
+        await navigator.share({ files })
+        return
+      }
+    } catch {
+      /* user cancelled or share failed — fall through */
+    }
+  }
+
+  // Fallback: per-blob anchor download
+  for (const { blob, filename } of items) {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
+    a.href = url
     a.download = filename
     document.body.appendChild(a)
-    a.href = url
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-  } finally {
-    node.style.transform = prevTransform
+    // 브라우저가 연속 다운로드 차단하지 않도록 짧은 텀
+    if (items.length > 1) await new Promise((r) => setTimeout(r, 250))
   }
 }
 
@@ -296,43 +324,47 @@ function buildMaterial(item: NewsItem): Material {
       </div>
     </div>
   )
-  // Card 2 — Body: 정보 핵심 (요약 + detail 발췌)
-  const card2 = (
-    <div
-      className={cardClass}
-      style={{ background: 'linear-gradient(135deg, #050505 0%, #1a1a1a 100%)' }}
-    >
+  // detail 문단 분리 (LLM이 \n\n 구분자로 생성한 3개 문단)
+  const paragraphs = (item.detail || '').split(/\n\n+/).map((p) => p.trim()).filter(Boolean)
+  const p1 = paragraphs[0] || ''
+  const p2 = paragraphs[1] || ''
+  const p3 = paragraphs[2] || ''
+
+  // 본문 카드 헬퍼 — 배경/현재/전망 공통 패턴
+  const bodyCard = (theme: string, paragraph: string, gradient: string, footerLabel: string) => (
+    <div className={cardClass} style={{ background: gradient }}>
       <div className="flex items-center px-6 pt-5">
         {headerBrand}
       </div>
-      <div
-        className="flex flex-col justify-start px-6 py-5"
-        style={{ minHeight: 'calc(100% - 130px)' }}
-      >
-        <div className="mb-3 flex items-center gap-2">
-          <span className="text-lg leading-none">{flag}</span>
-          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: catColor }}>
+      <div className="flex flex-col justify-start px-6 py-5" style={{ minHeight: 'calc(100% - 130px)' }}>
+        {/* 컨텍스트 미니바: 작은 flag + country/category + title 1줄 trim */}
+        <div className="mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
+          <span className="text-base leading-none">{flag}</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: catColor }}>
             {koCountry} · {catKo}
           </span>
+          <span className="ml-auto truncate text-[11px] text-gray-400">{trim(item.title, 40)}</span>
         </div>
-        <h2 className="mb-3 text-base font-bold leading-snug text-white sm:text-lg">
-          {trim(item.title, 100)}
-        </h2>
-        <p className="mb-3 text-sm leading-relaxed text-gray-200">{item.summary}</p>
-        {hasDetail && (
-          <p className="whitespace-pre-line text-[13px] leading-relaxed text-gray-400">
-            {trim(item.detail, 350)}
-          </p>
-        )}
+        {/* 테마 라벨 */}
+        <span
+          className="mb-3 inline-flex h-7 w-fit items-center justify-center rounded-full px-3 text-[11px] font-semibold uppercase leading-none tracking-wider"
+          style={{ backgroundColor: `${catColor}30`, color: catColor }}
+        >
+          {theme}
+        </span>
+        {/* paragraph 풀텍스트 */}
+        <p className="whitespace-pre-line text-[15px] leading-relaxed text-gray-100">
+          {paragraph}
+        </p>
       </div>
       <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-6 py-3.5">
-        <span className="text-xs font-medium leading-none text-gray-400">▶ 더 보기</span>
+        <span className="text-xs font-medium leading-none text-gray-400">{footerLabel}</span>
       </div>
     </div>
   )
 
-  // Card 3 — CTA: 브랜드 메시지 + 출처 + 링크
-  const card3 = (
+  // Card 5 — CTA: 브랜드 메시지 + 출처 + 링크
+  const card5_cta = (
     <div
       className={cardClass}
       style={{
@@ -369,11 +401,11 @@ function buildMaterial(item: NewsItem): Material {
     </div>
   )
 
-  const cards: Card[] = [
-    { jsx: card1, label: '1. Hook' },
-    { jsx: card2, label: '2. Body' },
-    { jsx: card3, label: '3. CTA' },
-  ]
+  const cards: Card[] = [{ jsx: card1, label: '1. Hook' }]
+  if (p1) cards.push({ jsx: bodyCard('배경', p1, 'linear-gradient(135deg, #050505 0%, #1a1a1a 100%)', '▶ Swipe'), label: '2. 배경' })
+  if (p2) cards.push({ jsx: bodyCard('현재', p2, `linear-gradient(135deg, #0a0a0a 0%, #161616 50%, ${catColor}22 100%)`, '▶ Swipe'), label: '3. 현재' })
+  if (p3) cards.push({ jsx: bodyCard('전망', p3, `linear-gradient(135deg, #050505 0%, #0f0f0f 50%, ${catColor}33 100%)`, '▶ 자세히'), label: '4. 전망' })
+  cards.push({ jsx: card5_cta, label: `${cards.length + 1}. CTA` })
 
   return { cards, caption, hashtags, threadsCaption, permalink, threadsLink }
 }
@@ -540,7 +572,8 @@ export default function InstagramAdmin() {
                         if (!node) return
                         setDownloading('threads')
                         try {
-                          await downloadCardPng(node, `${articleId}-threads.png`)
+                          const blob = await captureCardBlob(node)
+                          if (blob) await saveBlobs([{ blob, filename: `${articleId}-threads.png` }])
                         } finally {
                           setDownloading(null)
                         }
@@ -593,15 +626,44 @@ export default function InstagramAdmin() {
                 >
                   Instagram
                 </span>
-                <span className="text-xs text-gray-500">3장 carousel + 캡션 (링크 비활성)</span>
+                <span className="text-xs text-gray-500">{material.cards.length}장 carousel + 캡션 (링크 비활성)</span>
               </div>
 
               <section>
                 <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Carousel 미리보기
-                  </h3>
-                  <span className="text-[10px] text-gray-600">Hook → Body → CTA</span>
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Carousel 미리보기
+                    </h3>
+                    <span className="text-[10px] text-gray-600">
+                      {material.cards.map((c) => c.label.split('. ')[1]).join(' → ')}
+                    </span>
+                  </div>
+                  {articleId && (
+                    <button
+                      type="button"
+                      disabled={downloading === 'ig-all'}
+                      onClick={async () => {
+                        if (!articleId) return
+                        setDownloading('ig-all')
+                        try {
+                          const items: { blob: Blob; filename: string }[] = []
+                          for (let i = 0; i < material.cards.length; i++) {
+                            const node = igCardRefs.current[i]
+                            if (!node) continue
+                            const blob = await captureCardBlob(node)
+                            if (blob) items.push({ blob, filename: `${articleId}-card-${i + 1}.png` })
+                          }
+                          await saveBlobs(items)
+                        } finally {
+                          setDownloading(null)
+                        }
+                      }}
+                      className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-blue-500 disabled:cursor-wait disabled:opacity-60"
+                    >
+                      {downloading === 'ig-all' ? '저장 중…' : `전체 PNG 다운로드 (${material.cards.length}장)`}
+                    </button>
+                  )}
                 </div>
                 <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3">
                   {material.cards.map((c, idx) => {
@@ -621,7 +683,8 @@ export default function InstagramAdmin() {
                                 if (!node) return
                                 setDownloading(dlKey)
                                 try {
-                                  await downloadCardPng(node, `${articleId}-card-${idx + 1}.png`)
+                                  const blob = await captureCardBlob(node)
+                                  if (blob) await saveBlobs([{ blob, filename: `${articleId}-card-${idx + 1}.png` }])
                                 } finally {
                                   setDownloading(null)
                                 }
