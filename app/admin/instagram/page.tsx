@@ -6,31 +6,92 @@ import { getCountryName, getCountryNameKo, countryFlag } from '@/lib/countries'
 import { CATEGORY_META, isValidCategory } from '@/lib/categories'
 import { findEntry } from '@/lib/keywords/index'
 
+const CARD_PX = 1080
+
+function ScaledCard({
+  refCb,
+  children,
+}: {
+  refCb?: (el: HTMLDivElement | null) => void
+  children: React.ReactNode
+}) {
+  const wrapperRef = useRef<HTMLDivElement | null>(null)
+  const cardRef = useRef<HTMLDivElement | null>(null)
+  const [scale, setScale] = useState(0)
+
+  useEffect(() => {
+    const el = wrapperRef.current
+    if (!el) return
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0].contentRect.width
+      setScale(w / CARD_PX)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  return (
+    <div
+      ref={wrapperRef}
+      className="relative w-full"
+      style={{ aspectRatio: '1 / 1' }}
+    >
+      <div
+        ref={(el) => {
+          cardRef.current = el
+          refCb?.(el)
+        }}
+        style={{
+          width: CARD_PX,
+          height: CARD_PX,
+          transform: scale ? `scale(${scale})` : 'scale(0)',
+          transformOrigin: 'top left',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
 /** Capture a DOM node as a 1080×1080 PNG and trigger download.
  *  Cloudflare Pages edge can't run @vercel/og (Yoga/Resvg WASM doesn't init),
  *  so we render in the browser. html2canvas mis-positioned text vertically
  *  inside flex pills (baseline math drift). html-to-image uses SVG
  *  foreignObject so the browser's own renderer paints the pixels — preview
  *  and PNG are pixel-identical. Dynamic import keeps the admin-only library
- *  out of the public bundle. */
+ *  out of the public bundle.
+ *
+ *  The node is already rendered at CARD_PX×CARD_PX (ScaledCard keeps it fixed)
+ *  and only visually scaled via transform. We strip the transform before capture
+ *  so html-to-image sees the true 1080px box, then restore it afterwards. */
 async function downloadCardPng(node: HTMLElement, filename: string) {
   const { toBlob } = await import('html-to-image')
-  const rect = node.getBoundingClientRect()
-  const pixelRatio = 1080 / rect.width
-  const blob = await toBlob(node, {
-    pixelRatio,
-    cacheBust: true,
-    backgroundColor: undefined,
-  })
-  if (!blob) return
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  const prevTransform = node.style.transform
+  node.style.transform = 'none'
+  try {
+    const blob = await toBlob(node, {
+      pixelRatio: 1,
+      width: CARD_PX,
+      height: CARD_PX,
+      cacheBust: true,
+      backgroundColor: undefined,
+    })
+    if (!blob) return
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.download = filename
+    document.body.appendChild(a)
+    a.href = url
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } finally {
+    node.style.transform = prevTransform
+  }
 }
 
 type Status = 'idle' | 'loading' | 'ok' | 'error'
@@ -194,7 +255,7 @@ function buildMaterial(item: NewsItem): Material {
 
   // 3장 carousel — 1080×1080 기준 비율. 각 카드 독립 PNG export 가능한 구조.
   const cardClass =
-    'relative aspect-square w-full max-w-md shrink-0 overflow-hidden rounded-xl border border-gray-800 shadow-2xl'
+    'relative h-full w-full overflow-hidden rounded-xl border border-gray-800 shadow-2xl'
 
   const headerBrand = (
     <div className="flex items-center gap-2">
@@ -502,8 +563,10 @@ export default function InstagramAdmin() {
                   )}
                 </div>
                 <div className="flex justify-center">
-                  <div ref={threadsCardRef} className="w-[80%] sm:w-[55%]">
-                    {material.cards[0].jsx}
+                  <div className="w-[80%] sm:w-[55%]">
+                    <ScaledCard refCb={(el) => { threadsCardRef.current = el }}>
+                      {material.cards[0].jsx}
+                    </ScaledCard>
                   </div>
                 </div>
                 <p className="mt-2 text-center text-xs text-gray-600">
@@ -580,8 +643,10 @@ export default function InstagramAdmin() {
                             </button>
                           )}
                         </div>
-                        <div ref={(el) => { igCardRefs.current[idx] = el }} className="w-full">
-                          {c.jsx}
+                        <div className="w-full">
+                          <ScaledCard refCb={(el) => { igCardRefs.current[idx] = el }}>
+                            {c.jsx}
+                          </ScaledCard>
                         </div>
                       </div>
                     )
