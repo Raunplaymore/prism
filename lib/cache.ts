@@ -149,6 +149,28 @@ export async function deleteCachedNewsAllLangs(country: string): Promise<number>
   return count
 }
 
+/** Return uppercase country codes whose feed cache for `lang` is currently
+ *  populated. Used to expand the map page's Quick Access chip row beyond
+ *  the hardcoded TOP_COUNTRIES so countries the user previously selected
+ *  stay one click away on return visits. Failures swallow to []. */
+export async function listCachedCountries(
+  codes: string[],
+  lang: string,
+): Promise<string[]> {
+  const upper = codes.map((c) => c.toUpperCase())
+  if (upper.length === 0) return []
+  try {
+    const results = await redisPipeline(upper.map((c) => ['GET', feedKey(c, lang)]))
+    const hits: string[] = []
+    results.forEach((r, i) => {
+      if (r) hits.push(upper[i])
+    })
+    return hits
+  } catch {
+    return []
+  }
+}
+
 // --- Token usage tracking ---
 
 export interface TokenStats {

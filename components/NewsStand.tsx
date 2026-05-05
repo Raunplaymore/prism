@@ -1,6 +1,7 @@
 'use client'
 
-import { getAllCountries } from '@/lib/countries'
+import { useEffect, useState } from 'react'
+import { getAllCountries, getCountryName, countryFlag } from '@/lib/countries'
 import { SUPPORTED_COUNTRIES } from '@/lib/rss'
 
 // Quick Access — 권역 + 사용 빈도 순 (KR 먼저, 미국·동아시아·유럽·분쟁·기타).
@@ -41,6 +42,28 @@ export default function NewsStand({
   onToggleMap,
   mapOpen,
 }: NewsStandProps) {
+  // Cached non-TOP countries — fetched once on mount, soft enhancement.
+  // 사용자가 dropdown에서 비-TOP 국가를 선택해 캐시가 살아있으면 다음 방문
+  // 시 chip row에 자동 추가되어 재선택이 빨라진다.
+  const [cachedExtras, setCachedExtras] = useState<string[]>([])
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/quick-access')
+      .then((r) => (r.ok ? r.json() : { codes: [] }))
+      .then((data: { codes?: string[] }) => {
+        if (cancelled) return
+        const top = new Set(TOP_COUNTRIES.map((c) => c.code))
+        const extras = (data.codes ?? []).filter((c) => !top.has(c))
+        setCachedExtras(Array.from(new Set(extras)).sort().slice(0, 12))
+      })
+      .catch(() => {
+        /* soft enhancement, fail silent */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
     <div className="space-y-3">
       <div>
@@ -78,6 +101,22 @@ export default function NewsStand({
             >
               <span className="text-sm">{flag}</span>
               <span className="hidden sm:inline">{name}</span>
+              <span className="sm:hidden">{code}</span>
+            </button>
+          ))}
+          {cachedExtras.map((code) => (
+            <button
+              key={code}
+              onClick={() => onSelect(code)}
+              disabled={isLoading}
+              className={`flex shrink-0 items-center gap-1 rounded-md border px-2.5 py-1.5 text-sm font-medium transition ${
+                selectedCountry === code
+                  ? 'border-blue-500 bg-blue-600/20 text-blue-400'
+                  : 'border-gray-800 bg-gray-900 text-gray-400 hover:border-gray-700 hover:text-white'
+              } ${isLoading ? 'cursor-wait opacity-60' : ''}`}
+            >
+              <span className="text-sm">{countryFlag(code)}</span>
+              <span className="hidden sm:inline">{getCountryName(code)}</span>
               <span className="sm:hidden">{code}</span>
             </button>
           ))}
