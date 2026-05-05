@@ -665,7 +665,7 @@ export default function InstagramAdmin() {
                     </button>
                   )}
                 </div>
-                <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3">
+                <div className="flex items-start snap-x snap-mandatory gap-4 overflow-x-auto pb-3">
                   {material.cards.map((c, idx) => {
                     const dlKey = `ig-${idx}`
                     return (
