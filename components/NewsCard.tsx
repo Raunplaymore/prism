@@ -41,17 +41,6 @@ export default function NewsCard({ item, showCountry, defaultExpanded }: NewsCar
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation()
     const shareUrl = `${window.location.origin}/map?country=${item.country}&article=${item.id}`
-    // text 필드도 포함해야 일부 클라이언트(예: macOS 메시지/메일)에서 url
-    // preview가 잘 잡힘. share 실패/취소는 clipboard fallback으로 회복.
-    const data = { title: item.title, text: item.title, url: shareUrl }
-    if (typeof navigator !== 'undefined' && 'share' in navigator) {
-      try {
-        await navigator.share(data)
-        return
-      } catch {
-        /* user cancelled or share unsupported — fall through */
-      }
-    }
     try {
       await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
@@ -166,7 +155,7 @@ export default function NewsCard({ item, showCountry, defaultExpanded }: NewsCar
           <button
             onClick={handleShare}
             className="flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition hover:bg-gray-800 hover:text-white"
-            aria-label="공유"
+            aria-label="링크 복사"
           >
             {copied ? (
               <span className="text-[10px] text-green-400">복사됨</span>
