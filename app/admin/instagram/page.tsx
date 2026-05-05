@@ -325,21 +325,15 @@ function buildMaterial(item: NewsItem): Material {
       </div>
     </div>
   )
-  // detail 문단 분리 (LLM이 \n\n 구분자로 생성한 3개 문단)
-  const paragraphs = (item.detail || '').split(/\n\n+/).map((p) => p.trim()).filter(Boolean)
-  const p1 = paragraphs[0] || ''
-  const p2 = paragraphs[1] || ''
-  const p3 = paragraphs[2] || ''
-
-  // 본문 카드 헬퍼 — 배경/현재/전망 공통 패턴
-  const bodyCard = (theme: string, paragraph: string, gradient: string, footerLabel: string) => (
+  // 본문 카드 헬퍼 — gradient만 받는 단순 형태
+  const bodyCard = (gradient: string) => (
     <div className={cardClass} style={{ background: gradient }}>
       {/* 1) 헤더 brand */}
       <div className="flex items-center px-12 pt-7">
         {headerBrand}
       </div>
 
-      {/* 2) 컨텍스트 미니바 — 헤더 바로 아래 별도 row */}
+      {/* 2) 컨텍스트 미니바 */}
       <div className="mt-7 flex items-center gap-2 border-b border-white/10 px-12 pb-6">
         <span className="text-3xl leading-none">{flag}</span>
         <span
@@ -348,33 +342,29 @@ function buildMaterial(item: NewsItem): Material {
         >
           {koCountry} · {catKo}
         </span>
-        <span className="ml-auto truncate text-lg text-gray-400">{trim(item.title, 40)}</span>
       </div>
 
-      {/* 3) 가운데 영역: chapter + paragraph (justify-center로 카드 가운데 정렬) */}
+      {/* 3) 가운데: title + summary + detail */}
       <div
-        className="flex flex-col justify-center gap-10 px-12 py-14"
+        className="flex flex-col justify-center gap-8 px-12 py-14"
         style={{ minHeight: 'calc(100% - 280px)' }}
       >
-        <div>
-          <p className="mb-4 text-xl font-semibold uppercase tracking-[0.25em] text-gray-500">
-            {String(theme === '배경' ? '01' : theme === '현재' ? '02' : '03')} · CHAPTER
-          </p>
-          <h2
-            className="text-8xl font-bold leading-tight"
-            style={{ color: catColor }}
-          >
-            {theme}
-          </h2>
-        </div>
-        <p className="whitespace-pre-line text-[42px] leading-[1.55] text-gray-100">
-          {paragraph}
+        <h2 className="text-5xl font-bold leading-tight text-white">
+          {trim(item.title, 100)}
+        </h2>
+        <p className="text-3xl leading-snug font-medium text-gray-100">
+          {item.summary}
         </p>
+        {hasDetail && (
+          <p className="whitespace-pre-line text-[28px] leading-[1.6] text-gray-300">
+            {item.detail}
+          </p>
+        )}
       </div>
 
-      {/* 4) footer (absolute) */}
+      {/* 4) footer */}
       <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-12 py-5">
-        <span className="text-xl font-medium leading-none text-gray-400">{footerLabel}</span>
+        <span className="text-xl font-medium leading-none text-gray-400">▶ 더 보기</span>
       </div>
     </div>
   )
@@ -417,11 +407,11 @@ function buildMaterial(item: NewsItem): Material {
     </div>
   )
 
-  const cards: Card[] = [{ jsx: card1, label: '1. Hook' }]
-  if (p1) cards.push({ jsx: bodyCard('배경', p1, 'linear-gradient(135deg, #050505 0%, #1a1a1a 100%)', '▶ Swipe'), label: '2. 배경' })
-  if (p2) cards.push({ jsx: bodyCard('현재', p2, `linear-gradient(135deg, #0a0a0a 0%, #161616 50%, ${catColor}22 100%)`, '▶ Swipe'), label: '3. 현재' })
-  if (p3) cards.push({ jsx: bodyCard('전망', p3, `linear-gradient(135deg, #050505 0%, #0f0f0f 50%, ${catColor}33 100%)`, '▶ 자세히'), label: '4. 전망' })
-  cards.push({ jsx: card5_cta, label: `${cards.length + 1}. CTA` })
+  const cards: Card[] = [
+    { jsx: card1, label: '1. Hook' },
+    { jsx: bodyCard('linear-gradient(135deg, #050505 0%, #1a1a1a 100%)'), label: '2. Body' },
+    { jsx: card5_cta, label: '3. CTA' },
+  ]
 
   return { cards, caption, hashtags, threadsCaption, permalink, threadsLink }
 }
