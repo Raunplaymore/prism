@@ -23,7 +23,7 @@ export default function AboutPage() {
           <h2 className="mb-3 text-lg font-semibold text-blue-400">서비스 소개</h2>
           <p className="mb-4 text-sm leading-relaxed text-gray-300">
             Prism Globe은 전 세계 {SUPPORTED_COUNT}개국의 주요 뉴스를 AI가 수집, 분류, 요약하여 한국어로 제공하는 뉴스 브리핑 서비스입니다.
-            Google News RSS를 통해 각국의 현지 언어 뉴스를 실시간으로 수집하고, OpenAI의 gpt-4o-mini 모델을 활용하여
+            News RSS를 통해 각국의 현지 언어 뉴스를 실시간으로 수집하고, AI를 활용하여
             정치, 경제, 사회, 기술, 외교, 국방, 환경, 건강, 문화 등 다양한 카테고리로 분류하고 요약합니다.
           </p>
           <p className="text-sm leading-relaxed text-gray-300">
@@ -36,13 +36,12 @@ export default function AboutPage() {
           <h2 className="mb-3 text-lg font-semibold text-blue-400">주요 기능</h2>
           <ul className="space-y-2 text-sm text-gray-300">
             <li>- {SUPPORTED_COUNT}개국 뉴스를 한국어로 AI 요약</li>
-            <li>- D3.js 기반 인터랙티브 세계 지도</li>
+            <li>- 인터랙티브 세계 지도</li>
             <li>- 키워드 기반 다국가 비교 — 같은 사건을 여러 국가가 어떻게 다루는지 한눈에</li>
             <li>- 현지 언어로 뉴스 수집 (한국어, 일본어, 중국어, 아랍어, 러시아어 등)</li>
             <li>- 24시간 누적 피드 — 최신 기사가 상단에 추가</li>
             <li>- 기사 공유 기능 (링크 복사 및 공유)</li>
             <li>- 감성 분석 (긍정/중립/부정)</li>
-            <li>- 전 국가 무료 접근 (로그인 불필요)</li>
           </ul>
         </section>
 
@@ -53,7 +52,7 @@ export default function AboutPage() {
           </p>
           <ol className="space-y-2 text-sm text-gray-300">
             <li>1. <span className="text-white">수집</span> — 각국 Google News RSS에서 현지 언어 원문 수집</li>
-            <li>2. <span className="text-white">분류</span> — gpt-4o-mini가 정치/경제/사회/기술 등 9개 카테고리로 분류</li>
+            <li>2. <span className="text-white">분류</span> — 정치/경제/사회/기술 등 9개 카테고리로 분류</li>
             <li>3. <span className="text-white">요약 및 번역</span> — 한국어 제목, 2–3문장 요약, 상세 본문(150–250자)을 생성</li>
             <li>4. <span className="text-white">키워드 추출</span> — 약 65개의 큐레이션된 어휘 사전에 매칭하여 정규화</li>
             <li>5. <span className="text-white">감성 분석</span> — 긍정/중립/부정 라벨링</li>
@@ -62,19 +61,6 @@ export default function AboutPage() {
             결과 화면에는 원문 출처와 &quot;원문 보기&quot; 링크가 항상 함께 표기됩니다. 단순 자동 스크래핑 사이트가 되지 않도록
             기사 단위로 사람이 읽을 수 있는 한국어 콘텐츠를 생성하는 것이 핵심입니다.
           </p>
-        </section>
-
-        <section className="mb-8">
-          <h2 className="mb-3 text-lg font-semibold text-blue-400">기술 스택</h2>
-          <ul className="space-y-2 text-sm text-gray-300">
-            <li>- Next.js 14 (App Router) + TypeScript</li>
-            <li>- Cloudflare Pages (Edge Runtime)</li>
-            <li>- OpenAI gpt-4o-mini (뉴스 분류 및 요약)</li>
-            <li>- Upstash Redis (캐시 및 피드 저장)</li>
-            <li>- D3.js + TopoJSON (세계 지도)</li>
-            <li>- Google OAuth (인증)</li>
-            <li>- Telegram Bot (관리자 알림)</li>
-          </ul>
         </section>
 
         <section className="mb-8">
@@ -105,7 +91,7 @@ export default function AboutPage() {
         <section className="mb-8">
           <h2 className="mb-3 text-lg font-semibold text-blue-400">면책 조항</h2>
           <p className="text-sm leading-relaxed text-gray-300">
-            Prism Globe에서 제공하는 뉴스 요약은 AI가 생성한 것으로, 정확성을 보장하지 않습니다.
+            Prism Globe에서 제공하는 뉴스 요약은 AI가 번역 요약 생성한 것으로, 정확성을 보장하지 않습니다.
             정확한 정보는 원문 기사를 참고해 주세요. 각 기사 하단의 &quot;원문 보기&quot; 링크를 통해 원본 기사를 확인할 수 있습니다.
             번역 및 요약 과정에서 원문의 뉘앙스가 일부 손실될 수 있습니다.
           </p>
@@ -119,10 +105,10 @@ export default function AboutPage() {
           <p className="text-sm text-gray-300">
             이메일:{' '}
             <a
-              href="mailto:ray.er@kakaocorp.com"
+              href="mailto:support@prismglobe.com"
               className="text-blue-400 underline-offset-2 hover:underline"
             >
-              ray.er@kakaocorp.com
+              support@prismglobe.com
             </a>
           </p>
           <p className="mt-3 text-sm text-gray-400">
