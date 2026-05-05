@@ -1,0 +1,13 @@
+{
+  "version": 11,
+  "timestamp": "20260505T072429",
+  "files": [
+    "plan.md",
+    "pmpt.ai.md",
+    "pmpt.md"
+  ],
+  "changedFiles": [
+    "pmpt.md"
+  ],
+  "note": "LLM 프롬프트의 detail 필드 규칙을 완전히 완화했다. 기존의 강제 3문단 구조(배경·이해관계자·파급영향)와 \"요약과 중복 금지\"라는 비중복 룰을 모두 제거하고, 원문(description)에만 기반한 자연스러운 2-4 문장 요약으로 변경했다. 핵심은 정보 풍성도(depth)보다 신뢰성(faithfulness) 우선이라는 결정으로, 사용자 피드백 \"Prism이 기사를 왜곡할 수 있다\"는 지적을 반영했다. 프롬프트에 \"CRITICAL: 입력에 없는 배경·파급·예측·분석을 추가하지 말 것\" 명시와 \"짧은 정보 + 짧은 detail은 OK\" 룰을 추가하여 hallucination risk를 명확히 제거했다."
+}

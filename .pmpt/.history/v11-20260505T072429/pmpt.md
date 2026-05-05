@@ -114,14 +114,6 @@ Next.js 14 Frontend (D3.js 지도) → Next.js API Routes → RSS 피드 파싱 
 - 핵심은 정보 풍성도(depth)보다 신뢰성(faithfulness) 우선이라는 결정으로, 사용자 피드백 "Prism이 기사를 왜곡할 수 있다"는 지적을 반영했다
 - 프롬프트에 "CRITICAL: 입력에 없는 배경·파급·예측·분석을 추가하지 말 것" 명시와 "짧은 정보 + 짧은 detail은 OK" 룰을 추가하여 hallucination risk를 명확히 제거했다
 
-### v12 — 2026-05-05
-- AdSense-only 비즈니스 결정 + 데이터 신뢰 모델 정착 + 트래픽 성장 plan W1-8 실행
-- (1) 비즈니스 검토에서 B2B 금융/구독/스폰서 모두 보류, AdSense 트래픽 단일 축으로 결정 — 모든 작업이 PV·세션·재방문에 기여하는지로 평가
-- (2) detail 프롬프트가 "원문에 있는 정보만 정리, 추측·함의·전망 추가 금지"로 안착하고 input 300자 / output 150자 quality gate를 양쪽에 박아 빈약 결과 자체를 캐시에 안 들어가게 차단 — prism 신뢰 모델 클린
-- (3) 트래픽 plan: /country/[code] 82국 SEO 페이지 + sitemap 등록(439b862), /keyword·/category에 Country Lens 패널 + lens-aware Synthesis로 USP 시각화(885377d, d2dea28), Footer + Organization sameAs로 IG·Threads 채널 SEO 등록(c6db628), Quick Access에 캐시 hit 비-TOP 국가 동적 union(322cffb)
-- (4) 인스타 carousel admin 도구는 4:5 캔버스 + 모바일 폰트 시스템 + Web Share API로 모바일 저장 UX까지 완비
-- 다음 단계는 며칠 운영 후 GA4·Search Console 데이터 기반 우선순위 재평가
-
 ## Decisions
 - Claude API → RSS + OpenAI 전환 → RSS 피드로 무료 뉴스 수집, OpenAI는 번역/요약만 수행하여 토큰 비용 최소화. web_search 불필요
 - MVP에서 Supabase Auth 제외 → Redis IP 기반 사용량 추적으로 단순화

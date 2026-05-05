@@ -1,0 +1,13 @@
+{
+  "version": 12,
+  "timestamp": "20260505T153748",
+  "files": [
+    "plan.md",
+    "pmpt.ai.md",
+    "pmpt.md"
+  ],
+  "changedFiles": [
+    "pmpt.md"
+  ],
+  "note": "AdSense-only 비즈니스 결정 + 데이터 신뢰 모델 정착 + 트래픽 성장 plan W1-8 실행. (1) 비즈니스 검토에서 B2B 금융/구독/스폰서 모두 보류, AdSense 트래픽 단일 축으로 결정 — 모든 작업이 PV·세션·재방문에 기여하는지로 평가. (2) detail 프롬프트가 \"원문에 있는 정보만 정리, 추측·함의·전망 추가 금지\"로 안착하고 input 300자 / output 150자 quality gate를 양쪽에 박아 빈약 결과 자체를 캐시에 안 들어가게 차단 — prism 신뢰 모델 클린. (3) 트래픽 plan: /country/[code] 82국 SEO 페이지 + sitemap 등록(439b862), /keyword·/category에 Country Lens 패널 + lens-aware Synthesis로 USP 시각화(885377d, d2dea28), Footer + Organization sameAs로 IG·Threads 채널 SEO 등록(c6db628), Quick Access에 캐시 hit 비-TOP 국가 동적 union(322cffb). (4) 인스타 carousel admin 도구는 4:5 캔버스 + 모바일 폰트 시스템 + Web Share API로 모바일 저장 UX까지 완비. 다음 단계는 며칠 운영 후 GA4·Search Console 데이터 기반 우선순위 재평가."
+}
