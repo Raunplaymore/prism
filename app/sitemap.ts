@@ -1,6 +1,8 @@
 import type { MetadataRoute } from 'next'
 import { CATEGORY_KEYS, slugForCategory } from '@/lib/categories'
 import { getLiveKeywordCounts } from '@/lib/keywords/index'
+import { getAllCountries } from '@/lib/countries'
+import { isSupported } from '@/lib/rss'
 
 export const runtime = 'edge'
 // 1시간마다 재생성 — 새 키워드(slug)가 vocabulary에 추가되거나 cron이 새
@@ -52,5 +54,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // ignore — 정적 + 카테고리만으로도 sitemap은 valid
   }
 
-  return [...staticEntries, ...categoryEntries, ...keywordEntries]
+  const countryEntries: MetadataRoute.Sitemap = getAllCountries()
+    .filter(({ code }) => isSupported(code))
+    .map(({ code }) => ({
+      url: `${SITE}/country/${code}`,
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
+      lastModified: now,
+    }))
+
+  return [...staticEntries, ...categoryEntries, ...countryEntries, ...keywordEntries]
 }
