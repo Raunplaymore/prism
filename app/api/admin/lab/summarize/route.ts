@@ -3,6 +3,7 @@ export const runtime = 'edge'
 import { NextRequest, NextResponse } from 'next/server'
 import { recordTokenUsage } from '@/lib/cache'
 import { simpleHash } from '@/lib/news'
+import { isProductionRuntime, previewBlockedResponse } from '@/lib/env'
 
 async function redisGet(key: string): Promise<string | null> {
   const url = process.env.UPSTASH_REDIS_REST_URL
@@ -75,6 +76,7 @@ const LANG_LABELS: Record<string, string> = {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isProductionRuntime()) return previewBlockedResponse()
   try {
     const lang = request.nextUrl.searchParams.get('lang') === 'en' ? 'en' : 'ko'
     const langLabel = LANG_LABELS[lang]

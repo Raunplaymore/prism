@@ -7,6 +7,7 @@ import { getCountryName } from '@/lib/countries'
 import { checkCostAlert, notifyNewsCached, notifyError } from '@/lib/telegram'
 import { fetchNewsFromArticles } from '@/lib/news'
 import { indexBatch } from '@/lib/keywords/index'
+import { isProductionRuntime, previewBlockedResponse } from '@/lib/env'
 
 /**
  * Step 1: POST /api/news/collect?country=XX        → collect RSS only
@@ -78,6 +79,7 @@ export async function OPTIONS() {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isProductionRuntime()) return previewBlockedResponse()
   const step = request.nextUrl.searchParams.get('step')
 
   if (step === '2') {

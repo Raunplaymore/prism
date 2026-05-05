@@ -3,6 +3,7 @@ export const runtime = 'edge'
 import { NextRequest, NextResponse } from 'next/server'
 import { deleteCachedNewsAllLangs } from '@/lib/cache'
 import { verifySessionToken, getSessionFromCookie } from '@/lib/auth'
+import { isProductionRuntime, previewBlockedResponse } from '@/lib/env'
 
 async function isAdmin(request: NextRequest): Promise<boolean> {
   const token = getSessionFromCookie(request.headers.get('cookie'))
@@ -16,6 +17,7 @@ async function isAdmin(request: NextRequest): Promise<boolean> {
 }
 
 export async function DELETE(request: NextRequest) {
+  if (!isProductionRuntime()) return previewBlockedResponse()
   if (!(await isAdmin(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
