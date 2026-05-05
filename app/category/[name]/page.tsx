@@ -60,11 +60,15 @@ export async function generateMetadata({
   const articles = await fetchCategoryArticles(categoryKey, country)
   const countryCount = new Set(articles.map((a) => a.country)).size
 
+  const lensSuffix = country ? ` — ${getCountryNameKo(country)} 시각` : ''
+
   return {
-    title: `${meta.ko} 뉴스 — 다국가 시각 비교 — Prism Globe`,
+    title: `${meta.ko} 뉴스${lensSuffix} — 다국가 시각 비교 — Prism Globe`,
     description:
       articles.length > 0
-        ? `Prism Globe이 ${countryCount}개국에서 수집한 ${meta.ko} 분야 기사 ${articles.length}건. 국가별 보도 차이를 한국어로 비교합니다.`
+        ? country
+          ? `${getCountryNameKo(country)} 매체가 본 ${meta.ko} 분야 — Prism Globe이 ${articles.length}건의 보도를 수집했습니다.`
+          : `Prism Globe이 ${countryCount}개국에서 수집한 ${meta.ko} 분야 기사 ${articles.length}건. 국가별 보도 차이를 한국어로 비교합니다.`
         : `${meta.ko} 분야 기사를 다국가 시각으로 비교하는 Prism Globe 카테고리 페이지`,
     alternates: { canonical: `/category/${params.name}` },
     robots:
@@ -189,57 +193,55 @@ export default async function CategoryHubPage({
         </header>
 
         {(allGroups.length > 0 || country) && (
-          <div className="mb-6 flex flex-wrap gap-1.5">
-            <a
-              href={`/category/${params.name}`}
-              className={
-                !country
-                  ? 'inline-flex items-baseline gap-1 rounded-full border border-gray-700 bg-gray-800 px-2.5 py-0.5 text-xs text-white'
-                  : 'inline-flex items-baseline gap-1 rounded-full border border-gray-800 bg-gray-900 px-2.5 py-0.5 text-xs text-gray-400 transition hover:border-gray-700 hover:text-gray-200'
-              }
-            >
-              전체
-            </a>
-            {allGroups.map(([code, items]) => {
-              const active = country === code
-              return (
-                <a
-                  key={code}
-                  href={`/category/${params.name}?country=${code}`}
-                  className={
-                    active
-                      ? 'inline-flex items-baseline gap-1 rounded-full border border-gray-700 bg-gray-800 px-2.5 py-0.5 text-xs text-white'
-                      : 'inline-flex items-baseline gap-1 rounded-full border border-gray-800 bg-gray-900 px-2.5 py-0.5 text-xs text-gray-400 transition hover:border-gray-700 hover:text-gray-200'
-                  }
-                >
-                  <span>{countryFlag(code)}</span>
-                  <span>{getCountryNameKo(code)}</span>
-                  <span className="text-gray-600">({items.length}건)</span>
-                </a>
-              )
-            })}
-            <a
-              href="/map"
-              className="inline-flex items-center gap-1 rounded-full border border-gray-800 bg-gray-900 px-2.5 py-0.5 text-xs text-gray-400 transition hover:border-gray-700 hover:text-gray-200"
-            >
-              <svg
-                width="11"
-                height="11"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
+          <section
+            aria-label="Country Lens"
+            className="mb-6 rounded-xl border border-gray-800 bg-gray-900/40 p-4"
+          >
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                Country Lens
+              </h2>
+              <span className="text-[11px] text-gray-600">시각을 바꿔 비교해보세요</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={`/category/${params.name}`}
+                className={
+                  !country
+                    ? 'inline-flex items-center gap-1.5 rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-1.5 text-sm font-medium text-blue-200'
+                    : 'inline-flex items-center gap-1.5 rounded-lg border border-gray-800 bg-gray-900 px-3 py-1.5 text-sm text-gray-400 transition hover:border-gray-700 hover:text-gray-200'
+                }
               >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="2" y1="12" x2="22" y2="12" />
-                <path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z" />
-              </svg>
-              <span>글로벌</span>
-            </a>
-          </div>
+                <span aria-hidden="true">🌐</span>
+                <span>전체 시각</span>
+              </a>
+              {allGroups.slice(0, 7).map(([code, items]) => {
+                const active = country === code
+                return (
+                  <a
+                    key={code}
+                    href={`/category/${params.name}?country=${code}`}
+                    className={
+                      active
+                        ? 'inline-flex items-center gap-1.5 rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-1.5 text-sm font-medium text-blue-200'
+                        : 'inline-flex items-center gap-1.5 rounded-lg border border-gray-800 bg-gray-900 px-3 py-1.5 text-sm text-gray-400 transition hover:border-gray-700 hover:text-gray-200'
+                    }
+                  >
+                    <span>{countryFlag(code)}</span>
+                    <span>{getCountryNameKo(code)} 시각</span>
+                    <span className={active ? 'text-blue-300/70' : 'text-gray-600'}>
+                      · {items.length}건
+                    </span>
+                  </a>
+                )
+              })}
+              {allGroups.length > 7 && (
+                <span className="inline-flex items-center px-2 text-xs text-gray-600">
+                  +{allGroups.length - 7}개국 더 있음
+                </span>
+              )}
+            </div>
+          </section>
         )}
 
         {articles.length === 0 ? (
@@ -253,7 +255,7 @@ export default async function CategoryHubPage({
           </div>
         ) : (
           <>
-            <CategorySynthesis label={meta.ko} articles={articles} />
+            <CategorySynthesis label={meta.ko} articles={articles} lensCountry={country} />
             <ul className="space-y-3">
               {articles.map((item) => (
                 <li key={item.id}>
