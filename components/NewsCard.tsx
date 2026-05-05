@@ -105,7 +105,7 @@ export default function NewsCard({ item, showCountry, defaultExpanded }: NewsCar
       )}
       {expanded && item.detail && (
         <div className="mb-3 rounded-md border border-gray-800 bg-gray-950 p-3">
-          <p className="text-sm leading-relaxed text-gray-300">{item.detail}</p>
+          <p className="whitespace-pre-line text-sm leading-relaxed text-gray-300">{item.detail}</p>
         </div>
       )}
       <div className="flex items-center justify-between text-xs text-gray-500">

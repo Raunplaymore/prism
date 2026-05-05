@@ -237,7 +237,7 @@ export default function LabPage() {
                 </div>
                 <h3 className="mb-1 text-sm font-medium text-white">{a.title}</h3>
                 <p className="mb-2 text-xs text-gray-300">{a.summary}</p>
-                <p className="text-xs leading-relaxed text-gray-500">{a.detail}</p>
+                <p className="whitespace-pre-line text-xs leading-relaxed text-gray-500">{a.detail}</p>
               </div>
             ))}
           </div>
@@ -428,7 +428,7 @@ export default function LabPage() {
                     </div>
                     <p className="text-xs font-medium text-gray-200">{a.title}</p>
                     <p className="mt-1 text-[11px] leading-relaxed text-gray-400">{a.summary}</p>
-                    {a.detail && <p className="mt-2 text-[11px] leading-relaxed text-gray-500">{a.detail}</p>}
+                    {a.detail && <p className="whitespace-pre-line mt-2 text-[11px] leading-relaxed text-gray-500">{a.detail}</p>}
                   </div>
                 ))
               )}

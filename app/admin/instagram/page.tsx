@@ -320,7 +320,7 @@ function buildMaterial(item: NewsItem): Material {
         </h2>
         <p className="mb-3 text-sm leading-relaxed text-gray-200">{item.summary}</p>
         {hasDetail && (
-          <p className="text-[13px] leading-relaxed text-gray-400">
+          <p className="whitespace-pre-line text-[13px] leading-relaxed text-gray-400">
             {trim(item.detail, 350)}
           </p>
         )}
