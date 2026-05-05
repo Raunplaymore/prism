@@ -87,7 +87,7 @@ export async function fetchNewsFromArticles(countryCode: string, lang = 'en', ar
   const articlesForAi = articles.map((a, i) => ({
     i,
     t: a.title,
-    d: a.description.slice(0, 200),
+    d: a.description.slice(0, 700),
   }))
 
   const response = await callOpenAI([
@@ -101,8 +101,8 @@ FILTERING RULE:
 - Articles about bilateral relations are fine if ${countryName} is one of the main parties
 - Articles may be in any language — translate the title, summary, and detail to ${langLabel}
 
-Each item: {"originalIndex":number,"category":"one of the categories below","title":"${langLabel} title","summary":"1-2 sentence ${langLabel} summary","detail":"4-5 sentence ${langLabel} detailed analysis with context and background","sentiment":"positive"|"neutral"|"negative","keywords":["slug1","slug2",...]}
-Write title, summary, and detail in ${langLabel}. "summary" is a brief overview. "detail" provides deeper analysis, background context, and implications.
+Each item: {"originalIndex":number,"category":"one of the categories below","title":"${langLabel} title","summary":"1-2 sentence ${langLabel} summary","detail":"5-7 sentence ${langLabel} detailed analysis with context and background","sentiment":"positive"|"neutral"|"negative","keywords":["slug1","slug2",...]}
+Write title, summary, and detail in ${langLabel}. "summary" is a brief overview. "detail" provides deeper analysis, background context, and implications. "detail" MUST introduce information that is not in "summary" — historical context, stakeholders, why this matters now, or downstream implications. Restating the summary in different words is forbidden.
 
 For "keywords": extract 3-5 canonical English slug keywords (lowercase kebab-case ASCII).
 Prefer named entities — people, countries, organizations, companies — and concrete topics.
