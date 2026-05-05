@@ -6,7 +6,8 @@ import { getCountryName, getCountryNameKo, countryFlag } from '@/lib/countries'
 import { CATEGORY_META, isValidCategory } from '@/lib/categories'
 import { findEntry } from '@/lib/keywords/index'
 
-const CARD_PX = 1080
+const CARD_W = 1080
+const CARD_H = 1350
 
 function ScaledCard({
   refCb,
@@ -24,7 +25,7 @@ function ScaledCard({
     if (!el) return
     const ro = new ResizeObserver((entries) => {
       const w = entries[0].contentRect.width
-      setScale(w / CARD_PX)
+      setScale(w / CARD_W)
     })
     ro.observe(el)
     return () => ro.disconnect()
@@ -34,7 +35,7 @@ function ScaledCard({
     <div
       ref={wrapperRef}
       className="relative w-full"
-      style={{ aspectRatio: '1 / 1' }}
+      style={{ aspectRatio: '4 / 5' }}
     >
       <div
         ref={(el) => {
@@ -42,8 +43,8 @@ function ScaledCard({
           refCb?.(el)
         }}
         style={{
-          width: CARD_PX,
-          height: CARD_PX,
+          width: CARD_W,
+          height: CARD_H,
           transform: scale ? `scale(${scale})` : 'scale(0)',
           transformOrigin: 'top left',
           position: 'absolute',
@@ -57,7 +58,7 @@ function ScaledCard({
   )
 }
 
-/** Capture a DOM node as a 1080×1080 PNG blob.
+/** Capture a DOM node as a 1080×1350 PNG blob.
  *  Cloudflare Pages edge can't run @vercel/og (Yoga/Resvg WASM doesn't init),
  *  so we render in the browser. html2canvas mis-positioned text vertically
  *  inside flex pills (baseline math drift). html-to-image uses SVG
@@ -65,9 +66,9 @@ function ScaledCard({
  *  and PNG are pixel-identical. Dynamic import keeps the admin-only library
  *  out of the public bundle.
  *
- *  The node is already rendered at CARD_PX×CARD_PX (ScaledCard keeps it fixed)
+ *  The node is already rendered at CARD_W×CARD_H (ScaledCard keeps it fixed)
  *  and only visually scaled via transform. We strip the transform before capture
- *  so html-to-image sees the true 1080px box, then restore it afterwards. */
+ *  so html-to-image sees the true 1080×1350 box, then restore it afterwards. */
 async function captureCardBlob(node: HTMLElement): Promise<Blob | null> {
   const { toBlob } = await import('html-to-image')
   const prevTransform = node.style.transform
@@ -75,8 +76,8 @@ async function captureCardBlob(node: HTMLElement): Promise<Blob | null> {
   try {
     return await toBlob(node, {
       pixelRatio: 1,
-      width: CARD_PX,
-      height: CARD_PX,
+      width: CARD_W,
+      height: CARD_H,
       cacheBust: true,
       backgroundColor: undefined,
     })
@@ -288,8 +289,8 @@ function buildMaterial(item: NewsItem): Material {
   const headerBrand = (
     <div className="flex items-center gap-2">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo.png" alt="Prism Globe" className="h-7 w-7 rounded-md" />
-      <span className="text-base font-bold text-white">Prism Globe</span>
+      <img src="/logo.png" alt="Prism Globe" className="h-10 w-10 rounded-md" />
+      <span className="text-2xl font-bold text-white">Prism Globe</span>
     </div>
   )
 
@@ -301,26 +302,26 @@ function buildMaterial(item: NewsItem): Material {
         background: `linear-gradient(135deg, #050505 0%, #0a0a0a 40%, ${catColor}55 100%)`,
       }}
     >
-      <div className="flex items-center px-8 pt-7">
+      <div className="flex items-center px-12 pt-7">
         {headerBrand}
       </div>
       <div
-        className="flex flex-col justify-center gap-7 px-8 py-10"
-        style={{ minHeight: 'calc(100% - 130px)' }}
+        className="flex flex-col justify-center gap-10 px-12 py-14"
+        style={{ minHeight: 'calc(100% - 180px)' }}
       >
         <span className="text-8xl leading-none">{flag}</span>
         <span
-          className="inline-flex h-9 w-fit items-center justify-center rounded-full px-4 text-xs font-semibold uppercase leading-none tracking-wider"
+          className="inline-flex h-12 w-fit items-center justify-center rounded-full px-5 text-lg font-semibold uppercase leading-none tracking-wider"
           style={{ backgroundColor: `${catColor}30`, color: catColor }}
         >
           {koCountry} · {catKo}
         </span>
-        <h2 className="text-4xl font-bold leading-tight text-white">
+        <h2 className="text-7xl font-bold leading-tight text-white">
           {trim(item.title, 80)}
         </h2>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-8 py-4">
-        <span className="text-sm font-medium leading-none text-gray-400">▶ Swipe</span>
+      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-12 py-5">
+        <span className="text-xl font-medium leading-none text-gray-400">▶ Swipe</span>
       </div>
     </div>
   )
@@ -334,46 +335,46 @@ function buildMaterial(item: NewsItem): Material {
   const bodyCard = (theme: string, paragraph: string, gradient: string, footerLabel: string) => (
     <div className={cardClass} style={{ background: gradient }}>
       {/* 1) 헤더 brand */}
-      <div className="flex items-center px-8 pt-7">
+      <div className="flex items-center px-12 pt-7">
         {headerBrand}
       </div>
 
       {/* 2) 컨텍스트 미니바 — 헤더 바로 아래 별도 row */}
-      <div className="mt-5 flex items-center gap-2 border-b border-white/10 px-8 pb-4">
-        <span className="text-xl leading-none">{flag}</span>
+      <div className="mt-7 flex items-center gap-2 border-b border-white/10 px-12 pb-6">
+        <span className="text-3xl leading-none">{flag}</span>
         <span
-          className="text-xs font-semibold uppercase tracking-wider"
+          className="text-lg font-semibold uppercase tracking-wider"
           style={{ color: catColor }}
         >
           {koCountry} · {catKo}
         </span>
-        <span className="ml-auto truncate text-xs text-gray-400">{trim(item.title, 40)}</span>
+        <span className="ml-auto truncate text-lg text-gray-400">{trim(item.title, 40)}</span>
       </div>
 
       {/* 3) 가운데 영역: chapter + paragraph (justify-center로 카드 가운데 정렬) */}
       <div
-        className="flex flex-col justify-center gap-8 px-8 py-10"
-        style={{ minHeight: 'calc(100% - 200px)' }}
+        className="flex flex-col justify-center gap-10 px-12 py-14"
+        style={{ minHeight: 'calc(100% - 280px)' }}
       >
         <div>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-gray-500">
+          <p className="mb-4 text-xl font-semibold uppercase tracking-[0.25em] text-gray-500">
             {String(theme === '배경' ? '01' : theme === '현재' ? '02' : '03')} · CHAPTER
           </p>
           <h2
-            className="text-5xl font-bold leading-tight"
+            className="text-8xl font-bold leading-tight"
             style={{ color: catColor }}
           >
             {theme}
           </h2>
         </div>
-        <p className="whitespace-pre-line text-2xl leading-loose text-gray-100">
+        <p className="whitespace-pre-line text-[42px] leading-[1.55] text-gray-100">
           {paragraph}
         </p>
       </div>
 
       {/* 4) footer (absolute) */}
-      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-8 py-4">
-        <span className="text-sm font-medium leading-none text-gray-400">{footerLabel}</span>
+      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-12 py-5">
+        <span className="text-xl font-medium leading-none text-gray-400">{footerLabel}</span>
       </div>
     </div>
   )
@@ -386,32 +387,32 @@ function buildMaterial(item: NewsItem): Material {
         background: `linear-gradient(135deg, ${catColor}30 0%, #0a0a0a 50%, #050505 100%)`,
       }}
     >
-      <div className="flex items-center px-8 pt-7">
+      <div className="flex items-center px-12 pt-7">
         {headerBrand}
       </div>
       <div
-        className="flex flex-col justify-center gap-7 px-8 py-10"
-        style={{ minHeight: 'calc(100% - 130px)' }}
+        className="flex flex-col justify-center gap-10 px-12 py-14"
+        style={{ minHeight: 'calc(100% - 180px)' }}
       >
-        <h3 className="text-4xl font-bold leading-tight text-white">
+        <h3 className="text-7xl font-bold leading-tight text-white">
           85개국,
           <br />
           같은 사건을
           <br />
           <span style={{ color: catColor }}>다르게 본다</span>
         </h3>
-        <p className="text-lg leading-relaxed text-gray-300">
+        <p className="text-3xl leading-relaxed text-gray-300">
           한 나라의 시선만으로는 보이지 않던 흐름.
           <br />
           Prism Globe에서 다국가 뉴스를 한 화면으로.
         </p>
         <div className="rounded-lg border border-white/10 bg-white/5 px-5 py-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-500">출처</p>
-          <p className="mt-1 text-base font-medium text-white">{item.source}</p>
+          <p className="text-lg font-semibold uppercase tracking-[0.2em] text-gray-500">출처</p>
+          <p className="mt-1 text-3xl font-medium text-white">{item.source}</p>
         </div>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center border-t border-white/10 bg-black/50 px-8 py-4">
-        <span className="text-sm font-medium leading-none text-gray-400">prismglobe.com</span>
+      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center border-t border-white/10 bg-black/50 px-12 py-5">
+        <span className="text-xl font-medium leading-none text-gray-400">prismglobe.com</span>
       </div>
     </div>
   )
