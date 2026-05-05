@@ -601,7 +601,7 @@ export default function InstagramAdmin() {
                   )}
                 </div>
                 <div className="flex justify-center">
-                  <div className="w-[80%] sm:w-[55%]">
+                  <div className="w-[55%] sm:w-[42%]">
                     <ScaledCard refCb={(el) => { threadsCardRef.current = el }}>
                       {material.cards[0].jsx}
                     </ScaledCard>
@@ -685,7 +685,7 @@ export default function InstagramAdmin() {
                   {material.cards.map((c, idx) => {
                     const dlKey = `ig-${idx}`
                     return (
-                      <div key={c.label} className="flex w-[85%] shrink-0 snap-center flex-col items-center sm:w-[60%]">
+                      <div key={c.label} className="flex w-[55%] shrink-0 snap-center flex-col items-center sm:w-[42%]">
                         <div className="mb-1.5 flex w-full items-center justify-between">
                           <span className="text-[10px] font-medium uppercase tracking-wider text-gray-500">
                             {c.label}
