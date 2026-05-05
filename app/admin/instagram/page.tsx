@@ -336,7 +336,7 @@ export default function InstagramAdmin() {
   const [errorMsg, setErrorMsg] = useState<string>('')
   const [material, setMaterial] = useState<Material | null>(null)
   const [articleId, setArticleId] = useState<string | null>(null)
-  const [copied, setCopied] = useState<'caption' | 'hashtags' | 'all' | 'threads' | null>(null)
+  const [copied, setCopied] = useState<'caption' | 'hashtags' | 'all' | 'threads' | 'permalink' | null>(null)
   const [downloading, setDownloading] = useState<string | null>(null)
   const threadsCardRef = useRef<HTMLDivElement | null>(null)
   const igCardRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -407,12 +407,13 @@ export default function InstagramAdmin() {
     }
   }
 
-  const copy = async (kind: 'caption' | 'hashtags' | 'all' | 'threads') => {
+  const copy = async (kind: 'caption' | 'hashtags' | 'all' | 'threads' | 'permalink') => {
     if (!material) return
     let text = ''
     if (kind === 'caption') text = material.caption
     else if (kind === 'hashtags') text = material.hashtags
     else if (kind === 'threads') text = material.threadsCaption
+    else if (kind === 'permalink') text = material.permalink
     else text = `${material.caption}\n\n${material.hashtags}\n\n${material.permalink}`
     await navigator.clipboard.writeText(text)
     setCopied(kind)
@@ -619,9 +620,17 @@ export default function InstagramAdmin() {
               </section>
 
               <section>
-                <h3 className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Deep link (받는 사람용)
-                </h3>
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                    링크 (Bio · Stories용)
+                  </h3>
+                  <button
+                    onClick={() => copy('permalink')}
+                    className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-blue-500"
+                  >
+                    {copied === 'permalink' ? '✓ 복사됨' : '링크만 복사'}
+                  </button>
+                </div>
                 <pre className="whitespace-pre-wrap rounded-md border border-gray-800 bg-gray-900 p-3 text-xs text-blue-400">
                   {material.permalink}
                 </pre>
