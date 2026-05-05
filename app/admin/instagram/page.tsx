@@ -333,46 +333,45 @@ function buildMaterial(item: NewsItem): Material {
   // 본문 카드 헬퍼 — 배경/현재/전망 공통 패턴
   const bodyCard = (theme: string, paragraph: string, gradient: string, footerLabel: string) => (
     <div className={cardClass} style={{ background: gradient }}>
+      {/* 1) 헤더 brand */}
       <div className="flex items-center px-8 pt-7">
         {headerBrand}
       </div>
+
+      {/* 2) 컨텍스트 미니바 — 헤더 바로 아래 별도 row */}
+      <div className="mt-5 flex items-center gap-2 border-b border-white/10 px-8 pb-4">
+        <span className="text-xl leading-none">{flag}</span>
+        <span
+          className="text-xs font-semibold uppercase tracking-wider"
+          style={{ color: catColor }}
+        >
+          {koCountry} · {catKo}
+        </span>
+        <span className="ml-auto truncate text-xs text-gray-400">{trim(item.title, 40)}</span>
+      </div>
+
+      {/* 3) 가운데 영역: chapter + paragraph (justify-center로 카드 가운데 정렬) */}
       <div
-        className="flex flex-col justify-between px-8 py-8"
-        style={{ minHeight: 'calc(100% - 130px)' }}
+        className="flex flex-col justify-center gap-8 px-8 py-10"
+        style={{ minHeight: 'calc(100% - 200px)' }}
       >
-        {/* 상단: 컨텍스트 미니바 */}
-        <div className="flex items-center gap-2 border-b border-white/10 pb-4">
-          <span className="text-xl leading-none">{flag}</span>
-          <span
-            className="text-xs font-semibold uppercase tracking-wider"
+        <div>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-gray-500">
+            {String(theme === '배경' ? '01' : theme === '현재' ? '02' : '03')} · CHAPTER
+          </p>
+          <h2
+            className="text-5xl font-bold leading-tight"
             style={{ color: catColor }}
           >
-            {koCountry} · {catKo}
-          </span>
-          <span className="ml-auto truncate text-xs text-gray-400">{trim(item.title, 40)}</span>
+            {theme}
+          </h2>
         </div>
-
-        {/* 중앙: 큰 테마 디스플레이 + 본문 */}
-        <div className="flex flex-col gap-5">
-          <div>
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">
-              {String(theme === '배경' ? '01' : theme === '현재' ? '02' : '03')} · CHAPTER
-            </p>
-            <h2
-              className="text-3xl font-bold leading-tight"
-              style={{ color: catColor }}
-            >
-              {theme}
-            </h2>
-          </div>
-          <p className="whitespace-pre-line text-xl leading-loose text-gray-100">
-            {paragraph}
-          </p>
-        </div>
-
-        {/* 하단: 시각적 균형용 빈 spacer (footer는 absolute라 layout 안 차지) */}
-        <div />
+        <p className="whitespace-pre-line text-2xl leading-loose text-gray-100">
+          {paragraph}
+        </p>
       </div>
+
+      {/* 4) footer (absolute) */}
       <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end border-t border-white/10 bg-black/40 px-8 py-4">
         <span className="text-sm font-medium leading-none text-gray-400">{footerLabel}</span>
       </div>
