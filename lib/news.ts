@@ -38,6 +38,11 @@ Politics, Economy, Society, Tech, Defense, Diplomacy, Environment, Health, Cultu
 Exclude: celebrity/idol news (concerts, tours, comebacks, fan events, dating), K-pop, movie/TV/drama reviews, sports scores/match results.
 General sports INDUSTRY news (e.g. league deals, stadium economics) is OK.`
 
+/** RSS description이 이 길이 미만이면 LLM에 보내지 않고 drop.
+ *  짧은 입력은 detail이 summary 재진술 수준이라 사용자 가치가 낮음.
+ *  hallucination을 차단한 보수 프롬프트와 짝을 이룸. */
+const MIN_DESCRIPTION_LENGTH = 150
+
 async function callOpenAI(messages: { role: string; content: string }[]): Promise<OpenAIResponse> {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) throw new Error('Missing OPENAI_API_KEY')
@@ -84,7 +89,16 @@ export async function fetchNewsFromArticles(countryCode: string, lang = 'en', ar
     return []
   }
 
-  const articlesForAi = articles.map((a, i) => ({
+  const filteredArticles = articles.filter((a) => (a.description?.length ?? 0) >= MIN_DESCRIPTION_LENGTH)
+  if (filteredArticles.length === 0) {
+    return []
+  }
+
+  if (filteredArticles.length < articles.length) {
+    console.log(`[news] ${countryCode}: filtered ${articles.length - filteredArticles.length} short articles (<${MIN_DESCRIPTION_LENGTH}c), kept ${filteredArticles.length}`)
+  }
+
+  const articlesForAi = filteredArticles.map((a, i) => ({
     i,
     t: a.title,
     d: a.description.slice(0, 700),
@@ -130,9 +144,9 @@ Include all relevant articles (up to 30).`,
   if (!parsed.items || !Array.isArray(parsed.items)) return []
 
   return (parsed.items as SummarizedItem[])
-    .filter((item) => typeof item.originalIndex === 'number' && item.originalIndex >= 0 && item.originalIndex < articles.length)
+    .filter((item) => typeof item.originalIndex === 'number' && item.originalIndex >= 0 && item.originalIndex < filteredArticles.length)
     .map((item) => {
-      const original: RssArticle = articles[item.originalIndex]
+      const original: RssArticle = filteredArticles[item.originalIndex]
       // Normalize free-form LLM keywords against the curated vocabulary.
       // Unknown keywords are dropped here; pending-curator queue is Phase 3.
       const rawKeywords = Array.isArray(item.keywords) ? item.keywords : []
