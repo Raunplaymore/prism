@@ -39,14 +39,14 @@ Exclude: celebrity/idol news (concerts, tours, comebacks, fan events, dating), K
 General sports INDUSTRY news (e.g. league deals, stadium economics) is OK.`
 
 /** RSS description이 이 길이 미만이면 LLM에 보내지 않고 drop.
- *  짧은 입력은 detail이 summary 재진술 수준이라 사용자 가치가 낮음.
- *  hallucination을 차단한 보수 프롬프트와 짝을 이룸. */
-const MIN_DESCRIPTION_LENGTH = 300
+ *  짧은 입력으로는 한국어 summary조차 의미 있게 만들 수 없음. */
+const MIN_DESCRIPTION_LENGTH = 200
 
-/** LLM이 생성한 detail이 이 길이 미만이면 그 기사 자체를 캐시에서 drop.
- *  input 필터(MIN_DESCRIPTION_LENGTH)를 통과해도 paraphrase 위주의
- *  description은 facts를 추출할 게 적어 detail이 짧게 끝남.
- *  사용자에게 빈약한 결과를 안 노출하기 위한 출구 거름망. */
+/** LLM이 생성한 detail이 이 길이 미만이면 detail 필드를 비우고 article은
+ *  보존한다 (예전엔 article 자체를 drop했음). 짧은 RSS description으로
+ *  LLM이 무리하게 detail을 만들면 summary 재진술이 되니, summary만 살리고
+ *  detail은 비우는 게 정직 + 양 보존. UI는 detail이 비면 펼침 영역을
+ *  자동으로 숨긴다 (NewsCard의 `expanded && item.detail` 조건). */
 const MIN_DETAIL_LENGTH = 150
 
 async function callOpenAI(messages: { role: string; content: string }[]): Promise<OpenAIResponse> {
@@ -151,11 +151,14 @@ Include all relevant articles (up to 40).`,
 
   const validItems = (parsed.items as SummarizedItem[])
     .filter((item) => typeof item.originalIndex === 'number' && item.originalIndex >= 0 && item.originalIndex < filteredArticles.length)
-    .filter((item) => (item.detail?.length ?? 0) >= MIN_DETAIL_LENGTH)
 
-  if (validItems.length < parsed.items.length) {
-    const droppedShort = parsed.items.length - validItems.length
-    console.log(`[news] ${countryCode}: dropped ${droppedShort} articles with shallow output (input filter or detail<${MIN_DETAIL_LENGTH}c)`)
+  // Count how many had detail trimmed to empty for visibility in logs —
+  // article itself is preserved either way.
+  const trimmedDetail = validItems.filter(
+    (item) => (item.detail?.length ?? 0) < MIN_DETAIL_LENGTH,
+  ).length
+  if (trimmedDetail > 0) {
+    console.log(`[news] ${countryCode}: trimmed detail to empty for ${trimmedDetail} articles (detail<${MIN_DETAIL_LENGTH}c) — kept summary, dropped detail only`)
   }
 
   return validItems
@@ -166,13 +169,16 @@ Include all relevant articles (up to 40).`,
       const rawKeywords = Array.isArray(item.keywords) ? item.keywords : []
       const { matched } = matchKeywords(rawKeywords)
       const keywords = matched.map((m) => m.slug)
+      // Detail under MIN_DETAIL_LENGTH is treated as not worth showing —
+      // blank it out instead of dropping the article. UI hides empty detail.
+      const detail = (item.detail?.length ?? 0) >= MIN_DETAIL_LENGTH ? item.detail : ''
       return {
         id: `${countryCode}-${simpleHash(original.link)}`,
         country: countryCode,
         category: item.category,
         title: item.title,
         summary: item.summary,
-        detail: item.detail,
+        detail,
         sentiment: item.sentiment,
         source: original.source,
         url: original.link,
