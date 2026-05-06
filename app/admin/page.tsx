@@ -206,6 +206,9 @@ export default function AdminPage() {
             <p className="text-sm text-gray-500">{user.email}</p>
           </div>
           <div className="flex gap-2">
+            <a href="/admin/science-lab" className="rounded-md bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700">
+              과학 실험실 →
+            </a>
             <a href="/admin/pivot-lab" className="rounded-md bg-gray-800 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700">
               피벗 실험실 →
             </a>
