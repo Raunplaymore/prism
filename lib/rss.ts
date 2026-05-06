@@ -199,10 +199,14 @@ export function stripHtml(text: string): string {
     .replace(/&#39;/g, "'")
 }
 
-/** Fetch from a single RSS URL */
+/** Fetch from a single RSS URL.
+ *  Timeout was 5s but CF Workers + Google News occasionally needs longer
+ *  on the cold path; aborts there silently zero'd whole feeds, leading to
+ *  articlesCollected=0 across the board. 15s is generous enough to cover
+ *  intermittent latency without hanging the warm workflow. */
 export async function fetchOneRss(url: string): Promise<RssArticle[]> {
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 5000)
+  const timeout = setTimeout(() => controller.abort(), 15000)
 
   try {
     const res = await fetch(url, {
