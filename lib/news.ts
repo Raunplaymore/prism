@@ -106,7 +106,7 @@ export async function fetchNewsFromArticles(countryCode: string, lang = 'en', ar
   const articlesForAi = filteredArticles.map((a, i) => ({
     i,
     t: a.title,
-    d: a.description.slice(0, 700),
+    d: a.description.slice(0, 2000),
     // Mode flag: 'short' inputs get a faithful translation, 'long' inputs
     // get a 4-6 sentence elaboration with extracted facts. Branching at
     // input layer is more reliable than asking the model to count chars.
