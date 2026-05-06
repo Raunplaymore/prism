@@ -189,14 +189,26 @@ export function extractTag(xml: string, tag: string): string {
   return match ? match[1].trim() : ''
 }
 
+/** Strip HTML tags + decode common entities. Iterates until stable so
+ *  feeds that ship entity-encoded HTML inside CDATA (e.g. `&lt;a&gt;`)
+ *  also get cleaned: first pass decodes entities, second pass strips
+ *  the now-real tags. Caps at 3 passes to bound work on adversarial
+ *  inputs, then collapses whitespace. */
 export function stripHtml(text: string): string {
-  return text
-    .replace(/<[^>]+>/g, '')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
+  let s = text
+  for (let i = 0; i < 3; i++) {
+    const next = s
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/<[^>]+>/g, '')
+    if (next === s) break
+    s = next
+  }
+  return s.replace(/\s+/g, ' ').trim()
 }
 
 /** Fetch from a single RSS URL.
