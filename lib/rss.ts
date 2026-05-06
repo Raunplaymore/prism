@@ -189,26 +189,28 @@ export function extractTag(xml: string, tag: string): string {
   return match ? match[1].trim() : ''
 }
 
-/** Strip HTML tags + decode common entities. Iterates until stable so
- *  feeds that ship entity-encoded HTML inside CDATA (e.g. `&lt;a&gt;`)
- *  also get cleaned: first pass decodes entities, second pass strips
- *  the now-real tags. Caps at 3 passes to bound work on adversarial
- *  inputs, then collapses whitespace. */
+/** Strip HTML tags + decode common entities.
+ *
+ *  ⚠️ NOTE (2026-05-06): A more robust iterative version was tried (decode
+ *  → strip until stable) and exposed an uncomfortable truth — Google News
+ *  RSS descriptions are mostly headline + source name, not body text. After
+ *  proper stripping descriptions land at 30-100 chars, which kills the
+ *  current input filter and makes long-mode elaboration impossible without
+ *  fetching article bodies directly. Until that body-fetch research lands,
+ *  prism intentionally runs with this lighter version: leftover HTML
+ *  noise (URLs, font tags) inflates description length so the LLM sees a
+ *  ~700-char raw input and synthesizes a Korean paraphrase that, while
+ *  effectively a headline rephrase, kept article counts and detail length
+ *  stable through 5/5. Don't "fix" this until the article-extract pipeline
+ *  is ready to replace it. */
 export function stripHtml(text: string): string {
-  let s = text
-  for (let i = 0; i < 3; i++) {
-    const next = s
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/<[^>]+>/g, '')
-    if (next === s) break
-    s = next
-  }
-  return s.replace(/\s+/g, ' ').trim()
+  return text
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
 }
 
 /** Fetch from a single RSS URL.
