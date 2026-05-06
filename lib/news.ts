@@ -39,15 +39,14 @@ Exclude: celebrity/idol news (concerts, tours, comebacks, fan events, dating), K
 General sports INDUSTRY news (e.g. league deals, stadium economics) is OK.`
 
 /** RSS description이 이 길이 미만이면 LLM에 보내지 않고 drop.
- *  짧은 입력은 detail이 summary 재진술 수준이라 사용자 가치가 낮음.
- *  hallucination을 차단한 보수 프롬프트와 짝을 이룸. */
-const MIN_DESCRIPTION_LENGTH = 300
+ *  짧은 입력으로는 한국어 summary조차 의미 있게 만들 수 없음. */
+const MIN_DESCRIPTION_LENGTH = 200
 
-/** LLM이 생성한 detail이 이 길이 미만이면 그 기사 자체를 캐시에서 drop.
- *  input 필터(MIN_DESCRIPTION_LENGTH)를 통과해도 paraphrase 위주의
- *  description은 facts를 추출할 게 적어 detail이 짧게 끝남.
- *  사용자에게 빈약한 결과를 안 노출하기 위한 출구 거름망. */
-const MIN_DETAIL_LENGTH = 150
+/** description이 이 길이 이상이면 detail을 elaboration(4-6 sentence)으로,
+ *  미만이면 detail을 한국어 충실 번역(추가 facts 금지)으로 생성한다.
+ *  짧은 입력에서 LLM이 facts를 만들어내는 hallucination을 차단하면서도
+ *  detail이 비지 않도록 보장. */
+const ELABORATION_THRESHOLD = 300
 
 async function callOpenAI(messages: { role: string; content: string }[]): Promise<OpenAIResponse> {
   const apiKey = process.env.OPENAI_API_KEY
@@ -108,6 +107,10 @@ export async function fetchNewsFromArticles(countryCode: string, lang = 'en', ar
     i,
     t: a.title,
     d: a.description.slice(0, 700),
+    // Mode flag: 'short' inputs get a faithful translation, 'long' inputs
+    // get a 4-6 sentence elaboration with extracted facts. Branching at
+    // input layer is more reliable than asking the model to count chars.
+    m: a.description.length >= ELABORATION_THRESHOLD ? 'long' : 'short',
   }))
 
   const response = await callOpenAI([
@@ -121,8 +124,13 @@ FILTERING RULE:
 - Articles about bilateral relations are fine if ${countryName} is one of the main parties
 - Articles may be in any language — translate the title, summary, and detail to ${langLabel}
 
-Each item: {"originalIndex":number,"category":"one of the categories below","title":"${langLabel} title","summary":"1-2 sentence ${langLabel} summary","detail":"4-6 sentence ${langLabel} natural-flow elaboration. Extract ALL the concrete facts, names, quotes, numbers, dates, locations, and stated context from the input that aren't already in summary. Use only information actually present in the input; do not invent context, implications, or speculation.","sentiment":"positive"|"neutral"|"negative","keywords":["slug1","slug2",...]}
-Write title, summary, and detail in ${langLabel}. "summary" is a brief 1-2 sentence overview that captures the headline fact. "detail" is a natural-flow 4-6 sentence elaboration that surfaces the additional concrete facts in the input — names, numbers, dates, places, quoted statements, stated reasons or stated context — that summary couldn't fit. Aim for 4-6 sentences when the input supports it; only fall back to fewer sentences if the input genuinely contains nothing more to say beyond summary. CRITICAL: Use only information actually present in the input description. Do not add historical context, implications, predictions, "what to watch" remarks, or stakeholder analysis unless that information is explicitly stated in the source. Better a faithful 4-5 sentences with real facts than a 6-sentence padded one.
+Each item: {"originalIndex":number,"category":"one of the categories below","title":"${langLabel} title","summary":"1-2 sentence ${langLabel} summary","detail":"${langLabel} prose, mode-dependent (see below)","sentiment":"positive"|"neutral"|"negative","keywords":["slug1","slug2",...]}
+
+DETAIL FIELD — mode-dependent on the input's "m" flag:
+- m="short" → "detail" is a faithful ${langLabel} TRANSLATION of the input description. Render it as natural Korean prose, lightly cleaned up, but DO NOT add any information that isn't in the input. 1-3 sentences, however long the translation naturally runs. This mode applies when the source RSS gives us only a headline-level snippet — we just translate, we don't extrapolate.
+- m="long" → "detail" is a 4-6 sentence ${langLabel} natural-flow elaboration. Extract ALL the concrete facts, names, quotes, numbers, dates, locations, and stated context from the input that aren't already in summary. Aim for 4-6 sentences when the input supports it; fall back to fewer only if the input genuinely contains nothing more beyond summary.
+
+CRITICAL FOR BOTH MODES: Use only information actually present in the input description. Do not invent or add historical context, implications, predictions, "what to watch" remarks, or stakeholder analysis. "summary" is always a brief 1-2 sentence overview capturing the headline fact, regardless of mode. "detail" must never be empty.
 
 For "keywords": extract 3-5 canonical English slug keywords (lowercase kebab-case ASCII).
 Prefer named entities — people, countries, organizations, companies — and concrete topics.
@@ -151,11 +159,13 @@ Include all relevant articles (up to 40).`,
 
   const validItems = (parsed.items as SummarizedItem[])
     .filter((item) => typeof item.originalIndex === 'number' && item.originalIndex >= 0 && item.originalIndex < filteredArticles.length)
-    .filter((item) => (item.detail?.length ?? 0) >= MIN_DETAIL_LENGTH)
+    // detail must be non-empty — empty detail means LLM either misfired or
+    // refused to translate, so the row isn't trustworthy enough to cache.
+    .filter((item) => typeof item.detail === 'string' && item.detail.trim().length > 0)
 
   if (validItems.length < parsed.items.length) {
-    const droppedShort = parsed.items.length - validItems.length
-    console.log(`[news] ${countryCode}: dropped ${droppedShort} articles with shallow output (input filter or detail<${MIN_DETAIL_LENGTH}c)`)
+    const dropped = parsed.items.length - validItems.length
+    console.log(`[news] ${countryCode}: dropped ${dropped} articles (invalid index or empty detail)`)
   }
 
   return validItems
