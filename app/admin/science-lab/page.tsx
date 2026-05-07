@@ -145,8 +145,12 @@ export default function ScienceLabPage() {
     setStep2Loading(true)
     setError('')
     try {
+      // generate는 LLM 호출(15-25s)이라 prismglobe.com custom domain이 502를
+      // 반환함 — admin/page.tsx step=2 호출과 동일한 알려진 문제. pages.dev로
+      // 직접 호출. anon quota 적용되지만 LLM 한 번에 abuse 막아주고, admin
+      // cookie는 prismglobe.com 도메인 한정이라 .pages.dev에선 anon으로 분류.
       const res = await fetch(
-        `/api/admin/science-lab/run?step=generate&source=${source}`,
+        `https://prism-4gy.pages.dev/api/admin/science-lab/run?step=generate&source=${source}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
