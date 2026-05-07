@@ -3,6 +3,15 @@ export const runtime = 'edge'
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySessionToken, getSessionFromCookie } from '@/lib/auth'
 import { extractTag, stripHtml } from '@/lib/rss'
+import { enforceAnonQuota } from '@/lib/cache'
+
+// CORS — 사용자가 prismglobe.com 페이지에서 prism-4gy.pages.dev로 직접 호출 가능하도록.
+// 같은 이유로 admin/page.tsx:132에서 step=2 호출이 pages.dev로 직접 fetch함.
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, x-admin-secret',
+}
 
 // ────────────────────────────────────────────────────────────
 // Types
@@ -283,27 +292,46 @@ CRITICAL:
 // Route handler
 // ────────────────────────────────────────────────────────────
 
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS_HEADERS })
+}
+
+function withCors(res: NextResponse): NextResponse {
+  Object.entries(CORS_HEADERS).forEach(([k, v]) => res.headers.set(k, v))
+  return res
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Admin → bypass. anon → IP 일일 quota 적용 (LLM 비용 abuse 방지).
+  // 이 endpoint는 prismglobe.com custom domain의 long-running 502 우회를 위해
+  // client가 pages.dev로 직접 호출할 수 있어야 함 (admin cookie는 .pages.dev로
+  // 전달 안 됨). 같은 패턴이 admin/page.tsx step=2 호출에 이미 적용 중.
   if (!(await checkAdmin(request))) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const quota = await enforceAnonQuota(request)
+    if (!quota.ok) {
+      return withCors(NextResponse.json(
+        { error: 'rate_limit', message: '오늘 무료 사용량을 모두 사용했습니다.' },
+        { status: 429 },
+      ))
+    }
   }
 
   const step = request.nextUrl.searchParams.get('step')
   const rawSource = request.nextUrl.searchParams.get('source') ?? 'arxiv'
   if (!(rawSource in SOURCES)) {
-    return NextResponse.json({ error: 'Unknown source' }, { status: 400 })
+    return withCors(NextResponse.json({ error: 'Unknown source' }, { status: 400 }))
   }
   const source = rawSource as SourceId
 
   if (step === 'fetch') {
     const field = request.nextUrl.searchParams.get('field') ?? SOURCES[source].fields[0].id
-    return handleFetch(source, field)
+    return withCors(await handleFetch(source, field))
   }
 
   if (step === 'generate') {
     const body = (await request.json()) as { items?: ArxivItem[]; field?: string }
-    return handleGenerate(body.items ?? [], source, body.field ?? SOURCES[source].fields[0].id)
+    return withCors(await handleGenerate(body.items ?? [], source, body.field ?? SOURCES[source].fields[0].id))
   }
 
-  return NextResponse.json({ error: 'Unknown step' }, { status: 400 })
+  return withCors(NextResponse.json({ error: 'Unknown step' }, { status: 400 }))
 }
