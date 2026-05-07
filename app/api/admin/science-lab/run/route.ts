@@ -133,7 +133,11 @@ async function handleGenerate(items: ArxivItem[], field: string): Promise<NextRe
   }
 
   const fieldLabel = FIELDS_LABEL[field] ?? field
-  const inputs = items.map((it, i) => ({
+  // CF Pages function 30s wallclock + ICN→US OpenAI latency 변동성으로
+  // 5건 한 번에 처리하면 502 위험. 3건으로 cap. 사용자가 더 보고 싶으면
+  // 분야 다시 선택하거나 다음 cycle.
+  const capped = items.slice(0, 3)
+  const inputs = capped.map((it, i) => ({
     i,
     t: it.title,
     s: it.summary.slice(0, 1500),
@@ -168,12 +172,15 @@ CRITICAL:
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         temperature: 0.4,
+        max_tokens: 1500,
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: JSON.stringify(inputs) },
         ],
       }),
+      // CF Pages function 30s 한도 안에 끝내기 위한 명시적 timeout
+      signal: AbortSignal.timeout(25000),
     })
   } catch (e) {
     return NextResponse.json({ error: `OpenAI network error: ${e}` }, { status: 502 })
@@ -208,7 +215,7 @@ CRITICAL:
     }
   }
 
-  const merged = items.map((src, i) => ({
+  const merged = capped.map((src, i) => ({
     ...src,
     ...(eduMap.get(i) ?? { koTitle: '', koTagline: '', koBody: '' }),
   }))
