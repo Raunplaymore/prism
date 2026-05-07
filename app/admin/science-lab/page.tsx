@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react'
 // Types
 // ────────────────────────────────────────────────────────────
 
+type SourceId = 'arxiv' | 'sciencedaily'
+
 interface User {
   email: string
   name: string
@@ -29,23 +31,42 @@ interface EducationItem extends ArxivItem {
 }
 
 // ────────────────────────────────────────────────────────────
-// Field definitions
+// Source + field definitions
 // ────────────────────────────────────────────────────────────
 
-const FIELDS = [
-  { id: 'astro-ph',      emoji: '🚀', label: '천체물리·우주',     arxivCat: 'astro-ph' },
-  { id: 'q-bio',         emoji: '🧬', label: '생명공학·생물',     arxivCat: 'q-bio' },
-  { id: 'quant-ph',      emoji: '⚛️', label: '양자물리·양자정보', arxivCat: 'quant-ph' },
-  { id: 'cs.AI',         emoji: '🤖', label: 'AI·머신러닝',       arxivCat: 'cs.AI' },
-  { id: 'cs.LG',         emoji: '📚', label: '머신러닝 이론',     arxivCat: 'cs.LG' },
-  { id: 'cs.CL',         emoji: '💬', label: '자연어처리·LLM',    arxivCat: 'cs.CL' },
-  { id: 'cond-mat',      emoji: '🧪', label: '응집물질·재료',     arxivCat: 'cond-mat' },
-  { id: 'physics.ao-ph', emoji: '🌍', label: '지구·대기과학',     arxivCat: 'physics.ao-ph' },
-  { id: 'q-bio.NC',      emoji: '🧠', label: '신경과학',          arxivCat: 'q-bio.NC' },
-  { id: 'stat.ML',       emoji: '📊', label: '통계·머신러닝',     arxivCat: 'stat.ML' },
-  { id: 'math.PR',       emoji: '🔢', label: '확률·수학',         arxivCat: 'math.PR' },
-  { id: 'cs.RO',         emoji: '🦾', label: '로보틱스',          arxivCat: 'cs.RO' },
-] as const
+const SOURCE_FIELDS: Record<SourceId, { id: string; emoji: string; label: string }[]> = {
+  arxiv: [
+    { id: 'astro-ph',      emoji: '🚀', label: '천체물리·우주' },
+    { id: 'q-bio',         emoji: '🧬', label: '생명공학·생물' },
+    { id: 'quant-ph',      emoji: '⚛️', label: '양자물리·양자정보' },
+    { id: 'cs.AI',         emoji: '🤖', label: 'AI·머신러닝' },
+    { id: 'cs.LG',         emoji: '📚', label: '머신러닝 이론' },
+    { id: 'cs.CL',         emoji: '💬', label: '자연어처리·LLM' },
+    { id: 'cond-mat',      emoji: '🧪', label: '응집물질·재료' },
+    { id: 'physics.ao-ph', emoji: '🌍', label: '지구·대기과학' },
+    { id: 'q-bio.NC',      emoji: '🧠', label: '신경과학' },
+    { id: 'stat.ML',       emoji: '📊', label: '통계·머신러닝' },
+    { id: 'math.PR',       emoji: '🔢', label: '확률·수학' },
+    { id: 'cs.RO',         emoji: '🦾', label: '로보틱스' },
+  ],
+  sciencedaily: [
+    { id: 'all',             emoji: '🌐', label: '전체' },
+    { id: 'space_time',      emoji: '🚀', label: '우주·시간' },
+    { id: 'matter_energy',   emoji: '⚛️', label: '물질·에너지' },
+    { id: 'computers_math',  emoji: '🤖', label: '컴퓨터·수학' },
+    { id: 'health_medicine', emoji: '💊', label: '건강·의학' },
+    { id: 'mind_brain',      emoji: '🧠', label: '뇌·심리' },
+    { id: 'plants_animals',  emoji: '🌱', label: '식물·동물' },
+    { id: 'earth_climate',   emoji: '🌍', label: '지구·기후' },
+    { id: 'fossils_ruins',   emoji: '🦴', label: '화석·고고학' },
+    { id: 'strange_offbeat', emoji: '🎭', label: '특이·유머' },
+  ],
+}
+
+const SOURCE_LABEL: Record<SourceId, string> = {
+  arxiv: 'arXiv',
+  sciencedaily: 'ScienceDaily',
+}
 
 // ────────────────────────────────────────────────────────────
 // Helpers
@@ -71,7 +92,8 @@ export default function ScienceLabPage() {
   const [user, setUser] = useState<User | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
 
-  const [field, setField] = useState<string>('cs.AI')
+  const [source, setSource] = useState<SourceId>('arxiv')
+  const [field, setField] = useState<string>(SOURCE_FIELDS.arxiv[0].id)
   const [step1Loading, setStep1Loading] = useState(false)
   const [step2Loading, setStep2Loading] = useState(false)
   const [items, setItems] = useState<ArxivItem[]>([])
@@ -88,15 +110,25 @@ export default function ScienceLabPage() {
       .finally(() => setAuthChecked(true))
   }, [])
 
-  // ── Step 1: arXiv fetch ──────────────────────────────────
-  const fetchArxiv = async () => {
+  // ── Source change ─────────────────────────────────────────
+  const handleSourceChange = (s: SourceId) => {
+    setSource(s)
+    setField(SOURCE_FIELDS[s][0].id)
+    setItems([])
+    setEdu([])
+    setError('')
+  }
+
+  // ── Step 1: RSS fetch ─────────────────────────────────────
+  const fetchSource = async () => {
     setStep1Loading(true)
     setError('')
     setEdu([])
     try {
-      const res = await fetch(`/api/admin/science-lab/run?field=${field}&step=fetch`, {
-        method: 'POST',
-      })
+      const res = await fetch(
+        `/api/admin/science-lab/run?step=fetch&source=${source}&field=${field}`,
+        { method: 'POST' },
+      )
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'fetch failed')
       setItems(data.items || [])
@@ -113,11 +145,14 @@ export default function ScienceLabPage() {
     setStep2Loading(true)
     setError('')
     try {
-      const res = await fetch(`/api/admin/science-lab/run?step=generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items, field }),
-      })
+      const res = await fetch(
+        `/api/admin/science-lab/run?step=generate&source=${source}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items, field }),
+        },
+      )
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'generate failed')
       setEdu(data.items || [])
@@ -176,7 +211,7 @@ export default function ScienceLabPage() {
     )
   }
 
-  const activeField = FIELDS.find((f) => f.id === field)
+  const activeField = SOURCE_FIELDS[source].find((f) => f.id === field)
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -192,15 +227,42 @@ export default function ScienceLabPage() {
           </a>
           <h1 className="text-2xl font-bold">과학 실험실</h1>
           <p className="mt-1 text-sm text-gray-400">
-            arXiv 최신 논문 → GPT-4o-mini 한국어 교육 콘텐츠 변환. 분야 다양성과 콘텐츠 품질을 검증하는 실험 도구.
+            최신 과학 콘텐츠 → GPT-4o-mini 한국어 교육 콘텐츠 변환. 분야 다양성과 콘텐츠 품질을 검증하는 실험 도구.
           </p>
         </header>
+
+        {/* Source selector */}
+        <section className="mb-4">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">소스 선택</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleSourceChange('arxiv')}
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+                source === 'arxiv'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              }`}
+            >
+              📄 arXiv (학술 논문)
+            </button>
+            <button
+              onClick={() => handleSourceChange('sciencedaily')}
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+                source === 'sciencedaily'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              }`}
+            >
+              🌐 ScienceDaily (대중 친화)
+            </button>
+          </div>
+        </section>
 
         {/* Field selector */}
         <section className="mb-6">
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">분야 선택</h2>
           <div className="flex flex-wrap gap-2">
-            {FIELDS.map((f) => (
+            {SOURCE_FIELDS[source].map((f) => (
               <button
                 key={f.id}
                 onClick={() => { setField(f.id); setItems([]); setEdu([]); setError('') }}
@@ -219,11 +281,15 @@ export default function ScienceLabPage() {
         {/* Action row */}
         <section className="mb-8 flex flex-wrap gap-3">
           <button
-            onClick={fetchArxiv}
+            onClick={fetchSource}
             disabled={step1Loading}
             className="rounded-lg bg-gray-700 px-5 py-2.5 text-sm font-medium transition hover:bg-gray-600 disabled:cursor-wait disabled:opacity-50"
           >
-            {step1Loading ? '가져오는 중...' : `최신 논문 가져오기 (${activeField?.emoji ?? ''} ${activeField?.label ?? field})`}
+            {step1Loading
+              ? '가져오는 중...'
+              : source === 'arxiv'
+                ? `최신 논문 가져오기 (${activeField?.emoji ?? ''} ${activeField?.label ?? field})`
+                : `최신 기사 가져오기 (${activeField?.emoji ?? ''} ${activeField?.label ?? field})`}
           </button>
           <button
             onClick={generateEducation}
@@ -241,11 +307,11 @@ export default function ScienceLabPage() {
           </div>
         )}
 
-        {/* Step 1 results: arXiv abstracts */}
+        {/* Step 1 results: source raw items */}
         {items.length > 0 && (
           <section className="mb-10">
             <h2 className="mb-4 text-base font-semibold text-gray-300">
-              Step 1 — arXiv 원문 ({items.length}건)
+              Step 1 — {SOURCE_LABEL[source]} 원문 ({items.length}건)
             </h2>
             <div className="space-y-3">
               {items.map((item) => (
@@ -257,7 +323,8 @@ export default function ScienceLabPage() {
                     {item.title}
                   </h3>
                   <p className="mb-2 text-[11px] text-gray-500">
-                    {item.id} &middot; {formatDate(item.published)}
+                    {source === 'arxiv' && <>{item.id} &middot; </>}
+                    {formatDate(item.published)}
                     {item.authors.length > 0 && (
                       <> &middot; {item.authors.slice(0, 3).join(', ')}{item.authors.length > 3 ? ' 외' : ''}</>
                     )}
@@ -311,7 +378,9 @@ export default function ScienceLabPage() {
                   {/* 푸터 */}
                   <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-800 pt-4">
                     <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-500">
-                      <span className="font-mono">{item.id}</span>
+                      {source === 'arxiv' && (
+                        <span className="font-mono">{item.id}</span>
+                      )}
                       <span>{formatDate(item.published)}</span>
                       <span className="rounded-md bg-gray-800 px-2 py-0.5 text-gray-400">
                         {activeField?.emoji} {activeField?.label}
