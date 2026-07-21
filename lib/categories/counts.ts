@@ -1,4 +1,4 @@
-import { redis, redisPipeline } from '@/lib/cache'
+import { redis, redisPipeline, feedKeyPattern } from '@/lib/cache'
 import type { NewsItem } from '@/types/news'
 import { CATEGORY_KEYS, type CategoryKey, isValidCategory } from '@/lib/categories'
 
@@ -6,7 +6,7 @@ import { CATEGORY_KEYS, type CategoryKey, isValidCategory } from '@/lib/categori
  * Aggregate article counts per category across all live ko feeds.
  *
  * Strategy mirrors lib/keywords/index.ts#getArticlesByKeyword:
- *   1. KEYS feed:*:ko to discover live country feeds
+ *   1. KEYS current-schema feed pattern to discover live country feeds
  *   2. one pipeline GET fetches every feed in a single round trip
  *   3. count categories in memory
  *
@@ -25,7 +25,7 @@ export async function getCategoryCounts(): Promise<Record<CategoryKey, number>> 
   // 1. Discover live ko feeds.
   let keys: string[] = []
   try {
-    keys = ((await redis(['KEYS', 'feed:*:ko'])) as string[]) ?? []
+    keys = ((await redis(['KEYS', feedKeyPattern('ko')])) as string[]) ?? []
   } catch {
     return counts
   }

@@ -1,4 +1,4 @@
-import { redis, redisPipeline, getFeed } from '@/lib/cache'
+import { redis, redisPipeline, feedKeyPattern } from '@/lib/cache'
 import type { NewsItem } from '@/types/news'
 import { VOCABULARY, type KeywordEntry } from './vocabulary'
 
@@ -50,7 +50,7 @@ export async function getArticlesByKeyword(slug: string): Promise<NewsItem[]> {
   // Discover which feeds exist
   let keys: string[] = []
   try {
-    keys = ((await redis(['KEYS', 'feed:*:ko'])) as string[]) ?? []
+    keys = ((await redis(['KEYS', feedKeyPattern('ko')])) as string[]) ?? []
   } catch {
     return []
   }

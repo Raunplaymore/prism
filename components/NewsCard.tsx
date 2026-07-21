@@ -88,7 +88,10 @@ export default function NewsCard({ item, showCountry, defaultExpanded }: NewsCar
           </span>
         </div>
       </div>
-      <p className="mb-3 text-sm leading-relaxed text-gray-400">{item.summary}</p>
+      <div className="mb-3">
+        <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-gray-500">AI 요약 · RSS 원문 기반</span>
+        <p className="text-sm leading-relaxed text-gray-400">{item.summary}</p>
+      </div>
       {item.keywords && item.keywords.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-1">
           {item.keywords.map((kw) => (
@@ -105,6 +108,7 @@ export default function NewsCard({ item, showCountry, defaultExpanded }: NewsCar
       )}
       {expanded && item.detail && (
         <div className="mb-3 rounded-md border border-gray-800 bg-gray-950 p-3">
+          <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-wide text-gray-500">RSS 설명 번역</span>
           <p className="whitespace-pre-line text-sm leading-relaxed text-gray-300">{item.detail}</p>
         </div>
       )}
