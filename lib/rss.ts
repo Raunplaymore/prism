@@ -218,7 +218,19 @@ export function stripHtml(text: string): string {
  *  on the cold path; aborts there silently zero'd whole feeds, leading to
  *  articlesCollected=0 across the board. 15s is generous enough to cover
  *  intermittent latency without hanging the warm workflow. */
-export async function fetchOneRss(url: string): Promise<RssArticle[]> {
+export interface RssFetchDiagnostic {
+  url: string
+  status: number | null
+  articlesParsed: number
+  error?: string
+}
+
+interface RssFetchAttempt {
+  articles: RssArticle[]
+  diagnostic: RssFetchDiagnostic
+}
+
+async function fetchOneRssAttempt(url: string): Promise<RssFetchAttempt> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 15000)
 
@@ -228,23 +240,37 @@ export async function fetchOneRss(url: string): Promise<RssArticle[]> {
       redirect: 'follow',
       headers: { 'User-Agent': 'PrismNewsBot/1.0' },
     })
-    if (!res.ok) return []
+    if (!res.ok) {
+      return { articles: [], diagnostic: { url, status: res.status, articlesParsed: 0 } }
+    }
     const xml = await res.text()
-    return parseRss(xml)
-  } catch {
-    return []
+    const articles = parseRss(xml)
+    return { articles, diagnostic: { url, status: res.status, articlesParsed: articles.length } }
+  } catch (err) {
+    const error = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
+    return { articles: [], diagnostic: { url, status: null, articlesParsed: 0, error } }
   } finally {
     clearTimeout(timeout)
   }
 }
 
+/** Backwards-compatible article-only RSS fetch. */
+export async function fetchOneRss(url: string): Promise<RssArticle[]> {
+  return (await fetchOneRssAttempt(url)).articles
+}
+
+export interface RssFetchResult {
+  articles: RssArticle[]
+  diagnostics: RssFetchDiagnostic[]
+}
+
 /** Fetch articles from multiple Google News RSS queries, dedup, return up to 15 */
-export async function fetchRssArticles(countryCode: string): Promise<RssArticle[]> {
+export async function fetchRssArticlesWithDiagnostics(countryCode: string): Promise<RssFetchResult> {
   const urls = buildGoogleNewsUrls(countryCode)
 
   // Fetch all queries in parallel
-  const results = await Promise.all(urls.map(fetchOneRss))
-  const all = results.flat()
+  const results = await Promise.all(urls.map(fetchOneRssAttempt))
+  const all = results.flatMap((result) => result.articles)
 
   // Dedup by link
   const seen = new Set<string>()
@@ -255,11 +281,18 @@ export async function fetchRssArticles(countryCode: string): Promise<RssArticle[
   })
 
   // Sort by date (newest first) and limit
-  return unique
+  const articles = unique
     .sort((a, b) => {
       const da = a.pubDate ? new Date(a.pubDate).getTime() : 0
       const db = b.pubDate ? new Date(b.pubDate).getTime() : 0
       return db - da
     })
     .slice(0, 40)
+
+  return { articles, diagnostics: results.map((result) => result.diagnostic) }
+}
+
+/** Fetch articles from multiple Google News RSS queries. */
+export async function fetchRssArticles(countryCode: string): Promise<RssArticle[]> {
+  return (await fetchRssArticlesWithDiagnostics(countryCode)).articles
 }

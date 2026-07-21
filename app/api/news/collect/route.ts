@@ -1,7 +1,7 @@
 export const runtime = 'edge'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { fetchRssArticles, isSupported } from '@/lib/rss'
+import { fetchRssArticlesWithDiagnostics, isSupported } from '@/lib/rss'
 import { mergeFeed, getTokenStats, enforceAnonQuota } from '@/lib/cache'
 import { getCountryName } from '@/lib/countries'
 import { checkCostAlert, notifyNewsCached, notifyError } from '@/lib/telegram'
@@ -111,7 +111,7 @@ async function handleCollect(request: NextRequest) {
     }
 
     const code = country.toUpperCase()
-    const articles = await fetchRssArticles(code)
+    const { articles, diagnostics } = await fetchRssArticlesWithDiagnostics(code)
 
     // Store raw articles in Redis (TTL 10 min)
     await redisSet(`raw:${code}`, JSON.stringify(articles), 600)
@@ -119,6 +119,9 @@ async function handleCollect(request: NextRequest) {
     return NextResponse.json({
       country: code,
       articlesCollected: articles.length,
+      // Surface only transport-level facts so zero-result incidents can be
+      // investigated without silently treating failed fetches as empty news.
+      diagnostics,
     })
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })
