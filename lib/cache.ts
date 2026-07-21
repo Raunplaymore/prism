@@ -38,12 +38,20 @@ export async function redisPipeline(commands: string[][]): Promise<unknown[]> {
 }
 
 const FEED_TTL = 24 * 60 * 60 // 24 hours
+// v2 intentionally starts a clean feed after the old pipeline stored
+// model-written headlines. Old keys expire naturally and are never served.
+const FEED_SCHEMA_VERSION = 'v2'
 const REFRESH_INTERVAL = 6 * 60 * 60 // 6 hours — minimum between refreshes
 const USAGE_TTL = 24 * 60 * 60 // 24 hours
 const ARTICLE_MAX_AGE = 24 * 60 * 60 * 1000 // 24h in ms
 
 function feedKey(country: string, lang: string): string {
-  return `feed:${country.toUpperCase()}:${lang}`
+  return `feed:${FEED_SCHEMA_VERSION}:${country.toUpperCase()}:${lang}`
+}
+
+/** Redis KEYS pattern for the currently trusted feed schema only. */
+export function feedKeyPattern(lang: string): string {
+  return `feed:${FEED_SCHEMA_VERSION}:*:${lang}`
 }
 
 function usageKey(ip: string, date: string): string {
@@ -128,7 +136,7 @@ export async function mergeFeed(
 
 // --- Admin cache clear helpers ---
 function newsKey(country: string, lang: string): string {
-  return `feed:${country.toUpperCase()}:${lang}`
+  return feedKey(country, lang)
 }
 
 export async function deleteCachedNews(country: string, lang: string): Promise<boolean> {
